@@ -31,7 +31,7 @@ export class Base64Codec {
   static decodeString(input: string): string {
     input = input.replace(/[^A-Za-z0-9+/=]/g, '');
 
-    let output = '';
+    const chunks: string[] = [];
     let i = 0;
 
     while (i < input.length) {
@@ -40,16 +40,16 @@ export class Base64Codec {
       const enc3 = BASE64_IDX[input.charCodeAt(i++) - 43]!;
       const enc4 = BASE64_IDX[input.charCodeAt(i++) - 43]!;
 
-      output += String.fromCharCode((enc1 << 2) | (enc2 >> 4));
+      chunks.push(String.fromCharCode((enc1 << 2) | (enc2 >> 4)));
       if (enc3 !== 64) {
-        output += String.fromCharCode(((enc2 & 15) << 4) | (enc3 >> 2));
+        chunks.push(String.fromCharCode(((enc2 & 15) << 4) | (enc3 >> 2)));
         if (enc4 !== 64) {
-          output += String.fromCharCode(((enc3 & 3) << 6) | enc4);
+          chunks.push(String.fromCharCode(((enc3 & 3) << 6) | enc4));
         }
       }
     }
 
-    return output;
+    return chunks.join('');
   }
 
   static encode(input: Uint8Array, maxline?: number): string {

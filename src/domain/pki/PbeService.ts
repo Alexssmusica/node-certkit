@@ -62,9 +62,9 @@ export class PbeService {
       // set default options
       options = options || {};
       options.saltSize = options.saltSize || 8;
-      options.count = options.count || 2048;
+      options.count = options.count || 10000;
       options.algorithm = options.algorithm || 'aes128';
-      options.prfAlgorithm = options.prfAlgorithm || 'sha1';
+      options.prfAlgorithm = options.prfAlgorithm || 'sha256';
 
       // generate PBE params
       const salt = deps.random.getBytesSync(options.saltSize);

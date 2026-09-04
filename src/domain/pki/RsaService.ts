@@ -5,6 +5,7 @@ import { BigInteger } from '../math/BigInteger.js';
 import type { BigIntegerRandomSource } from '../math/BigInteger.js';
 import type { NativeCryptoProvider, PemKeyCodec, PrimeGenerator } from '../ports/index.js';
 import { UtilNamespace } from '../util/UtilNamespace.js';
+import { constantTimeEquals } from '../util/constantTimeEquals.js';
 import { createRsaValidators } from './RsaAsn1.js';
 import type {
   KeyPairGenerationState,
@@ -17,6 +18,12 @@ import type {
 import { Pkcs1Codec } from './Pkcs1Codec.js';
 import { PemCodec } from './PemCodec.js';
 import type { CertkitRsaNamespace } from './CertkitPkiTypes.js';
+
+/** @internal Options that weaken RSA verification; not part of the public API. */
+type RsaVerifyInternalOptions = {
+  _parseAllDigestBytes?: boolean;
+  _skipPaddingChecks?: boolean;
+};
 
 const GCD_30_DELTA = [6, 4, 2, 4, 2, 4, 6, 2];
 
@@ -421,9 +428,9 @@ export class RsaService {
       if (options === undefined) {
         options = { _parseAllDigestBytes: true, _skipPaddingChecks: false };
       }
-      const verifyOptions = {
-        _parseAllDigestBytes: (options as { _parseAllDigestBytes?: boolean })._parseAllDigestBytes !== false,
-        _skipPaddingChecks: (options as { _skipPaddingChecks?: boolean })._skipPaddingChecks === true
+      const verifyOptions: RsaVerifyInternalOptions = {
+        _parseAllDigestBytes: (options as RsaVerifyInternalOptions)._parseAllDigestBytes !== false,
+        _skipPaddingChecks: (options as RsaVerifyInternalOptions)._skipPaddingChecks === true
       };
 
       let schemeObj: { verify: (digest: string, d: string, modBits?: number) => boolean };
@@ -474,7 +481,7 @@ export class RsaService {
                 );
               }
             }
-            return dig === capture.digest;
+            return constantTimeEquals(dig, capture.digest!);
           }
         };
       } else if (scheme === 'NONE' || scheme === 'NULL' || scheme === null) {

@@ -62,3 +62,27 @@ export type PadOptions = {
   overflow?: number;
   decrypt?: boolean;
 };
+
+/**
+ * Validate and remove PKCS#7 padding from a decrypted buffer.
+ */
+export function validatePkcs7Padding(output: ByteStringBuffer, blockSize: number): boolean {
+  const len = output.length();
+  if (len === 0 || len % blockSize !== 0) {
+    return false;
+  }
+
+  const count = output.at(len - 1);
+  if (count < 1 || count > blockSize || count > len) {
+    return false;
+  }
+
+  for (let i = len - count; i < len; ++i) {
+    if (output.at(i) !== count) {
+      return false;
+    }
+  }
+
+  output.truncate(count);
+  return true;
+}

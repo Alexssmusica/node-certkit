@@ -20,27 +20,24 @@ export class HexCodec {
   }
 
   static decodeToString(hex: string): string {
-    let rval = '';
+    const chars: string[] = [];
     let i = 0;
     if (hex.length & 1) {
       i = 1;
-      rval += String.fromCharCode(parseInt(hex[0]!, 16));
+      chars.push(String.fromCharCode(parseInt(hex[0]!, 16)));
     }
     for (; i < hex.length; i += 2) {
-      rval += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+      chars.push(String.fromCharCode(parseInt(hex.substr(i, 2), 16)));
     }
-    return rval;
+    return chars.join('');
   }
 
   static encode(bytes: Uint8Array): string {
-    let rval = '';
+    const hex: string[] = [];
     for (let i = 0; i < bytes.length; ++i) {
       const b = bytes[i]!;
-      if (b < 16) {
-        rval += '0';
-      }
-      rval += b.toString(16);
+      hex.push((b < 16 ? '0' : '') + b.toString(16));
     }
-    return rval;
+    return hex.join('');
   }
 }

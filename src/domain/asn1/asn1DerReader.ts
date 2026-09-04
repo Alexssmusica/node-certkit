@@ -3,9 +3,10 @@ import { Asn1Codec } from './Asn1Codec.js';
 import type { Asn1FromDerOptions, Asn1Object, DerError } from './Asn1Types.js';
 
 export function checkBufferLength(bytes: ByteStringBuffer, remaining: number, n: number): void {
-  if (n > remaining) {
+  const available = bytes.length();
+  if (n > remaining || n > available) {
     const error = new Error('Too few bytes to parse DER.') as DerError;
-    error.available = bytes.length();
+    error.available = available;
     error.remaining = remaining;
     error.requested = n;
     throw error;
@@ -177,11 +178,12 @@ export function fromDerInternal(
         // (stored in array to signal composed value)
         start = bytes.length();
         const subOptions = {
+          ...options,
           // enforce strict mode to avoid parsing ASN.1 from plain data
           strict: true,
           decodeBitStrings: true
         };
-        const composed = fromDerInternal(bytes, remaining, depth + 1, subOptions as any);
+        const composed = fromDerInternal(bytes, remaining, depth + 1, subOptions);
         let used = start - bytes.length();
         remaining -= used;
         if (type == Asn1Codec.Type.BITSTRING) {
@@ -194,7 +196,11 @@ export function fromDerInternal(
         if (used === length && (tc === Asn1Codec.Class.UNIVERSAL || tc === Asn1Codec.Class.CONTEXT_SPECIFIC)) {
           value = [composed];
         }
-      } catch {}
+      } catch (ex) {
+        if (ex instanceof Error && /Max depth exceeded/.test(ex.message)) {
+          throw ex;
+        }
+      }
     }
     if (value === undefined) {
       // restore read position
@@ -216,12 +222,13 @@ export function fromDerInternal(
     }
 
     if (type === Asn1Codec.Type.BMPSTRING) {
-      value = '';
+      const chars: string[] = [];
       for (; length > 0; length -= 2) {
         checkBufferLength(bytes, remaining, 2);
-        value += String.fromCharCode(bytes.getInt16());
+        chars.push(String.fromCharCode(bytes.getInt16()));
         remaining -= 2;
       }
+      value = chars.join('');
     } else {
       value = bytes.getBytes(length);
       remaining -= length;

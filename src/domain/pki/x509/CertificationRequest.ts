@@ -4,6 +4,7 @@ import type { X509Runtime } from './X509Runtime.js';
 import type {
   DerError,
   DnAttribute,
+  DnAttributeInput,
   MessageDigest,
   PrivateKey,
   X509AttachCtx,
@@ -125,15 +126,15 @@ export class CertificationRequest {
       };
       csr.md = null;
 
-      csr.setSubject = function (attrs: DnAttribute[]) {
+      csr.setSubject = function (attrs: DnAttributeInput[]) {
         fillMissingFields(attrs);
-        csr.subject.attributes = attrs;
+        csr.subject.attributes = attrs as DnAttribute[];
         csr.subject.hash = null;
       };
 
-      csr.setAttributes = function (attrs: DnAttribute[]) {
+      csr.setAttributes = function (attrs: DnAttributeInput[]) {
         fillMissingFields(attrs);
-        csr.attributes = attrs;
+        csr.attributes = attrs as DnAttribute[];
       };
 
       csr.sign = function (key: PrivateKey, md?: MessageDigest) {

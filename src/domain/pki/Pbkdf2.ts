@@ -19,14 +19,18 @@ type MessageDigest = {
 
 export type Pbkdf2Callback = (err: Error | null, key?: string) => void;
 
-export type Pbkdf2Function = (
-  p: string,
-  s: string,
-  c: number,
-  dkLen: number,
-  md?: string | MessageDigest | null | Pbkdf2Callback,
-  callback?: Pbkdf2Callback
-) => string | void;
+export type Pbkdf2Function = {
+  (p: string, s: string, c: number, dkLen: number, md?: string | MessageDigest | null): string;
+  (
+    p: string,
+    s: string,
+    c: number,
+    dkLen: number,
+    md: string | MessageDigest | null | undefined,
+    callback: Pbkdf2Callback
+  ): void;
+  (p: string, s: string, c: number, dkLen: number, callback: Pbkdf2Callback): void;
+};
 
 export class Pbkdf2 {
   static createCertkitFunction(deps: Pbkdf2Dependencies): Pbkdf2Function {
@@ -51,10 +55,10 @@ export class Pbkdf2 {
         nativeCrypto.available &&
         nativeCrypto.pbkdf2Available &&
         (md === null || typeof md !== 'object') &&
-        (nativeCrypto.pbkdf2SyncSupportsDigest || !md || md === 'sha1')
+        (nativeCrypto.pbkdf2SyncSupportsDigest || !md || md === 'sha256')
       ) {
         if (typeof md !== 'string') {
-          md = 'sha1';
+          md = 'sha256';
         }
         const digest = md as string;
         const pBuf = Buffer.from(p, 'binary');
@@ -89,7 +93,7 @@ export class Pbkdf2 {
       }
 
       if (typeof md === 'undefined' || md === null) {
-        md = 'sha1';
+        md = 'sha256';
       }
       if (typeof md === 'string') {
         if (!(md in deps.mdAlgorithms)) {
@@ -100,6 +104,22 @@ export class Pbkdf2 {
 
       const mdObj = md as MessageDigest;
       const hLen = mdObj.digestLength;
+
+      if (!Number.isInteger(c) || c < 1) {
+        const err = new Error('Invalid PBKDF2 iteration count.');
+        if (callback) {
+          return callback(err);
+        }
+        throw err;
+      }
+
+      if (!Number.isInteger(dkLen) || dkLen < 1) {
+        const err = new Error('Invalid PBKDF2 derived key length.');
+        if (callback) {
+          return callback(err);
+        }
+        throw err;
+      }
 
       if (dkLen > 0xffffffff * hLen) {
         const err = new Error('Derived key is too long.');
@@ -177,7 +197,7 @@ export class Pbkdf2 {
       outer();
     }
 
-    return pbkdf2;
+    return pbkdf2 as Pbkdf2Function;
   }
 }
 

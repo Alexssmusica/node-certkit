@@ -4,7 +4,8 @@ import {
   CipherModeOptions,
   CipherModeStartOptions,
   PadOptions,
-  transformIV
+  transformIV,
+  validatePkcs7Padding
 } from './cipherModeUtils.js';
 
 export class CbcMode {
@@ -85,14 +86,7 @@ export class CbcMode {
       return false;
     }
 
-    const len = output.length();
-    const count = output.at(len - 1);
-    if (count > this.blockSize << 2) {
-      return false;
-    }
-
-    output.truncate(count);
-    return true;
+    return validatePkcs7Padding(output, this.blockSize);
   }
 }
 

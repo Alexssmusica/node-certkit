@@ -1,4 +1,5 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { constantTimeEquals } from '../util/constantTimeEquals.js';
 import {
   BlockCipherApi,
   CipherModeOptions,
@@ -215,7 +216,8 @@ export class GcmMode {
 
     this.tag.truncate(this.tag.length() % (this._tagLength! / 8));
 
-    if (options.decrypt && this.tag.bytes() !== this._tag) {
+    if (options.decrypt && !constantTimeEquals(this.tag.bytes(), this._tag!)) {
+      output.clear();
       rval = false;
     }
 

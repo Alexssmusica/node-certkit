@@ -1,4 +1,5 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { validatePkcs7Padding } from './cipherModeUtils.js';
 
 const piTable = [
   0xd9, 0x78, 0xf9, 0xc4, 0x19, 0xdd, 0xb5, 0xed, 0x28, 0xe9, 0xfd, 0x79, 0x4a, 0xa0, 0xd8, 0x9d, 0xc6, 0x7e, 0x37,
@@ -246,14 +247,7 @@ export class Rc2Cipher {
             if (pad) {
               rval = pad(8, _output!, !encrypt);
             } else {
-              const len = _output!.length();
-              const count = _output!.at(len - 1);
-
-              if (count > len) {
-                rval = false;
-              } else {
-                _output!.truncate(count);
-              }
+              rval = validatePkcs7Padding(_output!, 8);
             }
           }
         }

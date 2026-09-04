@@ -29,6 +29,9 @@ export type PemEncodeOptions = {
 };
 
 export class PemCodec {
+  /** Maximum PEM input size accepted by decode (16 MiB). */
+  static MAX_DECODE_INPUT_LENGTH = 16 * 1024 * 1024;
+
   static encode(msg: PemMessage, options?: PemEncodeOptions): string {
     options = options || {};
     let rval = '-----BEGIN ' + msg.type + '-----\r\n';
@@ -69,22 +72,62 @@ export class PemCodec {
   }
 
   static decode(str: string): PemMessage[] {
-    const rval: PemMessage[] = [];
+    if (str.length > PemCodec.MAX_DECODE_INPUT_LENGTH) {
+      throw new Error('PEM input exceeds maximum allowed size.');
+    }
 
-    const rMessage =
-      /\s*-----BEGIN ([A-Z0-9- ]+)-----\r?\n?([\x21-\x7e\s]+?(?:\r?\n\r?\n))?([:A-Za-z0-9+\/=\s]+?)-----END \1-----/g;
-    const rHeader = /([\x21-\x7e]+):\s*([\x21-\x7e\s^:]+)/;
-    const rCRLF = /\r?\n/;
-    let match: RegExpExecArray | null;
-    while (true) {
-      match = rMessage.exec(str);
-      if (!match) {
+    const rval: PemMessage[] = [];
+    const BEGIN_MARKER = '-----BEGIN ';
+    const END_PREFIX = '-----END ';
+    let pos = 0;
+
+    while (pos < str.length) {
+      while (pos < str.length && /\s/.test(str.charAt(pos))) {
+        ++pos;
+      }
+      if (pos >= str.length) {
         break;
       }
 
-      let type = match[1]!;
+      const beginIdx = str.indexOf(BEGIN_MARKER, pos);
+      if (beginIdx === -1) {
+        break;
+      }
+
+      const typeStart = beginIdx + BEGIN_MARKER.length;
+      const typeEnd = str.indexOf('-----', typeStart);
+      if (typeEnd === -1) {
+        throw new Error('Invalid PEM formatted message.');
+      }
+
+      let type = str.substring(typeStart, typeEnd);
+      const endType = type;
       if (type === 'NEW CERTIFICATE REQUEST') {
         type = 'CERTIFICATE REQUEST';
+      }
+
+      let contentStart = typeEnd + 5;
+      if (str.charAt(contentStart) === '\r') {
+        ++contentStart;
+      }
+      if (str.charAt(contentStart) === '\n') {
+        ++contentStart;
+      }
+
+      const endMarker = END_PREFIX + endType + '-----';
+      const endIdx = str.indexOf(endMarker, contentStart);
+      if (endIdx === -1) {
+        throw new Error('Invalid PEM formatted message.');
+      }
+
+      const blockContent = str.substring(contentStart, endIdx);
+      let headerPart = '';
+      let bodyPart = blockContent;
+
+      const headerBodySplit = /\r?\n\r?\n/.exec(blockContent);
+      if (headerBodySplit && headerBodySplit.index !== undefined) {
+        headerPart = blockContent.substring(0, headerBodySplit.index);
+        bodyPart = blockContent.substring(headerBodySplit.index + headerBodySplit[0].length);
       }
 
       const msg: PemMessage = {
@@ -93,65 +136,15 @@ export class PemCodec {
         contentDomain: null,
         dekInfo: null,
         headers: [],
-        body: Base64Codec.decodeString(match[3]!)
+        body: Base64Codec.decodeString(bodyPart)
       };
       rval.push(msg);
 
-      if (!match[2]) {
-        continue;
+      if (headerPart.length > 0) {
+        PemCodec.parseHeaders(msg, headerPart);
       }
 
-      const lines = match[2].split(rCRLF);
-      let li = 0;
-      while (match && li < lines.length) {
-        let line = lines[li]!.replace(/\s+$/, '');
-
-        for (let nl = li + 1; nl < lines.length; ++nl) {
-          const next = lines[nl]!;
-          if (!/\s/.test(next[0]!)) {
-            break;
-          }
-          line += next;
-          li = nl;
-        }
-
-        match = rHeader.exec(line);
-        if (match) {
-          const header: PemHeader = { name: match[1]!, values: [] };
-          const values = match[2]!.split(',');
-          for (let vi = 0; vi < values.length; ++vi) {
-            header.values.push(PemCodec.ltrim(values[vi]!));
-          }
-
-          if (!msg.procType) {
-            if (header.name !== 'Proc-Type') {
-              throw new Error('Invalid PEM formatted message. The first ' + 'encapsulated header must be "Proc-Type".');
-            } else if (header.values.length !== 2) {
-              throw new Error('Invalid PEM formatted message. The "Proc-Type" ' + 'header must have two subfields.');
-            }
-            msg.procType = { version: values[0]!, type: values[1]! };
-          } else if (!msg.contentDomain && header.name === 'Content-Domain') {
-            msg.contentDomain = values[0] || '';
-          } else if (!msg.dekInfo && header.name === 'DEK-Info') {
-            if (header.values.length === 0) {
-              throw new Error(
-                'Invalid PEM formatted message. The "DEK-Info" ' + 'header must have at least one subfield.'
-              );
-            }
-            msg.dekInfo = { algorithm: values[0]!, parameters: values[1] || null };
-          } else {
-            msg.headers.push(header);
-          }
-        }
-
-        ++li;
-      }
-
-      if ((msg.procType as unknown) === 'ENCRYPTED' && !msg.dekInfo) {
-        throw new Error(
-          'Invalid PEM formatted message. The "DEK-Info" ' + 'header must be present if "Proc-Type" is "ENCRYPTED".'
-        );
-      }
+      pos = endIdx + endMarker.length;
     }
 
     if (rval.length === 0) {
@@ -159,6 +152,62 @@ export class PemCodec {
     }
 
     return rval;
+  }
+
+  private static parseHeaders(msg: PemMessage, headerPart: string): void {
+    const rHeader = /^([\x21-\x7e]+):\s*([\x21-\x7e\s^:]+)/;
+    const lines = headerPart.split(/\r?\n/);
+    let li = 0;
+
+    while (li < lines.length) {
+      let line = lines[li]!.replace(/\s+$/, '');
+
+      for (let nl = li + 1; nl < lines.length; ++nl) {
+        const next = lines[nl]!;
+        if (!/\s/.test(next.charAt(0))) {
+          break;
+        }
+        line += next;
+        li = nl;
+      }
+
+      const match = rHeader.exec(line);
+      if (match) {
+        const header: PemHeader = { name: match[1]!, values: [] };
+        const values = match[2]!.split(',');
+        for (let vi = 0; vi < values.length; ++vi) {
+          header.values.push(PemCodec.ltrim(values[vi]!));
+        }
+
+        if (!msg.procType) {
+          if (header.name !== 'Proc-Type') {
+            throw new Error('Invalid PEM formatted message. The first ' + 'encapsulated header must be "Proc-Type".');
+          } else if (header.values.length !== 2) {
+            throw new Error('Invalid PEM formatted message. The "Proc-Type" ' + 'header must have two subfields.');
+          }
+          msg.procType = { version: values[0]!, type: values[1]! };
+        } else if (!msg.contentDomain && header.name === 'Content-Domain') {
+          msg.contentDomain = values[0] || '';
+        } else if (!msg.dekInfo && header.name === 'DEK-Info') {
+          if (header.values.length === 0) {
+            throw new Error(
+              'Invalid PEM formatted message. The "DEK-Info" ' + 'header must have at least one subfield.'
+            );
+          }
+          msg.dekInfo = { algorithm: values[0]!, parameters: values[1] || null };
+        } else {
+          msg.headers.push(header);
+        }
+      }
+
+      ++li;
+    }
+
+    if ((msg.procType as unknown) === 'ENCRYPTED' && !msg.dekInfo) {
+      throw new Error(
+        'Invalid PEM formatted message. The "DEK-Info" ' + 'header must be present if "Proc-Type" is "ENCRYPTED".'
+      );
+    }
   }
 
   static createCertkitNamespace(): { encode: typeof PemCodec.encode; decode: typeof PemCodec.decode } {

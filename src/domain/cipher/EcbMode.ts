@@ -1,5 +1,11 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
-import { BlockCipherApi, CipherModeOptions, CipherModeStartOptions, PadOptions } from './cipherModeUtils.js';
+import {
+  BlockCipherApi,
+  CipherModeOptions,
+  CipherModeStartOptions,
+  PadOptions,
+  validatePkcs7Padding
+} from './cipherModeUtils.js';
 
 export class EcbMode {
   name = 'ECB';
@@ -63,14 +69,7 @@ export class EcbMode {
       return false;
     }
 
-    const len = output.length();
-    const count = output.at(len - 1);
-    if (count > this.blockSize << 2) {
-      return false;
-    }
-
-    output.truncate(count);
-    return true;
+    return validatePkcs7Padding(output, this.blockSize);
   }
 }
 

@@ -1,4 +1,5 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { constantTimeEquals } from '../util/constantTimeEquals.js';
 import type { MessageDigest } from './Mgf1.js';
 
 export type MgfObject = {
@@ -147,7 +148,7 @@ export class PssScheme {
         hash.update(m_.getBytes());
         const h_ = hash.digest().getBytes();
 
-        return h === h_;
+        return constantTimeEquals(h, h_);
       }
     };
   }

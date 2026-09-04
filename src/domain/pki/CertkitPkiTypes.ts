@@ -23,7 +23,15 @@ export type CertkitRsaNamespace = {
     state: Record<string, unknown>,
     callback: (err: Error | null, keypair?: RsaKeyPair) => void
   ) => void;
-  generateKeyPair: (...args: unknown[]) => RsaKeyPair | void;
+  generateKeyPair(bits?: number, e?: number, options?: unknown): RsaKeyPair;
+  generateKeyPair(
+    bits: number,
+    e: number | undefined,
+    options: unknown,
+    callback: (err: Error | null, keypair?: RsaKeyPair) => void
+  ): void;
+  generateKeyPair(bits: number, callback: (err: Error | null, keypair?: RsaKeyPair) => void): void;
+  generateKeyPair(options: Record<string, unknown>, callback: (err: Error | null, keypair?: RsaKeyPair) => void): void;
   setPublicKey: (n: BigInteger, e: BigInteger) => RsaPublicKey;
   setPrivateKey: (
     n: BigInteger,
@@ -72,8 +80,8 @@ export type EncryptPrivateKeyInfoOptions = {
 export type CertkitPkcs12Namespace = {
   pkcs12FromAsn1: (obj: Asn1Object, strict?: boolean | string, password?: string) => Pkcs12Pfx;
   toPkcs12Asn1: (
-    key: RsaPrivateKey,
-    cert: X509Certificate | X509Certificate[] | string | string[],
+    key: RsaPrivateKey | null,
+    cert: X509Certificate | X509Certificate[] | string | string[] | null,
     password: string | null,
     options?: Pkcs12CreateOptions
   ) => Asn1Object;

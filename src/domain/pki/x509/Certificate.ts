@@ -403,6 +403,7 @@ export class Certificate {
         if (md !== null) {
           rval = verifySignature({
             certificate: cert,
+            subject: child,
             md: md,
             signature: child.signature
           });
@@ -550,6 +551,9 @@ export class Certificate {
         capture.certinfoSignatureParams,
         false
       );
+      if (cert.signatureOid !== cert.siginfo.algorithmOid) {
+        throw new Error('Certificate signature algorithm mismatch between TBSCertificate and outer signature.');
+      }
       cert.signature = capture.certSignature;
 
       const validity = [];

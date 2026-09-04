@@ -44,7 +44,7 @@ export function assembleOids(certkit: MutableCertkit): void {
   certkit.pki = certkit.pki || {};
   const oids = OidRegistry.createCertkitNamespace();
   certkit.pki.oids = oids;
-  certkit.oids = certkit.oids || oids;
+  certkit.oids = oids;
 }
 
 export function assemblePkcs7Asn1(certkit: MutableCertkit): void {

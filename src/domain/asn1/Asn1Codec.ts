@@ -251,13 +251,16 @@ export class Asn1Codec {
    *
    * @return the a copy of the asn1 object.
    */
-  static copy(obj: any, options?: { excludeBitStringContents?: boolean }): any {
+  static copy(obj: any, options?: { excludeBitStringContents?: boolean }, depth = 0): any {
+    if (depth >= Asn1Codec.maxDepth) {
+      throw new Error('ASN.1 copy error: Max depth exceeded.');
+    }
     let copy: any;
 
     if (isArray(obj)) {
       copy = [];
       for (let i = 0; i < obj.length; ++i) {
-        copy.push(Asn1Codec.copy(obj[i], options));
+        copy.push(Asn1Codec.copy(obj[i], options, depth + 1));
       }
       return copy;
     }
@@ -272,7 +275,7 @@ export class Asn1Codec {
       type: obj.type,
       constructed: obj.constructed,
       composed: obj.composed,
-      value: Asn1Codec.copy(obj.value, options)
+      value: Asn1Codec.copy(obj.value, options, depth + 1)
     };
     if (options && !options.excludeBitStringContents) {
       // TODO: copy byte buffer if it's a buffer not a string
@@ -394,6 +397,7 @@ export class Asn1Codec {
     if (typeof bytes === 'string') {
       bytes = new ByteStringBuffer(bytes);
     }
+    bytes.strictReads = true;
 
     const byteCount = bytes.length();
     const value = fromDerInternal(
@@ -413,10 +417,14 @@ export class Asn1Codec {
       error.remaining = bytes.length();
       throw error;
     }
+    bytes.compact();
     return value;
   }
 
-  static toDer(obj: any) {
+  static toDer(obj: any, depth = 0) {
+    if (depth >= Asn1Codec.maxDepth) {
+      throw new Error('ASN.1 serialization error: Max depth exceeded.');
+    }
     const bytes = new ByteStringBuffer();
 
     // build the first byte
@@ -450,7 +458,7 @@ export class Asn1Codec {
       // add all of the child DER bytes together
       for (let i = 0; i < obj.value.length; ++i) {
         if (obj.value[i] !== undefined) {
-          value.putBuffer(Asn1Codec.toDer(obj.value[i]));
+          value.putBuffer(Asn1Codec.toDer(obj.value[i], depth + 1));
         }
       }
     } else {
@@ -572,7 +580,7 @@ export class Asn1Codec {
    * @return the OID dot-separated string.
    */
   static derToOid(bytes: string | ByteStringBuffer) {
-    let oid;
+    const parts: string[] = [];
 
     // wrap in buffer if needed
     if (typeof bytes === 'string') {
@@ -581,7 +589,7 @@ export class Asn1Codec {
 
     // first byte is 40 * value1 + value2
     let b = bytes.getByte();
-    oid = Math.floor(b / 40) + '.' + (b % 40);
+    parts.push(String(Math.floor(b / 40)), String(b % 40));
 
     // other bytes are each value in base 128 with 8th bit set except for
     // the last byte for each value
@@ -599,12 +607,12 @@ export class Asn1Codec {
         value += b & 0x7f;
       } else {
         // last byte
-        oid += '.' + (value + b);
+        parts.push(String(value + b));
         value = 0;
       }
     }
 
-    return oid;
+    return parts.join('.');
   }
 
   /**
@@ -927,7 +935,13 @@ export class Asn1Codec {
    *
    * @return true on success, false on failure.
    */
-  static validate(obj: any, v: Asn1Validator, capture?: Record<string, unknown>, errors?: any[]) {
+  static validate(obj: any, v: Asn1Validator, capture?: Record<string, unknown>, errors?: any[], depth = 0) {
+    if (depth >= Asn1Codec.maxDepth) {
+      if (errors) {
+        errors.push('ASN.1 validation error: Max depth exceeded.');
+      }
+      return false;
+    }
     let rval = false;
 
     // ensure tag class and type are the same if specified
@@ -1004,7 +1018,7 @@ export class Asn1Codec {
             }
 
             // Tags are compatible (or schema did not declare tags) - dive into recursive validate.
-            const childRval = Asn1Codec.validate(objChild, schemaItem, capture, errors);
+            const childRval = Asn1Codec.validate(objChild, schemaItem, capture, errors, depth + 1);
             if (childRval) {
               // consume this child
               ++j;

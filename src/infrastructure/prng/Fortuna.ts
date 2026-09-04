@@ -228,22 +228,7 @@ export class Fortuna {
       }
 
       if (b.length() < needed) {
-        let hi: number, lo: number, next: number;
-        let seed = Math.floor(Math.random() * 0x010000);
-        while (b.length() < needed) {
-          lo = 16807 * (seed & 0xffff);
-          hi = 16807 * (seed >> 16);
-          lo += (hi & 0x7fff) << 16;
-          lo += hi >> 15;
-          lo = (lo & 0x7fffffff) + (lo >> 31);
-          seed = lo & 0xffffffff;
-
-          for (let i = 0; i < 3; ++i) {
-            next = seed >>> (i << 3);
-            next ^= Math.floor(Math.random() * 0x0100);
-            b.putByte(next & 0xff);
-          }
-        }
+        throw new Error('Unable to collect sufficient entropy for PRNG seed.');
       }
 
       return b.getBytes(needed);
@@ -275,7 +260,7 @@ export class Fortuna {
     ctx.collect = function (bytes: string) {
       const count = bytes.length;
       for (let i = 0; i < count; ++i) {
-        ctx.pools[ctx.pool]!.update(bytes.substr(i, 1));
+        ctx.pools[ctx.pool]!.update(bytes.charAt(i));
         ctx.pool = ctx.pool === 31 ? 0 : ctx.pool + 1;
       }
     };

@@ -15,6 +15,7 @@ export type X509SignatureHelpers = {
   createSignatureDigest: (options: { signatureOid: string; type: string }) => MessageDigest;
   verifySignature: (options: {
     certificate: X509Certificate | X509CertificationRequest;
+    subject?: X509Certificate | X509CertificationRequest;
     md: MessageDigest;
     signature: string | null;
   }) => boolean;
@@ -143,49 +144,68 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
    *   signature the signature
    * @return a created md instance. throws if unknown oid.
    */
-  const verifySignature = function (options: any) {
-    const cert = options.certificate;
+  const verifySignature = function (options: {
+    certificate: X509Certificate | X509CertificationRequest;
+    subject?: X509Certificate | X509CertificationRequest;
+    md: MessageDigest;
+    signature: string | null;
+  }) {
+    const issuer = options.certificate;
+    const subject = (options.subject || options.certificate) as X509Certificate;
     let scheme;
 
-    switch (cert.signatureOid) {
+    switch (subject.signatureOid) {
       case oids.sha1WithRSAEncryption:
       case oids.sha1WithRSASignature:
         break;
       case oids['RSASSA-PSS']: {
         let hash, mgfScheme;
+        const signatureParameters = subject.signatureParameters as unknown as {
+          mgf: { hash: { algorithmOid: string }; algorithmOid: string };
+          hash: { algorithmOid: string };
+          saltLength: number;
+        };
 
-        hash = oids[cert.signatureParameters.mgf.hash.algorithmOid];
+        hash = oids[signatureParameters.mgf.hash.algorithmOid];
         if (hash === undefined || md[hash] === undefined) {
           const error = new Error('Unsupported MGF hash function.') as DerError;
-          error.oid = cert.signatureParameters.mgf.hash.algorithmOid;
+          error.oid = signatureParameters.mgf.hash.algorithmOid;
           error.name = hash;
           throw error;
         }
 
-        mgfScheme = oids[cert.signatureParameters.mgf.algorithmOid];
+        mgfScheme = oids[signatureParameters.mgf.algorithmOid];
         if (mgfScheme === undefined || mgf[mgfScheme] === undefined) {
           const error = new Error('Unsupported MGF function.') as DerError;
-          error.oid = cert.signatureParameters.mgf.algorithmOid;
+          error.oid = signatureParameters.mgf.algorithmOid;
           error.name = mgfScheme;
           throw error;
         }
 
         mgfScheme = mgf[mgfScheme].create(md[hash].create());
 
-        hash = oids[cert.signatureParameters.hash.algorithmOid];
+        hash = oids[signatureParameters.hash.algorithmOid];
         if (hash === undefined || md[hash] === undefined) {
           const error = new Error('Unsupported RSASSA-PSS hash function.') as DerError;
-          error.oid = cert.signatureParameters.hash.algorithmOid;
+          error.oid = signatureParameters.hash.algorithmOid;
           error.name = hash;
           throw error;
         }
 
-        scheme = pss.create(md[hash].create(), mgfScheme, cert.signatureParameters.saltLength);
+        scheme = pss.create(md[hash].create(), mgfScheme, signatureParameters.saltLength);
         break;
       }
     }
 
-    return cert.publicKey.verify(options.md.digest().getBytes(), options.signature, scheme);
+    if (!issuer.publicKey) {
+      throw new Error('Certificate is missing a public key.');
+    }
+
+    return issuer.publicKey.verify(
+      options.md.digest().getBytes() as unknown as Parameters<typeof issuer.publicKey.verify>[0],
+      options.signature as string,
+      scheme
+    );
   };
 
   /**

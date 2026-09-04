@@ -165,6 +165,15 @@ export class CertificateVerify {
               error: pki.certificateError.bad_certificate
             };
           }
+          if (error === null && bcExt !== null && bcExt.cA) {
+            if (keyUsageExt === null || !keyUsageExt.keyCertSign) {
+              error = {
+                message:
+                  'Certificate basicConstraints indicates CA but keyUsage extension is missing or lacks keyCertSign.',
+                error: pki.certificateError.bad_certificate
+              };
+            }
+          }
           if (error === null && keyUsageExt !== null && bcExt !== null && 'pathLenConstraint' in bcExt) {
             const pathLen = depth - 1;
             if (pathLen > (bcExt.pathLenConstraint as number)) {

@@ -14,11 +14,14 @@ export class ByteStringBuffer {
   data: string;
   read: number;
   _constructedStringLength: number;
+  /** When true, reads past the end throw instead of returning stale values. */
+  strictReads: boolean;
 
   constructor(b?: ByteStringBufferInput | null) {
     this.data = '';
     this.read = 0;
     this._constructedStringLength = 0;
+    this.strictReads = false;
 
     if (typeof b === 'string') {
       this.data = b;
@@ -151,16 +154,25 @@ export class ByteStringBuffer {
   }
 
   getByte(): number {
+    if (this.strictReads && this.read >= this.data.length) {
+      throw new RangeError('ByteStringBuffer read past end of buffer.');
+    }
     return this.data.charCodeAt(this.read++);
   }
 
   getInt16(): number {
+    if (this.strictReads && this.read + 2 > this.data.length) {
+      throw new RangeError('ByteStringBuffer read past end of buffer.');
+    }
     const rval = (this.data.charCodeAt(this.read) << 8) ^ this.data.charCodeAt(this.read + 1);
     this.read += 2;
     return rval;
   }
 
   getInt24(): number {
+    if (this.strictReads && this.read + 3 > this.data.length) {
+      throw new RangeError('ByteStringBuffer read past end of buffer.');
+    }
     const rval =
       (this.data.charCodeAt(this.read) << 16) ^
       (this.data.charCodeAt(this.read + 1) << 8) ^
@@ -170,6 +182,9 @@ export class ByteStringBuffer {
   }
 
   getInt32(): number {
+    if (this.strictReads && this.read + 4 > this.data.length) {
+      throw new RangeError('ByteStringBuffer read past end of buffer.');
+    }
     const rval =
       (this.data.charCodeAt(this.read) << 24) ^
       (this.data.charCodeAt(this.read + 1) << 16) ^
@@ -180,12 +195,18 @@ export class ByteStringBuffer {
   }
 
   getInt16Le(): number {
+    if (this.strictReads && this.read + 2 > this.data.length) {
+      throw new RangeError('ByteStringBuffer read past end of buffer.');
+    }
     const rval = this.data.charCodeAt(this.read) ^ (this.data.charCodeAt(this.read + 1) << 8);
     this.read += 2;
     return rval;
   }
 
   getInt24Le(): number {
+    if (this.strictReads && this.read + 3 > this.data.length) {
+      throw new RangeError('ByteStringBuffer read past end of buffer.');
+    }
     const rval =
       this.data.charCodeAt(this.read) ^
       (this.data.charCodeAt(this.read + 1) << 8) ^
@@ -195,6 +216,9 @@ export class ByteStringBuffer {
   }
 
   getInt32Le(): number {
+    if (this.strictReads && this.read + 4 > this.data.length) {
+      throw new RangeError('ByteStringBuffer read past end of buffer.');
+    }
     const rval =
       this.data.charCodeAt(this.read) ^
       (this.data.charCodeAt(this.read + 1) << 8) ^
@@ -206,6 +230,10 @@ export class ByteStringBuffer {
 
   getInt(n: number): number {
     checkBitsParam(n);
+    const byteCount = n >> 3;
+    if (this.strictReads && this.read + byteCount > this.data.length) {
+      throw new RangeError('ByteStringBuffer read past end of buffer.');
+    }
     let rval = 0;
     do {
       rval = (rval << 8) + this.data.charCodeAt(this.read++);
@@ -243,6 +271,9 @@ export class ByteStringBuffer {
   }
 
   at(i: number): number {
+    if (this.read + i >= this.data.length || this.read + i < 0) {
+      throw new RangeError('ByteStringBuffer read past end of buffer.');
+    }
     return this.data.charCodeAt(this.read + i);
   }
 

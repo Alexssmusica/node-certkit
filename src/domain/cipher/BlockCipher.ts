@@ -4,6 +4,7 @@ export type CipherAlgorithm = {
   mode: {
     blockSize: number;
     name?: string;
+    tag?: ByteStringBuffer;
     start: (options: Record<string, unknown>) => void;
     encrypt: (input: ByteStringBuffer, output: ByteStringBuffer, finish: boolean) => boolean | void;
     decrypt: (input: ByteStringBuffer, output: ByteStringBuffer, finish: boolean) => boolean | void;

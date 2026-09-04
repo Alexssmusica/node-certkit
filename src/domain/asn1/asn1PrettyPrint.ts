@@ -11,9 +11,12 @@ export function setPrettyPrintPkiOids(oids?: Record<string, string>): void {
 }
 
 export function prettyPrintAsn1(obj: any, level?: number, indentation?: number): string {
-  let rval = '';
-
   const indentLevel = level || 0;
+  if (indentLevel >= Asn1Codec.maxDepth) {
+    throw new Error('ASN.1 pretty print error: Max depth exceeded.');
+  }
+
+  let rval = '';
   const indentSize = indentation || 2;
 
   // start new line for deep levels

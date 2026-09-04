@@ -11,9 +11,20 @@ export type DnAttribute = {
   extensions?: X509Extension[];
 };
 
+/** Partial DN attribute accepted by setters; missing fields are filled by fillMissingFields. */
+export type DnAttributeInput = {
+  type?: string;
+  value?: string;
+  valueTagClass?: number;
+  name?: string;
+  shortName?: string;
+  valueConstructed?: boolean;
+  extensions?: X509Extension[];
+};
+
 export type DistinguishedName = {
   getField: (sn: string | { type?: string; name?: string; shortName?: string }) => DnAttribute | null;
-  addField: (attr: DnAttribute) => void;
+  addField: (attr: DnAttributeInput) => void;
   attributes: DnAttribute[];
   hash: string | null;
   uniqueId?: string;
@@ -89,8 +100,8 @@ export type X509Certificate = {
   md: MessageDigest | null;
   tbsCertificate?: Asn1Object;
   signatureParameters?: SignatureParameters;
-  setSubject: (attrs: DnAttribute[], uniqueId?: string) => void;
-  setIssuer: (attrs: DnAttribute[], uniqueId?: string) => void;
+  setSubject: (attrs: DnAttributeInput[], uniqueId?: string) => void;
+  setIssuer: (attrs: DnAttributeInput[], uniqueId?: string) => void;
   setExtensions: (exts: X509Extension[]) => void;
   getExtension: (options: string | { id?: string; name?: string }) => X509Extension | null;
   sign: (key: PrivateKey, md?: MessageDigest) => void;
@@ -110,12 +121,12 @@ export type X509CertificationRequest = {
   publicKey: PublicKey | null;
   attributes: DnAttribute[];
   getAttribute: (sn: string | { type?: string; name?: string; shortName?: string }) => DnAttribute | null;
-  addAttribute: (attr: DnAttribute) => void;
+  addAttribute: (attr: DnAttributeInput) => void;
   md: MessageDigest | null;
   certificationRequestInfo?: Asn1Object;
   signatureParameters?: SignatureParameters;
-  setSubject: (attrs: DnAttribute[]) => void;
-  setAttributes: (attrs: DnAttribute[]) => void;
+  setSubject: (attrs: DnAttributeInput[]) => void;
+  setAttributes: (attrs: DnAttributeInput[]) => void;
   sign: (key: PrivateKey, md?: MessageDigest) => void;
   verify: () => boolean;
 };
@@ -192,12 +203,13 @@ export type X509Helpers = {
   createSignatureDigest: (options: { signatureOid: string; type: string }) => MessageDigest;
   verifySignature: (options: {
     certificate: X509Certificate | X509CertificationRequest;
+    subject?: X509Certificate | X509CertificationRequest;
     md: MessageDigest;
     signature: string | null;
   }) => boolean;
   dnToAsn1: (obj: { attributes: DnAttribute[] }) => Asn1Object;
   getAttributesAsJson: (attrs: DnAttribute[]) => Record<string, unknown>;
-  fillMissingFields: (attrs: DnAttribute[]) => void;
+  fillMissingFields: (attrs: DnAttributeInput[]) => void;
   fillMissingExtensionFields: (e: X509Extension, options?: { cert?: X509Certificate }) => void;
   signatureParametersToAsn1: (oid: string, params: SignatureParameters) => Asn1Object;
   CRIAttributesToAsn1: (csr: X509CertificationRequest) => Asn1Object;
