@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/Alexssmusica/node-certkit/compare/v1.0.1...v1.0.2) (2026-09-04)
+
+
+### Bug Fixes
+
+* ajustes no types ([3a75241](https://github.com/Alexssmusica/node-certkit/commit/3a75241f6ae49f1b46c9e906c558a5c1725d7064))
+
 ## [1.0.1](https://github.com/Alexssmusica/node-certkit/compare/v1.0.0...v1.0.1) (2026-09-04)
 
 
