@@ -9,17 +9,17 @@ export type PrngPlugin = {
   md: {
     create: () => MessageDigestInstance;
   };
-  cipher: (key: unknown, seed: unknown) => string;
-  increment: (seed: unknown) => unknown;
-  formatKey: (keyBytes: string) => unknown;
-  formatSeed: (seedBytes: string) => unknown;
+  cipher: (key: number[], seed: number[]) => string;
+  increment: (seed: number[]) => number[];
+  formatKey: (keyBytes: string) => number[];
+  formatSeed: (seedBytes: string) => number[];
 };
 
 export type PrngContext = {
   plugin: PrngPlugin;
-  key: unknown;
-  seed: unknown;
-  time: unknown;
+  key: number[] | null;
+  seed: number[] | null;
+  time: null;
   reseeds: number;
   generated: number;
   keyBytes: string;

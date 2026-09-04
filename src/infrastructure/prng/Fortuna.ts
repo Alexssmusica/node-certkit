@@ -66,12 +66,14 @@ export class Fortuna {
           });
         }
 
-        const bytes = cipher(ctx.key, ctx.seed);
+        const key = ctx.key;
+        const seed = ctx.seed!;
+        const bytes = cipher(key, seed);
         ctx.generated += bytes.length;
         b.putBytes(bytes);
 
-        ctx.key = formatKey(cipher(ctx.key, increment(ctx.seed)));
-        ctx.seed = formatSeed(cipher(ctx.key, ctx.seed));
+        ctx.key = formatKey(cipher(key, increment(seed)));
+        ctx.seed = formatSeed(cipher(ctx.key, ctx.seed!));
 
         EnvInfo.setImmediate(() => generate());
       }
@@ -95,12 +97,14 @@ export class Fortuna {
           _reseedSync();
         }
 
-        const bytes = cipher(ctx.key, ctx.seed);
+        const key = ctx.key!;
+        const seed = ctx.seed!;
+        const bytes = cipher(key, seed);
         ctx.generated += bytes.length;
         b.putBytes(bytes);
 
-        ctx.key = formatKey(cipher(ctx.key, increment(ctx.seed)));
-        ctx.seed = formatSeed(cipher(ctx.key, ctx.seed));
+        ctx.key = formatKey(cipher(key, increment(seed)));
+        ctx.seed = formatSeed(cipher(ctx.key, ctx.seed!));
       }
 
       return b.getBytes(count);

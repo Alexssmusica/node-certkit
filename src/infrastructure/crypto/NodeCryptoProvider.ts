@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import type { NativeCryptoProvider } from '../../domain/ports/index.js';
+import type { NativeCryptoProvider, RsaKeyPairGenerateOptions } from '../../domain/ports/index.js';
 
 export class NodeCryptoProvider implements NativeCryptoProvider {
   readonly available = true;
@@ -49,15 +49,18 @@ export class NodeCryptoProvider implements NativeCryptoProvider {
     )(password, salt, iterations, keylen, callback);
   }
 
-  generateKeyPairSync(_type: string, options: Record<string, unknown>): { publicKey: string; privateKey: string } {
-    return crypto.generateKeyPairSync('rsa', options as unknown as crypto.RSAKeyPairOptions<'pem', 'pem'>);
+  generateKeyPairSync(_type: string, options: RsaKeyPairGenerateOptions): { publicKey: string; privateKey: string } {
+    return crypto.generateKeyPairSync('rsa', options as crypto.RSAKeyPairOptions<'pem', 'pem'>) as {
+      publicKey: string;
+      privateKey: string;
+    };
   }
 
   generateKeyPair(
     _type: string,
-    options: Record<string, unknown>,
+    options: RsaKeyPairGenerateOptions,
     callback: (err: Error | null, publicKey: string, privateKey: string) => void
   ): void {
-    crypto.generateKeyPair('rsa', options as unknown as crypto.RSAKeyPairOptions<'pem', 'pem'>, callback);
+    crypto.generateKeyPair('rsa', options as crypto.RSAKeyPairOptions<'pem', 'pem'>, callback);
   }
 }

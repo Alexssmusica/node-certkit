@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-this-alias -- legacy node-forge RSA key POJO pattern */
-import type { Asn1Object, Asn1Validator } from '../asn1/Asn1Types.js';
+import type { Asn1Object, Asn1Validator, Asn1Value } from '../asn1/Asn1Types.js';
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { BigInteger } from '../math/BigInteger.js';
 import type { BigIntegerRandomSource } from '../math/BigInteger.js';
@@ -17,7 +17,7 @@ import type {
 } from './RsaTypes.js';
 import { Pkcs1Codec } from './Pkcs1Codec.js';
 import { PemCodec } from './PemCodec.js';
-import type { CertkitRsaNamespace } from './CertkitPkiTypes.js';
+import type { CertkitPki, CertkitRsaNamespace } from './CertkitPkiTypes.js';
 
 /** @internal Options that weaken RSA verification; not part of the public API. */
 type RsaVerifyInternalOptions = {
@@ -94,8 +94,8 @@ export class RsaService {
     this.#pemKeyCodec = codec;
   }
 
-  #createAsn1(tagClass: number, type: number, constructed: boolean, value: unknown): Asn1Object {
-    return this.#asn1.create(tagClass, type, constructed, value, null) as Asn1Object;
+  #createAsn1(tagClass: number, type: number, constructed: boolean, value: Asn1Value): Asn1Object {
+    return this.#asn1.create(tagClass, type, constructed, value, null);
   }
 
   createDefaultPemKeyCodec(): PemKeyCodec {
@@ -440,16 +440,16 @@ export class RsaService {
             d = service.#decodePkcs1v15(d, key, true, undefined, verifyOptions);
             const obj = service.#asn1.fromDer(d, { parseAllBytes: verifyOptions._parseAllDigestBytes });
             const capture: Record<string, string> = {};
-            const errors: unknown[] = [];
+            const errors: string[] = [];
             if (
               !service.#asn1.validate(obj, service.digestInfoValidator, capture, errors) ||
               !Array.isArray((obj as Asn1Object).value) ||
-              ((obj as Asn1Object).value as unknown[]).length !== 2
+              ((obj as Asn1Object).value as Asn1Object[]).length !== 2
             ) {
               const error = new Error(
                 'ASN.1 object does not contain a valid RSASSA-PKCS1-v1_5 DigestInfo value.'
               ) as Error & {
-                errors?: unknown[];
+                errors?: string[];
               };
               error.errors = errors;
               throw error;
@@ -785,8 +785,8 @@ export class RsaService {
           return nativeCrypto.generateKeyPair(
             'rsa',
             {
-              modulusLength: bits,
-              publicExponent: e,
+              modulusLength: bits as number,
+              publicExponent: e as number,
               publicKeyEncoding: { type: 'spki', format: 'pem' },
               privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
             },
@@ -795,8 +795,8 @@ export class RsaService {
                 return (callback as (err: Error | null) => void)(err);
               }
               (callback as (err: Error | null, keypair?: RsaKeyPair) => void)(null, {
-                privateKey: pemCodec.privateKeyFromPem(priv) as RsaPrivateKey,
-                publicKey: pemCodec.publicKeyFromPem(pub) as RsaPublicKey
+                privateKey: pemCodec.privateKeyFromPem(priv),
+                publicKey: pemCodec.publicKeyFromPem(pub)
               });
             }
           );
@@ -804,14 +804,14 @@ export class RsaService {
       } else {
         if (nativeCrypto && typeof nativeCrypto.generateKeyPairSync === 'function') {
           const keypair = nativeCrypto.generateKeyPairSync('rsa', {
-            modulusLength: bits,
-            publicExponent: e,
+            modulusLength: bits as number,
+            publicExponent: e as number,
             publicKeyEncoding: { type: 'spki', format: 'pem' },
             privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
           });
           return {
-            privateKey: pemCodec.privateKeyFromPem(keypair.privateKey) as RsaPrivateKey,
-            publicKey: pemCodec.publicKeyFromPem(keypair.publicKey) as RsaPublicKey
+            privateKey: pemCodec.privateKeyFromPem(keypair.privateKey),
+            publicKey: pemCodec.publicKeyFromPem(keypair.publicKey)
           };
         }
       }
@@ -955,7 +955,7 @@ export class RsaService {
   privateKeyFromAsn1(obj: Asn1Object): RsaPrivateKey {
     const asn1 = this.#asn1;
     let capture: Record<string, string> = {};
-    let errors: unknown[] = [];
+    let errors: string[] = [];
     if (asn1.validate(obj, this.privateKeyValidator, capture, errors)) {
       obj = asn1.fromDer(new ByteStringBuffer(capture.privateKey!), {}) as Asn1Object;
     }
@@ -964,7 +964,7 @@ export class RsaService {
     errors = [];
     if (!asn1.validate(obj, this.rsaPrivateKeyValidator, capture, errors)) {
       const error = new Error('Cannot read private key. ASN.1 object does not contain an RSAPrivateKey.') as Error & {
-        errors?: unknown[];
+        errors?: string[];
       };
       error.errors = errors;
       throw error;
@@ -1000,7 +1000,7 @@ export class RsaService {
   publicKeyFromAsn1(obj: Asn1Object): RsaPublicKey {
     const asn1 = this.#asn1;
     const capture: Record<string, unknown> = {};
-    const errors: unknown[] = [];
+    const errors: string[] = [];
     if (asn1.validate(obj, this.publicKeyValidator, capture, errors)) {
       const oid = asn1.derToOid(capture.publicKeyOid as string);
       if (oid !== this.#oids.rsaEncryption) {
@@ -1014,7 +1014,7 @@ export class RsaService {
     const cap: Record<string, string> = {};
     if (!asn1.validate(obj, this.rsaPublicKeyValidator, cap, errors)) {
       const error = new Error('Cannot read public key. ASN.1 object does not contain an RSAPublicKey.') as Error & {
-        errors?: unknown[];
+        errors?: string[];
       };
       error.errors = errors;
       throw error;
@@ -1065,11 +1065,11 @@ export class RsaService {
     return rsa as CertkitRsaNamespace;
   }
 
-  attachToPki(pki: Record<string, unknown>): void {
+  attachToPki(pki: Partial<CertkitPki>): void {
     const rsa = this.createCertkitNamespace();
     pki.rsa = rsa;
     pki.setRsaPublicKey = this.setPublicKey.bind(this);
-    pki.setRsaPrivateKey = this.setPrivateKey.bind(this);
+    pki.setRsaPrivateKey = this.setPrivateKey.bind(this) as CertkitPki['setRsaPrivateKey'];
     pki.wrapRsaPrivateKey = this.wrapRsaPrivateKey.bind(this);
     pki.privateKeyFromAsn1 = this.privateKeyFromAsn1.bind(this);
     pki.privateKeyToAsn1 = this.privateKeyToRSAPrivateKey.bind(this);

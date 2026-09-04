@@ -1,4 +1,6 @@
+import type { BigInteger } from '../../domain/math/BigInteger.js';
 import { PrimeService } from '../../domain/prime/PrimeService.js';
+import type { PrimeGenerateOptions } from '../../domain/prime/PrimeTypes.js';
 import type { PrimeGenerator } from '../../domain/ports/index.js';
 import { NodeRandomSource } from '../random/NodeRandomSource.js';
 import { NodeCryptoProvider } from '../crypto/NodeCryptoProvider.js';
@@ -15,10 +17,10 @@ export class NodePrimeGenerator implements PrimeGenerator {
 
   generateProbablePrime(
     bits: number,
-    options: Record<string, unknown>,
-    callback: (err: Error | null, num?: unknown) => void
+    options: PrimeGenerateOptions,
+    callback: (err: Error | null, num?: BigInteger) => void
   ): void {
-    const opts = { ...options };
+    const opts: PrimeGenerateOptions = { ...options };
     if (!opts.prng) {
       opts.prng = this.#randomSource;
     }

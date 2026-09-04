@@ -1,3 +1,7 @@
+import type { BigInteger } from '../math/BigInteger.js';
+import type { PrimeGenerateOptions } from '../prime/PrimeTypes.js';
+import type { RsaPrivateKey, RsaPublicKey } from '../pki/RsaTypes.js';
+
 /**
  * Port for cryptographically secure random bytes.
  */
@@ -12,10 +16,27 @@ export interface RandomSource {
 export interface PrimeGenerator {
   generateProbablePrime(
     bits: number,
-    options: Record<string, unknown>,
-    callback: (err: Error | null, num?: unknown) => void
+    options: PrimeGenerateOptions,
+    callback: (err: Error | null, num?: BigInteger) => void
   ): void;
 }
+
+export type RsaPublicKeyEncoding = {
+  type: 'spki';
+  format: 'pem';
+};
+
+export type RsaPrivateKeyEncoding = {
+  type: 'pkcs8';
+  format: 'pem';
+};
+
+export type RsaKeyPairGenerateOptions = {
+  modulusLength: number;
+  publicExponent: number;
+  publicKeyEncoding: RsaPublicKeyEncoding;
+  privateKeyEncoding: RsaPrivateKeyEncoding;
+};
 
 /**
  * Port for Node.js native crypto fast paths.
@@ -35,10 +56,10 @@ export interface NativeCryptoProvider {
     digest: string,
     callback: (err: Error | null, derivedKey: Buffer) => void
   ): void;
-  generateKeyPairSync(type: string, options: Record<string, unknown>): { publicKey: string; privateKey: string };
+  generateKeyPairSync(type: string, options: RsaKeyPairGenerateOptions): { publicKey: string; privateKey: string };
   generateKeyPair(
     type: string,
-    options: Record<string, unknown>,
+    options: RsaKeyPairGenerateOptions,
     callback: (err: Error | null, publicKey: string, privateKey: string) => void
   ): void;
 }
@@ -54,6 +75,6 @@ export interface Clock {
  * Port for PEM-encoded RSA key parsing (breaks rsa↔pki cycle).
  */
 export interface PemKeyCodec {
-  privateKeyFromPem(pem: string): unknown;
-  publicKeyFromPem(pem: string): unknown;
+  privateKeyFromPem(pem: string): RsaPrivateKey;
+  publicKeyFromPem(pem: string): RsaPublicKey;
 }

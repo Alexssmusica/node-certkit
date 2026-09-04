@@ -46,7 +46,7 @@ export class FortunaRandom {
         const tmp = UtilNamespace.createBuffer(seed);
         return [tmp.getInt32(), tmp.getInt32(), tmp.getInt32(), tmp.getInt32()];
       },
-      cipher(key: unknown, seed: unknown) {
+      cipher(key: number[], seed: number[]) {
         deps.aes._updateBlock(key, seed, prngAesOutput, false);
         prngAesBuffer.putInt32(prngAesOutput[0]!);
         prngAesBuffer.putInt32(prngAesOutput[1]!);
@@ -54,9 +54,8 @@ export class FortunaRandom {
         prngAesBuffer.putInt32(prngAesOutput[3]!);
         return prngAesBuffer.getBytes();
       },
-      increment(seed: unknown) {
-        const s = seed as number[];
-        ++s[3]!;
+      increment(seed: number[]) {
+        ++seed[3]!;
         return seed;
       },
       md: deps.sha256

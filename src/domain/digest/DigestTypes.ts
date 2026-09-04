@@ -54,8 +54,8 @@ export interface Sha512Digest {
 
 export interface BlockDigest {
   blockLength: number;
-  start: () => unknown;
-  update: (msg: string, encoding?: string) => unknown;
+  start: () => BlockDigest;
+  update: (msg: string, encoding?: string) => BlockDigest;
   digest: () => ByteStringBuffer;
 }
 
