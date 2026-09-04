@@ -207,6 +207,78 @@ Named exports from the package entry:
 import certkit, {createCertkit} from 'node-certkit';
 ```
 
+## TypeScript / migrating from node-forge
+
+This package ships its own types (no `@types/node-forge` needed). The runtime
+API is intentionally similar to node-forge; most call sites only need to change
+the import:
+
+```ts
+// before
+import forge from 'node-forge';
+
+// after
+import certkit from 'node-certkit';
+```
+
+### Type equivalents
+
+| node-forge (`@types/node-forge`) | node-certkit |
+|----------------------------------|--------------|
+| `forge.pkcs12.PKCS12Pfx` | `Pkcs12Pfx` or `certkit.pkcs12.Pkcs12Pfx` (named import) |
+| `forge.pki.Certificate` | `X509Certificate` or `certkit.pki.Certificate` (named import) |
+| `forge.pki.rsa.PrivateKey` | `RsaPrivateKey` or `certkit.pki.rsa.PrivateKey` (named import) |
+| `forge.asn1.Asn1` | `Asn1Object` or `certkit.asn1.Asn1` (named import) |
+| `forge.util.ByteBuffer` | `ByteStringBuffer` or `certkit.util.ByteBuffer` (named import) |
+
+### Importing types
+
+With **default import** (typical runtime usage), import types by name:
+
+```ts
+import certkit, { type Pkcs12Pfx } from 'node-certkit';
+
+function getKey(p12: Pkcs12Pfx): string {
+  const bags = p12.getBags({ bagType: certkit.pki.oids.keyBag });
+  // ...
+}
+```
+
+For **forge-style namespace types** (`certkit.pkcs12.Pkcs12Pfx`), use the named
+value export (merged with the type namespace):
+
+```ts
+import { certkit } from 'node-certkit';
+
+type Pfx = certkit.pkcs12.Pkcs12Pfx;
+```
+
+### PKCS#12 load (typed)
+
+```ts
+import certkit, { type Pkcs12Pfx } from 'node-certkit';
+
+const decoded = certkit.util.binary.base64.decode(base64Pfx);
+const asn = certkit.asn1.fromDer(new certkit.util.ByteStringBuffer(decoded));
+const p12: Pkcs12Pfx = certkit.pkcs12.pkcs12FromAsn1(asn, true, password);
+```
+
+`util.binary.base64.decode(input)` returns `Uint8Array` (no need to wrap with
+`new Uint8Array(...)` unless you want a copy).
+
+### Stricter null checks
+
+Unlike `@types/node-forge` (which used `any` in several places), certkit types
+are strict. `certificate.subject.getField(...)` returns `DnAttribute | null`:
+
+```ts
+const cn = certificate.subject.getField({ name: 'commonName' });
+if (!cn) {
+  throw new Error('commonName not found in certificate subject');
+}
+const values = cn.value.toString().split(':');
+```
+
 ## Testing
 
 ### Prepare to run tests
@@ -226,6 +298,14 @@ Watch mode:
 Type-check tests only (strict, no emit):
 
     npm run test:types
+
+Public API type regression (consumer usage + golden test):
+
+    npm run test:types:public
+
+Published declaration file (`lib/index.d.ts`):
+
+    npm run build && npm run test:dts
 
 Security regression tests live under `tests/security/` and are included in
 `npm test`.

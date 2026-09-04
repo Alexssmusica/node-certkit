@@ -1,14 +1,18 @@
 import type { Asn1Object, Asn1Validator } from '../asn1/Asn1Types.js';
+import type { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import type { BigInteger } from '../math/BigInteger.js';
+import type { Pkcs12CreateOptions, Pkcs12Pfx } from './Pkcs12Types.js';
 import type { RsaKeyPair, RsaPrivateKey, RsaPublicKey } from './RsaTypes.js';
 import type {
   CertificateErrorMap,
   DnAttribute,
+  MessageDigest,
   VerifyCallback,
   VerifyOptions,
   X509CaStore,
   X509Certificate,
-  X509CertificationRequest
+  X509CertificationRequest,
+  X509Extension
 } from './x509/X509Types.js';
 
 export type CertkitRsaNamespace = {
@@ -49,9 +53,30 @@ export type CertkitPbeNamespace = {
   opensslDeriveBytes: (password: string, salt: unknown, dkLen: number, md?: unknown) => unknown;
 };
 
+export type PublicKeyFingerprintOptions = {
+  md?: MessageDigest;
+  type?: 'RSAPublicKey' | 'SubjectPublicKeyInfo';
+  encoding?: 'hex' | 'binary';
+  delimiter?: string;
+};
+
+export type PublicKeyFingerprint = string | ReturnType<MessageDigest['digest']>;
+
+export type EncryptPrivateKeyInfoOptions = {
+  saltSize?: number;
+  count?: number;
+  algorithm?: string;
+  prfAlgorithm?: string;
+};
+
 export type CertkitPkcs12Namespace = {
-  pkcs12FromAsn1: (obj: unknown, strict?: boolean, password?: string) => unknown;
-  toPkcs12Asn1: (key: unknown, cert: unknown | unknown[], password: string, options?: unknown) => unknown;
+  pkcs12FromAsn1: (obj: Asn1Object, strict?: boolean | string, password?: string) => Pkcs12Pfx;
+  toPkcs12Asn1: (
+    key: RsaPrivateKey,
+    cert: X509Certificate | X509Certificate[] | string | string[],
+    password: string | null,
+    options?: Pkcs12CreateOptions
+  ) => Asn1Object;
   generateKey: CertkitPbeNamespace['generatePkcs12Key'];
 };
 
@@ -62,39 +87,39 @@ export type CertkitPki = {
   pbe: CertkitPbeNamespace;
   setRsaPublicKey: CertkitRsaNamespace['setPublicKey'];
   setRsaPrivateKey: CertkitRsaNamespace['setPrivateKey'];
-  wrapRsaPrivateKey: (key: unknown) => Asn1Object;
-  privateKeyFromAsn1: (obj: unknown) => RsaPrivateKey;
+  wrapRsaPrivateKey: (key: Asn1Object) => Asn1Object;
+  privateKeyFromAsn1: (obj: Asn1Object) => RsaPrivateKey;
   privateKeyToAsn1: (key: RsaPrivateKey) => Asn1Object;
   privateKeyToRSAPrivateKey: (key: RsaPrivateKey) => Asn1Object;
-  publicKeyFromAsn1: (obj: unknown) => RsaPublicKey;
+  publicKeyFromAsn1: (obj: Asn1Object) => RsaPublicKey;
   publicKeyToAsn1: (key: RsaPublicKey) => Asn1Object;
   publicKeyToSubjectPublicKeyInfo: (key: RsaPublicKey) => Asn1Object;
   publicKeyToRSAPublicKey: (key: RsaPublicKey) => Asn1Object;
-  encryptPrivateKeyInfo: (obj: unknown, password: string, options?: unknown) => unknown;
-  decryptPrivateKeyInfo: (obj: unknown, password: string) => unknown;
-  encryptedPrivateKeyToPem: (epki: unknown, maxline?: number) => string;
-  encryptedPrivateKeyFromPem: (pem: string) => unknown;
-  encryptRsaPrivateKey: (rsaKey: RsaPrivateKey, password: string, options?: unknown) => string;
+  encryptPrivateKeyInfo: (obj: Asn1Object, password: string, options?: EncryptPrivateKeyInfoOptions) => Asn1Object;
+  decryptPrivateKeyInfo: (obj: Asn1Object, password: string) => Asn1Object | null;
+  encryptedPrivateKeyToPem: (epki: Asn1Object, maxline?: number) => string;
+  encryptedPrivateKeyFromPem: (pem: string) => Asn1Object;
+  encryptRsaPrivateKey: (rsaKey: RsaPrivateKey, password: string, options?: EncryptPrivateKeyInfoOptions) => string;
   decryptRsaPrivateKey: (pem: string, password: string) => RsaPrivateKey;
   certificateFromPem: (pem: string, computeHash?: boolean, strict?: boolean) => X509Certificate;
   certificateToPem: (cert: X509Certificate, maxline?: number) => string;
   publicKeyFromPem: (pem: string) => RsaPublicKey;
   publicKeyToPem: (key: RsaPublicKey, maxline?: number) => string;
   publicKeyToRSAPublicKeyPem: (key: RsaPublicKey, maxline?: number) => string;
-  getPublicKeyFingerprint: (key: RsaPublicKey, options?: unknown) => unknown;
+  getPublicKeyFingerprint: (key: RsaPublicKey, options?: PublicKeyFingerprintOptions) => PublicKeyFingerprint;
   certificationRequestFromPem: (pem: string, computeHash?: boolean, strict?: boolean) => X509CertificationRequest;
   certificationRequestToPem: (csr: X509CertificationRequest, maxline?: number) => string;
   createCertificate: () => X509Certificate;
-  certificateFromAsn1: (obj: unknown, computeHash?: boolean) => X509Certificate;
-  certificateExtensionsFromAsn1: (exts: unknown) => unknown[];
-  certificateExtensionFromAsn1: (ext: unknown) => unknown;
+  certificateFromAsn1: (obj: Asn1Object, computeHash?: boolean) => X509Certificate;
+  certificateExtensionsFromAsn1: (exts: Asn1Object) => X509Extension[];
+  certificateExtensionFromAsn1: (ext: Asn1Object) => X509Extension;
   getTBSCertificate: (cert: X509Certificate) => Asn1Object;
-  distinguishedNameToAsn1: (dn: unknown) => Asn1Object;
+  distinguishedNameToAsn1: (dn: { attributes: DnAttribute[] }) => Asn1Object;
   certificateToAsn1: (cert: X509Certificate) => Asn1Object;
-  certificateExtensionsToAsn1: (exts: unknown[]) => Asn1Object;
-  certificateExtensionToAsn1: (ext: unknown) => Asn1Object;
+  certificateExtensionsToAsn1: (exts: X509Extension[]) => Asn1Object;
+  certificateExtensionToAsn1: (ext: X509Extension) => Asn1Object;
   certificationRequestToAsn1: (csr: X509CertificationRequest) => Asn1Object;
-  certificationRequestFromAsn1: (obj: unknown, computeHash?: boolean) => X509CertificationRequest;
+  certificationRequestFromAsn1: (obj: Asn1Object, computeHash?: boolean) => X509CertificationRequest;
   createCertificationRequest: () => X509CertificationRequest;
   getCertificationRequestInfo: (csr: X509CertificationRequest) => Asn1Object;
   createCaStore: (certs?: Array<X509Certificate | string>) => X509CaStore;
@@ -104,12 +129,12 @@ export type CertkitPki = {
     chain: X509Certificate[],
     options?: VerifyCallback | VerifyOptions
   ) => boolean;
-  RDNAttributesAsArray: (rdn: unknown, md: unknown) => DnAttribute[];
-  CRIAttributesAsArray: (attributes: unknown) => DnAttribute[];
-  pemToDer: (pem: string) => unknown;
+  RDNAttributesAsArray: (rdn: Asn1Object, md: MessageDigest) => DnAttribute[];
+  CRIAttributesAsArray: (attributes: Asn1Object) => DnAttribute[];
+  pemToDer: (pem: string) => ByteStringBuffer;
   privateKeyFromPem: (pem: string) => RsaPrivateKey;
   privateKeyToPem: (key: RsaPrivateKey, maxline?: number) => string;
-  privateKeyInfoToPem: (keyInfo: unknown, maxline?: number) => string;
+  privateKeyInfoToPem: (keyInfo: Asn1Object, maxline?: number) => string;
 };
 
 export type CertkitPkiPbeMethods = Pick<

@@ -3,6 +3,8 @@ export class RawCodec {
     return String.fromCharCode.apply(null, Array.from(bytes));
   }
 
+  static decode(str: string | Uint8Array): Uint8Array;
+  static decode(str: string | Uint8Array, output: Uint8Array, offset?: number): number;
   static decode(str: string | Uint8Array, output?: Uint8Array, offset?: number): Uint8Array | number {
     let out = output;
     if (!out) {

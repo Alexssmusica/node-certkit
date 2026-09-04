@@ -6,7 +6,7 @@ export class Base58Codec {
     return BaseNCodec.encode(input, BASE58, maxline);
   }
 
-  static decode(input: string, _maxline?: number): Buffer | Uint8Array | undefined {
+  static decode(input: string, _maxline?: number): Uint8Array | undefined {
     return BaseNCodec.decode(input, BASE58);
   }
 }

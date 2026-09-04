@@ -1,4 +1,6 @@
 export class HexCodec {
+  static decode(hex: string): Uint8Array;
+  static decode(hex: string, output: Uint8Array, offset?: number): number;
   static decode(hex: string, output?: Uint8Array, offset?: number): Uint8Array | number {
     let out = output;
     if (!out) {

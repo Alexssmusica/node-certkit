@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "incremental": false
+  },
+  "include": ["tests/types/dts-consumer-usage.ts"],
+  "exclude": ["node_modules"]
+}

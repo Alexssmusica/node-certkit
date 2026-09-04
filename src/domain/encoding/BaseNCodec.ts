@@ -56,7 +56,7 @@ export class BaseNCodec {
     return output;
   }
 
-  static decode(input: string, alphabet: string): Buffer | Uint8Array | undefined {
+  static decode(input: string, alphabet: string): Uint8Array | undefined {
     if (typeof input !== 'string') {
       throw new TypeError('"input" must be a string.');
     }

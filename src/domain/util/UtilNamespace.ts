@@ -15,7 +15,7 @@ type BaseNModule = {
     alphabet: string,
     maxline?: number
   ) => string;
-  decode: (input: string, alphabet: string) => Buffer | Uint8Array | undefined;
+  decode: (input: string, alphabet: string) => Uint8Array | undefined;
 };
 
 /** Flat util namespace shape matching legacy certkit.util API. */

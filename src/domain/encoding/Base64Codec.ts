@@ -79,6 +79,8 @@ export class Base64Codec {
     return output;
   }
 
+  static decode(input: string): Uint8Array;
+  static decode(input: string, output: Uint8Array, offset?: number): number;
   static decode(input: string, output?: Uint8Array, offset?: number): Uint8Array | number {
     let out = output;
     if (!out) {

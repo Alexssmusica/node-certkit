@@ -35,6 +35,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:types": "tsc -p tsconfig.test.json --noEmit",
+    "test:types:public": "tsc -p tsconfig.types.json --noEmit",
+    "test:dts": "tsc -p tsconfig.dts.json --noEmit",
     "test:security": "vitest run tests/security",
     "lint": "eslint src/"
   },
