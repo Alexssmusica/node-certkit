@@ -130,32 +130,6 @@ describe('rsa', function () {
     });
   }
 
-  // check if keygen params use deterministic algorithm
-  // NOTE: needs to match implementation details
-  function isDeterministic(isPrng, isAsync, isPurejs) {
-    // always needs to have a prng
-    if (!isPrng) {
-      return false;
-    }
-    if (UTIL.isNodejs) {
-      // Node versions >= 10.12.0 support native keyPair generation,
-      // which is non-deterministic
-      if (isAsync && !isPurejs && typeof require('crypto').generateKeyPair === 'function') {
-        return false;
-      }
-      if (!isAsync && !isPurejs && typeof require('crypto').generateKeyPairSync === 'function') {
-        return false;
-      }
-    } else {
-      // async browser code has race conditions with multiple workers
-      if (isAsync) {
-        return false;
-      }
-    }
-    // will run deterministic algorithm
-    return true;
-  }
-
   it('should generate 512 bit key pair (sync)', function () {
     _genSync();
   });
@@ -211,10 +185,7 @@ describe('rsa', function () {
     _pairCmp(pair1, pair2);
   });
 
-  it('should generate same 512 bit key pair (prng+sync,prng+sync+purejs)', (ctx) => {
-    if (!isDeterministic(true, false, false) || !isDeterministic(true, false, true)) {
-      ctx.skip();
-    }
+  it('should generate same 512 bit key pair (prng+sync,prng+sync+purejs)', () => {
     var pair1 = _genSync({ samePrng: true });
     // save
     var purejs = CERTKIT.options.usePureJavaScript;
@@ -226,10 +197,7 @@ describe('rsa', function () {
     _pairCmp(pair1, pair2);
   });
 
-  it('should generate same 512 bit key pair ' + '(prng+sync+purejs,prng+sync+purejs)', (ctx) => {
-    if (!isDeterministic(true, false, true) || !isDeterministic(true, false, true)) {
-      ctx.skip();
-    }
+  it('should generate same 512 bit key pair ' + '(prng+sync+purejs,prng+sync+purejs)', () => {
     // save
     var purejs = CERTKIT.options.usePureJavaScript;
     // test pure mode
@@ -241,10 +209,7 @@ describe('rsa', function () {
     _pairCmp(pair1, pair2);
   });
 
-  it('should generate same 512 bit key pair (prng+sync,prng+async)', async (ctx) => {
-    if (!isDeterministic(true, false, false) || !isDeterministic(true, true, false)) {
-      ctx.skip();
-    }
+  it('should generate same 512 bit key pair (prng+sync,prng+async)', async () => {
     var pair1 = _genSync({ samePrng: true });
     await new Promise<void>((resolve, reject) => {
       _genAsync({ samePrng: true }, function (pair2) {
@@ -258,10 +223,7 @@ describe('rsa', function () {
     });
   });
 
-  it('should generate same 512 bit key pair (prng+async,prng+sync)', async (ctx) => {
-    if (!isDeterministic(true, true, false) || !isDeterministic(true, false, false)) {
-      ctx.skip();
-    }
+  it('should generate same 512 bit key pair (prng+async,prng+sync)', async () => {
     await new Promise<void>((resolve, reject) => {
       _genAsync({ samePrng: true }, function (pair1) {
         try {
@@ -275,10 +237,7 @@ describe('rsa', function () {
     });
   });
 
-  it('should generate same 512 bit key pair (prng+async,prng+async)', async (ctx) => {
-    if (!isDeterministic(true, true, false) || !isDeterministic(true, true, false)) {
-      ctx.skip();
-    }
+  it('should generate same 512 bit key pair (prng+async,prng+async)', async () => {
     var pair1;
     var pair2;
     await new Promise<void>((resolve, reject) => {
