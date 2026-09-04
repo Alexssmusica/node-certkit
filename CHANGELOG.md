@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/Alexssmusica/node-certkit/compare/v1.0.2...v1.0.3) (2026-09-04)
+
+
+### Bug Fixes
+
+* erro types ([e0ff460](https://github.com/Alexssmusica/node-certkit/commit/e0ff460602d4b9fcee5cf57e6cdf0386c04df797))
+
 ## [1.0.2](https://github.com/Alexssmusica/node-certkit/compare/v1.0.1...v1.0.2) (2026-09-04)
 
 
