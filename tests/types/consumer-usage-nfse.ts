@@ -15,12 +15,9 @@ function getPrivateKeyNFSe(
   caCertificates: certkit.pki.Certificate[]
 ): CertificateNFSeData {
   const tempPassword = Math.random().toString(36).substring(2);
-  const p12Asn1 = certkit.pkcs12.toPkcs12Asn1(
-    privateKey,
-    [certificate, ...caCertificates],
-    tempPassword,
-    { algorithm: '3des' }
-  );
+  const p12Asn1 = certkit.pkcs12.toPkcs12Asn1(privateKey, [certificate, ...caCertificates], tempPassword, {
+    algorithm: '3des'
+  });
   const p12Der = certkit.asn1.toDer(p12Asn1).getBytes();
   const p12Buffer = Buffer.from(p12Der, 'binary');
   return { p12Buffer, tempPassword };
