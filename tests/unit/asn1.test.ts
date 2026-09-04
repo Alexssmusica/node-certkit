@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import certkit from '../../src/presentation/index.js';
-import type { Asn1Object, Asn1Validator } from '../../src/domain/asn1/Asn1Types.js';
+import type { Asn1Object, Asn1Validator, Asn1Value } from '../../src/domain/asn1/Asn1Types.js';
 const ASN1 = certkit.asn1;
 const UTIL = certkit.util;
 
@@ -440,7 +440,7 @@ describe('asn1', () => {
         if (test.mutate) {
           test.mutate(obj1 as Asn1Object, obj2 as Asn1Object);
         }
-        expect(ASN1.equals(obj1, obj2)).toBe(test.equal);
+        expect(ASN1.equals(obj1 as Asn1Value, obj2 as Asn1Value)).toBe(test.equal);
       });
     });
   })();
@@ -486,7 +486,7 @@ describe('asn1', () => {
       const name = `should check ASN.1 copy: ${test.name || `#${index}`}`;
       it(name, () => {
         const obj = typeof test.obj === 'function' ? test.obj() : test.obj;
-        expect(ASN1.equals(ASN1.copy(obj), obj)).toBe(true);
+        expect(ASN1.equals(ASN1.copy(obj as Asn1Value), obj as Asn1Value)).toBe(true);
       });
     });
   })();
@@ -523,8 +523,8 @@ describe('asn1', () => {
         : function (f: () => void) {
             f();
           };
-      let asn1;
-      let der;
+      let asn1: Asn1Object | undefined;
+      let der: ReturnType<typeof ASN1.toDer> | undefined;
       asn1assert(() => {
         asn1 = ASN1.fromDer(b, {
           strict: strict,
@@ -543,20 +543,20 @@ describe('asn1', () => {
 
       // round-trip(ish) check
       if (!throws) {
-        der = ASN1.toDer(asn1);
+        der = ASN1.toDer(asn1!);
         if (options.roundtrip) {
           // byte comparisons for round-trip testing can fail due to
           // semantically safe changes such as changing the length encoding.
           // test a roundtrip for data where it makes sense.
-          expect(UTIL.bytesToHex(bytes)).toBe(UTIL.bytesToHex(der.bytes()));
+          expect(UTIL.bytesToHex(bytes)).toBe(UTIL.bytesToHex(der!.bytes()));
         }
       }
 
       // validator check
       if (!throws && options.v) {
         const capture = {};
-        const errors: unknown[] = [];
-        const asn1ok = ASN1.validate(asn1, options.v, capture, errors);
+        const errors: string[] = [];
+        const asn1ok = ASN1.validate(asn1!, options.v, capture, errors);
         expect(errors).toEqual([]);
         if (options.captured) {
           expect(capture).toEqual(options.captured);

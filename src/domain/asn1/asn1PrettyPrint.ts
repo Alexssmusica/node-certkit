@@ -1,6 +1,7 @@
 import { decodeUtf8 } from '../encoding/Utf8Codec.js';
 import { UtilNamespace } from '../util/UtilNamespace.js';
 import { Asn1Codec } from './Asn1Codec.js';
+import type { Asn1Object } from './Asn1Types.js';
 
 const nonLatinRegex = /[^\u0000-\u00ff]/;
 
@@ -10,7 +11,7 @@ export function setPrettyPrintPkiOids(oids?: Record<string, string>): void {
   pkiOids = oids;
 }
 
-export function prettyPrintAsn1(obj: any, level?: number, indentation?: number): string {
+export function prettyPrintAsn1(obj: Asn1Object, level?: number, indentation?: number): string {
   const indentLevel = level || 0;
   if (indentLevel >= Asn1Codec.maxDepth) {
     throw new Error('ASN.1 pretty print error: Max depth exceeded.');
@@ -126,11 +127,12 @@ export function prettyPrintAsn1(obj: any, level?: number, indentation?: number):
   if (obj.composed) {
     let subvalues = 0;
     let sub = '';
-    for (let i = 0; i < obj.value.length; ++i) {
-      if (obj.value[i] !== undefined) {
+    const children = obj.value as Asn1Object[];
+    for (let i = 0; i < children.length; ++i) {
+      if (children[i] !== undefined) {
         subvalues += 1;
-        sub += prettyPrintAsn1(obj.value[i], indentLevel + 1, indentSize);
-        if (i + 1 < obj.value.length) {
+        sub += prettyPrintAsn1(children[i]!, indentLevel + 1, indentSize);
+        if (i + 1 < children.length) {
           sub += ',';
         }
       }
@@ -138,8 +140,9 @@ export function prettyPrintAsn1(obj: any, level?: number, indentation?: number):
     rval += indent + 'Sub values: ' + subvalues + sub;
   } else {
     rval += indent + 'Value: ';
+    const primitive = obj.value as string;
     if (obj.type === Asn1Codec.Type.OID) {
-      const oid = Asn1Codec.derToOid(obj.value);
+      const oid = Asn1Codec.derToOid(primitive);
       rval += oid;
       if (pkiOids && oid in pkiOids) {
         rval += ' (' + pkiOids[oid] + ') ';
@@ -147,21 +150,21 @@ export function prettyPrintAsn1(obj: any, level?: number, indentation?: number):
     }
     if (obj.type === Asn1Codec.Type.INTEGER) {
       try {
-        rval += Asn1Codec.derToInteger(obj.value);
+        rval += Asn1Codec.derToInteger(primitive);
       } catch {
-        rval += '0x' + UtilNamespace.bytesToHex(obj.value);
+        rval += '0x' + UtilNamespace.bytesToHex(primitive);
       }
     } else if (obj.type === Asn1Codec.Type.BITSTRING) {
       // TODO: shift bits as needed to display without padding
-      if (obj.value.length > 1) {
+      if (primitive.length > 1) {
         // remove unused bits field
-        rval += '0x' + UtilNamespace.bytesToHex(obj.value.slice(1));
+        rval += '0x' + UtilNamespace.bytesToHex(primitive.slice(1));
       } else {
         rval += '(none)';
       }
       // show unused bit count
-      if (obj.value.length > 0) {
-        const unused = obj.value.charCodeAt(0);
+      if (primitive.length > 0) {
+        const unused = primitive.charCodeAt(0);
         if (unused == 1) {
           rval += ' (1 unused bit shown)';
         } else if (unused > 1) {
@@ -169,28 +172,28 @@ export function prettyPrintAsn1(obj: any, level?: number, indentation?: number):
         }
       }
     } else if (obj.type === Asn1Codec.Type.OCTETSTRING) {
-      if (!nonLatinRegex.test(obj.value)) {
-        rval += '(' + obj.value + ') ';
+      if (!nonLatinRegex.test(primitive)) {
+        rval += '(' + primitive + ') ';
       }
-      rval += '0x' + UtilNamespace.bytesToHex(obj.value);
+      rval += '0x' + UtilNamespace.bytesToHex(primitive);
     } else if (obj.type === Asn1Codec.Type.UTF8) {
       try {
-        rval += decodeUtf8(obj.value);
-      } catch (e: any) {
-        if (e.message === 'URI malformed') {
-          rval += '0x' + UtilNamespace.bytesToHex(obj.value) + ' (malformed UTF8)';
+        rval += decodeUtf8(primitive);
+      } catch (e: unknown) {
+        if (e instanceof Error && e.message === 'URI malformed') {
+          rval += '0x' + UtilNamespace.bytesToHex(primitive) + ' (malformed UTF8)';
         } else {
           throw e;
         }
       }
     } else if (obj.type === Asn1Codec.Type.PRINTABLESTRING || obj.type === Asn1Codec.Type.IA5STRING) {
-      rval += obj.value;
-    } else if (nonLatinRegex.test(obj.value)) {
-      rval += '0x' + UtilNamespace.bytesToHex(obj.value);
-    } else if (obj.value.length === 0) {
+      rval += primitive;
+    } else if (nonLatinRegex.test(primitive)) {
+      rval += '0x' + UtilNamespace.bytesToHex(primitive);
+    } else if (primitive.length === 0) {
       rval += '[null]';
     } else {
-      rval += obj.value;
+      rval += primitive;
     }
   }
 

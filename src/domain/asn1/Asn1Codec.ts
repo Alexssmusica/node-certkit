@@ -2,9 +2,23 @@ import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { isArray } from '../util/typeChecks.js';
 import { fromDerInternal } from './asn1DerReader.js';
 import { prettyPrintAsn1, setPrettyPrintPkiOids } from './asn1PrettyPrint.js';
-import type { Asn1FromDerOptions, Asn1NamespaceObject, Asn1Object, Asn1Validator, DerError } from './Asn1Types.js';
+import type {
+  Asn1FromDerOptions,
+  Asn1NamespaceObject,
+  Asn1Object,
+  Asn1Validator,
+  Asn1Value,
+  DerError
+} from './Asn1Types.js';
 
-export type { Asn1FromDerOptions, Asn1NamespaceObject, Asn1Object, Asn1Validator, DerError } from './Asn1Types.js';
+export type {
+  Asn1FromDerOptions,
+  Asn1NamespaceObject,
+  Asn1Object,
+  Asn1Validator,
+  Asn1Value,
+  DerError
+} from './Asn1Types.js';
 
 /* Migrated from lib/Asn1Codec.js */
 /**
@@ -205,7 +219,7 @@ export class Asn1Codec {
     tagClass: number,
     type: number,
     constructed: boolean,
-    value: any,
+    value: Asn1Value,
     options?: { bitStringContents?: string } | null
   ): Asn1Object {
     /* An asn1 object has a tagClass, a type, a constructed flag, and a
@@ -237,7 +251,7 @@ export class Asn1Codec {
       obj.bitStringContents = options.bitStringContents;
       // TODO: add readonly flag to avoid this overhead
       // save copy to detect changes
-      obj.original = Asn1Codec.copy(obj);
+      obj.original = Asn1Codec.copy(obj) as Asn1Object;
     }
     return obj;
   }
@@ -251,18 +265,17 @@ export class Asn1Codec {
    *
    * @return the a copy of the asn1 object.
    */
-  static copy(obj: any, options?: { excludeBitStringContents?: boolean }, depth = 0): any {
+  static copy(obj: Asn1Value, options?: { excludeBitStringContents?: boolean }, depth = 0): Asn1Value {
     if (depth >= Asn1Codec.maxDepth) {
       throw new Error('ASN.1 copy error: Max depth exceeded.');
     }
-    let copy: any;
 
     if (isArray(obj)) {
-      copy = [];
+      const copied: Asn1Value[] = [];
       for (let i = 0; i < obj.length; ++i) {
-        copy.push(Asn1Codec.copy(obj[i], options, depth + 1));
+        copied.push(Asn1Codec.copy(obj[i]!, options, depth + 1));
       }
-      return copy;
+      return copied as Asn1Object[];
     }
 
     if (typeof obj === 'string') {
@@ -270,7 +283,7 @@ export class Asn1Codec {
       return obj;
     }
 
-    copy = {
+    const copy: Asn1Object = {
       tagClass: obj.tagClass,
       type: obj.type,
       constructed: obj.constructed,
@@ -296,7 +309,7 @@ export class Asn1Codec {
    *
    * @return true if the asn1 objects are equal.
    */
-  static equals(obj1: any, obj2: any, options?: { includeBitStringContents?: boolean }): boolean {
+  static equals(obj1: Asn1Value, obj2: Asn1Value, options?: { includeBitStringContents?: boolean }): boolean {
     if (isArray(obj1)) {
       if (!isArray(obj2)) {
         return false;
@@ -320,14 +333,16 @@ export class Asn1Codec {
       return obj1 === obj2;
     }
 
+    const asn1Obj1 = obj1 as Asn1Object;
+    const asn1Obj2 = obj2 as Asn1Object;
     let equal =
-      obj1.tagClass === obj2.tagClass &&
-      obj1.type === obj2.type &&
-      obj1.constructed === obj2.constructed &&
-      obj1.composed === obj2.composed &&
-      Asn1Codec.equals(obj1.value, obj2.value);
+      asn1Obj1.tagClass === asn1Obj2.tagClass &&
+      asn1Obj1.type === asn1Obj2.type &&
+      asn1Obj1.constructed === asn1Obj2.constructed &&
+      asn1Obj1.composed === asn1Obj2.composed &&
+      Asn1Codec.equals(asn1Obj1.value, asn1Obj2.value);
     if (options && options.includeBitStringContents) {
-      equal = equal && obj1.bitStringContents === obj2.bitStringContents;
+      equal = equal && asn1Obj1.bitStringContents === asn1Obj2.bitStringContents;
     }
 
     return equal;
@@ -421,7 +436,7 @@ export class Asn1Codec {
     return value;
   }
 
-  static toDer(obj: any, depth = 0) {
+  static toDer(obj: Asn1Object, depth = 0) {
     if (depth >= Asn1Codec.maxDepth) {
       throw new Error('ASN.1 serialization error: Max depth exceeded.');
     }
@@ -443,7 +458,7 @@ export class Asn1Codec {
     }
 
     if (useBitStringContents) {
-      value.putBytes(obj.bitStringContents);
+      value.putBytes(obj.bitStringContents!);
     } else if (obj.composed) {
       // if composed, use each child asn1 object's DER bytes as value
       // turn on 6th bit (0x20 = 32) to indicate asn1 is constructed
@@ -456,16 +471,18 @@ export class Asn1Codec {
       }
 
       // add all of the child DER bytes together
-      for (let i = 0; i < obj.value.length; ++i) {
-        if (obj.value[i] !== undefined) {
-          value.putBuffer(Asn1Codec.toDer(obj.value[i], depth + 1));
+      const children = obj.value as Asn1Object[];
+      for (let i = 0; i < children.length; ++i) {
+        if (children[i] !== undefined) {
+          value.putBuffer(Asn1Codec.toDer(children[i]!, depth + 1));
         }
       }
     } else {
+      const primitive = obj.value as string;
       // use Asn1Codec.value directly
       if (obj.type === Asn1Codec.Type.BMPSTRING) {
-        for (let i = 0; i < obj.value.length; ++i) {
-          value.putInt16(obj.value.charCodeAt(i));
+        for (let i = 0; i < primitive.length; ++i) {
+          value.putInt16(primitive.charCodeAt(i));
         }
       } else {
         // ensure integer is minimally-encoded
@@ -473,15 +490,15 @@ export class Asn1Codec {
         // .. ex '00 00 01' => '01'?
         if (
           obj.type === Asn1Codec.Type.INTEGER &&
-          obj.value.length > 1 &&
+          primitive.length > 1 &&
           // leading 0x00 for positive integer
-          ((obj.value.charCodeAt(0) === 0 && (obj.value.charCodeAt(1) & 0x80) === 0) ||
+          ((primitive.charCodeAt(0) === 0 && (primitive.charCodeAt(1) & 0x80) === 0) ||
             // leading 0xFF for negative integer
-            (obj.value.charCodeAt(0) === 0xff && (obj.value.charCodeAt(1) & 0x80) === 0x80))
+            (primitive.charCodeAt(0) === 0xff && (primitive.charCodeAt(1) & 0x80) === 0x80))
         ) {
-          value.putBytes(obj.value.substr(1));
+          value.putBytes(primitive.substr(1));
         } else {
-          value.putBytes(obj.value);
+          value.putBytes(primitive);
         }
       }
     }
@@ -872,7 +889,7 @@ export class Asn1Codec {
    *
    * @return the byte buffer.
    */
-  static integerToDer(x: any) {
+  static integerToDer(x: number) {
     const rval = new ByteStringBuffer();
     if (x >= -0x80 && x < 0x80) {
       return rval.putSignedInt(x, 8);
@@ -935,7 +952,7 @@ export class Asn1Codec {
    *
    * @return true on success, false on failure.
    */
-  static validate(obj: any, v: Asn1Validator, capture?: Record<string, unknown>, errors?: any[], depth = 0) {
+  static validate(obj: Asn1Object, v: Asn1Validator, capture?: Record<string, unknown>, errors?: string[], depth = 0) {
     if (depth >= Asn1Codec.maxDepth) {
       if (errors) {
         errors.push('ASN.1 validation error: Max depth exceeded.');
@@ -961,7 +978,7 @@ export class Asn1Codec {
             rval = !!schemaItem.optional;
 
             // current child in the object
-            const objChild = obj.value[j];
+            const objChild = (obj.value as Asn1Object[])[j];
 
             // if there is no child left to match
             if (!objChild) {
@@ -1046,15 +1063,16 @@ export class Asn1Codec {
             capture[v.captureBitStringContents] = obj.bitStringContents;
           }
           if (v.captureBitStringValue && 'bitStringContents' in obj) {
-            if (obj.bitStringContents.length < 2) {
+            const bitStringContents = obj.bitStringContents!;
+            if (bitStringContents.length < 2) {
               capture[v.captureBitStringValue] = '';
             } else {
               // FIXME: support unused bits with data shifting
-              const unused = obj.bitStringContents.charCodeAt(0);
+              const unused = bitStringContents.charCodeAt(0);
               if (unused !== 0) {
                 throw new Error('captureBitStringValue only supported for zero unused bits');
               }
-              capture[v.captureBitStringValue] = obj.bitStringContents.slice(1);
+              capture[v.captureBitStringValue] = bitStringContents.slice(1);
             }
           }
         }
@@ -1083,7 +1101,7 @@ export class Asn1Codec {
    *
    * @return the string.
    */
-  static prettyPrint(obj: any, level?: number, indentation?: number): string {
+  static prettyPrint(obj: Asn1Object, level?: number, indentation?: number): string {
     return prettyPrintAsn1(obj, level, indentation);
   }
 

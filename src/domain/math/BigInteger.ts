@@ -5,8 +5,8 @@
 
 // Basic JavaScript BN library - subset useful for RSA encryption.
 
-import type { BigIntegerRandomSource } from './BigIntegerTypes.js';
-export type { BigIntegerRandomSource } from './BigIntegerTypes.js';
+import type { BigIntegerRandomSource, BigIntegerReduction, BitwiseWordOp } from './BigIntegerTypes.js';
+export type { BigIntegerRandomSource, BigIntegerReduction, BitwiseWordOp } from './BigIntegerTypes.js';
 import {
   dbits,
   BI_FP,
@@ -57,19 +57,21 @@ export class BigInteger {
     c?: BigIntegerRandomSource
   ) {
     if (a != null) {
-      if (typeof a === 'number') this.fromNumber(a, b as number | BigIntegerRandomSource | undefined, c);
-      else if (b == null && typeof a !== 'string') this.fromString(a as number[], 256);
-      else this.fromString(a as string | number[], b as number | undefined);
+      if (typeof a === 'number') {
+        if (typeof b === 'number') this.fromNumber(a, b, c);
+        else this.fromNumber(a, b!);
+      } else if (b == null && typeof a !== 'string') this.fromString(a as number[], 256);
+      else this.fromString(a as string, b as number);
     }
   }
 
-  copyTo(r: any) {
+  copyTo(r: BigInteger) {
     for (let i = this.t - 1; i >= 0; --i) r.data[i] = this.data[i];
     r.t = this.t;
     r.s = this.s;
   }
 
-  fromInt(x: any) {
+  fromInt(x: number) {
     this.t = 1;
     this.s = x < 0 ? -1 : 0;
     if (x > 0) this.data[0] = x;
@@ -77,7 +79,9 @@ export class BigInteger {
     else this.t = 0;
   }
 
-  fromString(s: any, b: any) {
+  fromString(s: string, b: number): void;
+  fromString(s: number[], b: number): void;
+  fromString(s: string | number[], b: number) {
     let k;
     if (b == 16) k = 4;
     else if (b == 8) k = 3;
@@ -87,7 +91,7 @@ export class BigInteger {
     else if (b == 32) k = 5;
     else if (b == 4) k = 2;
     else {
-      this.fromRadix(s, b);
+      this.fromRadix(s as string, b);
       return;
     }
     this.t = 0;
@@ -96,9 +100,9 @@ export class BigInteger {
       mi = false,
       sh = 0;
     while (--i >= 0) {
-      const x = k == 8 ? s[i] & 0xff : intAt(s, i);
+      const x = k == 8 ? (s as number[])[i]! & 0xff : intAt(s as string, i);
       if (x < 0) {
-        if (s.charAt(i) == '-') mi = true;
+        if ((s as string).charAt(i) == '-') mi = true;
         continue;
       }
       mi = false;
@@ -110,7 +114,7 @@ export class BigInteger {
       sh += k;
       if (sh >= this.DB) sh -= this.DB;
     }
-    if (k == 8 && (s[0] & 0x80) != 0) {
+    if (k == 8 && ((s as number[])[0]! & 0x80) != 0) {
       this.s = -1;
       if (sh > 0) this.data[this.t - 1] |= ((1 << (this.DB - sh)) - 1) << sh;
     }
@@ -123,7 +127,7 @@ export class BigInteger {
     while (this.t > 0 && this.data[this.t - 1] == c) --this.t;
   }
 
-  toString(b: any): string {
+  toString(b: number): string {
     if (this.s < 0) return '-' + this.negate().toString(b);
     let k;
     if (b == 16) k = 4;
@@ -171,7 +175,7 @@ export class BigInteger {
     return this.s < 0 ? this.negate() : this;
   }
 
-  compareTo(a: any) {
+  compareTo(a: BigInteger) {
     let r = this.s - a.s;
     if (r != 0) return r;
     let i = this.t;
@@ -186,7 +190,7 @@ export class BigInteger {
     return this.DB * (this.t - 1) + nbits(this.data[this.t - 1] ^ (this.s & this.DM));
   }
 
-  dlShiftTo(n: any, r: any) {
+  dlShiftTo(n: number, r: BigInteger) {
     let i;
     for (i = this.t - 1; i >= 0; --i) r.data[i + n] = this.data[i];
     for (i = n - 1; i >= 0; --i) r.data[i] = 0;
@@ -194,13 +198,13 @@ export class BigInteger {
     r.s = this.s;
   }
 
-  drShiftTo(n: any, r: any) {
+  drShiftTo(n: number, r: BigInteger) {
     for (let i = n; i < this.t; ++i) r.data[i - n] = this.data[i];
     r.t = Math.max(this.t - n, 0);
     r.s = this.s;
   }
 
-  lShiftTo(n: any, r: any) {
+  lShiftTo(n: number, r: BigInteger) {
     const bs = n % this.DB;
     const cbs = this.DB - bs;
     const bm = (1 << cbs) - 1;
@@ -218,7 +222,7 @@ export class BigInteger {
     r.clamp();
   }
 
-  rShiftTo(n: any, r: any) {
+  rShiftTo(n: number, r: BigInteger) {
     r.s = this.s;
     const ds = Math.floor(n / this.DB);
     if (ds >= this.t) {
@@ -238,7 +242,7 @@ export class BigInteger {
     r.clamp();
   }
 
-  subTo(a: any, r: any) {
+  subTo(a: BigInteger, r: BigInteger) {
     let i = 0,
       c = 0,
       m = Math.min(a.t, this.t);
@@ -273,7 +277,7 @@ export class BigInteger {
 
   // HAC 14.12
   // "this" should be the larger one if appropriate.
-  multiplyTo(a: any, r: any) {
+  multiplyTo(a: BigInteger, r: BigInteger) {
     const x = this.abs(),
       y = a.abs();
     let i = x.t;
@@ -286,7 +290,7 @@ export class BigInteger {
   }
 
   // HAC 14.16
-  squareTo(r: any) {
+  squareTo(r: BigInteger) {
     const x = this.abs();
     let i = (r.t = 2 * x.t);
     while (--i >= 0) r.data[i] = 0;
@@ -304,7 +308,7 @@ export class BigInteger {
 
   // HAC 14.20
   // r != q, this != m.  q or r may be null.
-  divRemTo(m: any, q: any, r: any) {
+  divRemTo(m: BigInteger, q: BigInteger | null, r: BigInteger | null) {
     const pm = m.abs();
     if (pm.t <= 0) return;
     const pt = this.abs();
@@ -363,7 +367,7 @@ export class BigInteger {
     if (ts < 0) BigInteger.ZERO.subTo(r, r);
   }
 
-  mod(a: any) {
+  mod(a: BigInteger) {
     const r = nbi();
     this.abs().divRemTo(a, null, r);
     if (this.s < 0 && r.compareTo(BigInteger.ZERO) > 0) a.subTo(r, r);
@@ -399,7 +403,7 @@ export class BigInteger {
   }
 
   // HAC 14.79
-  exp(e: any, z: any) {
+  exp(e: number, z: BigIntegerReduction) {
     if (e > 0xffffffff || e < 1) return BigInteger.ONE;
     let r = nbi(),
       r2 = nbi(),
@@ -418,7 +422,7 @@ export class BigInteger {
     return z.revert(r);
   }
 
-  modPowInt(e: any, m: any) {
+  modPowInt(e: number, m: BigInteger) {
     let z;
     if (e < 256 || m.isEven()) z = new Classic(m);
     else z = new Montgomery(m);
@@ -449,7 +453,7 @@ export class BigInteger {
     return this.t == 0 ? this.s : (this.data[0] << 16) >> 16;
   }
 
-  chunkSize(r: any) {
+  chunkSize(r: number) {
     return Math.floor((Math.LN2 * this.DB) / Math.log(r));
   }
 
@@ -459,7 +463,7 @@ export class BigInteger {
     else return 1;
   }
 
-  toRadix(b: any) {
+  toRadix(b: number) {
     if (b == null) b = 10;
     if (this.signum() == 0 || b < 2 || b > 36) return '0';
     const cs = this.chunkSize(b);
@@ -476,7 +480,7 @@ export class BigInteger {
     return z.intValue().toString(b) + r;
   }
 
-  fromRadix(s: any, b: any) {
+  fromRadix(s: string, b: number) {
     this.fromInt(0);
     if (b == null) b = 10;
     const cs = this.chunkSize(b);
@@ -505,12 +509,14 @@ export class BigInteger {
     if (mi) BigInteger.ZERO.subTo(this, this);
   }
 
-  fromNumber(a: any, b?: any, c?: any) {
-    if ('number' == typeof b) {
+  fromNumber(a: number, b: BigIntegerRandomSource): void;
+  fromNumber(a: number, b: number, c?: BigIntegerRandomSource): void;
+  fromNumber(a: number, b?: number | BigIntegerRandomSource, c?: BigIntegerRandomSource) {
+    if (typeof b === 'number') {
       // new BigInteger(int,int,RNG)
       if (a < 2) this.fromInt(1);
       else {
-        this.fromNumber(a, c);
+        this.fromNumber(a, c!);
         if (!this.testBit(a - 1))
           // force MSB set
           this.bitwiseTo(BigInteger.ONE.shiftLeft(a - 1), op_or, this);
@@ -522,10 +528,11 @@ export class BigInteger {
       }
     } else {
       // new BigInteger(int,RNG)
+      const rng = b as BigIntegerRandomSource;
       const x: number[] = [],
         t = a & 7;
       x.length = (a >> 3) + 1;
-      b.nextBytes(x);
+      rng.nextBytes(x);
       if (t > 0) x[0] &= (1 << t) - 1;
       else x[0] = 0;
       this.fromString(x, 256);
@@ -560,17 +567,17 @@ export class BigInteger {
     return r;
   }
 
-  equals(a: any) {
+  equals(a: BigInteger) {
     return this.compareTo(a) == 0;
   }
-  min(a: any) {
+  min(a: BigInteger) {
     return this.compareTo(a) < 0 ? this : a;
   }
-  max(a: any) {
+  max(a: BigInteger) {
     return this.compareTo(a) > 0 ? this : a;
   }
 
-  bitwiseTo(a: any, op: any, r: any) {
+  bitwiseTo(a: BigInteger, op: BitwiseWordOp, r: BigInteger) {
     let i,
       f,
       m = Math.min(a.t, this.t);
@@ -588,25 +595,25 @@ export class BigInteger {
     r.clamp();
   }
 
-  and(a: any) {
+  and(a: BigInteger) {
     const r = nbi();
     this.bitwiseTo(a, op_and, r);
     return r;
   }
 
-  or(a: any) {
+  or(a: BigInteger) {
     const r = nbi();
     this.bitwiseTo(a, op_or, r);
     return r;
   }
 
-  xor(a: any) {
+  xor(a: BigInteger) {
     const r = nbi();
     this.bitwiseTo(a, op_xor, r);
     return r;
   }
 
-  andNot(a: any) {
+  andNot(a: BigInteger) {
     const r = nbi();
     this.bitwiseTo(a, op_andnot, r);
     return r;
@@ -620,14 +627,14 @@ export class BigInteger {
     return r;
   }
 
-  shiftLeft(n: any) {
+  shiftLeft(n: number) {
     const r = nbi();
     if (n < 0) this.rShiftTo(-n, r);
     else this.lShiftTo(n, r);
     return r;
   }
 
-  shiftRight(n: any) {
+  shiftRight(n: number) {
     const r = nbi();
     if (n < 0) this.lShiftTo(-n, r);
     else this.rShiftTo(n, r);
@@ -647,31 +654,31 @@ export class BigInteger {
     return r;
   }
 
-  testBit(n: any) {
+  testBit(n: number) {
     const j = Math.floor(n / this.DB);
     if (j >= this.t) return this.s != 0;
     return (this.data[j] & (1 << (n % this.DB))) != 0;
   }
 
-  changeBit(n: any, op: any) {
+  changeBit(n: number, op: BitwiseWordOp) {
     const r = BigInteger.ONE.shiftLeft(n);
     this.bitwiseTo(r, op, r);
     return r;
   }
 
-  setBit(n: any) {
+  setBit(n: number) {
     return this.changeBit(n, op_or);
   }
 
-  clearBit(n: any) {
+  clearBit(n: number) {
     return this.changeBit(n, op_andnot);
   }
 
-  flipBit(n: any) {
+  flipBit(n: number) {
     return this.changeBit(n, op_xor);
   }
 
-  addTo(a: any, r: any) {
+  addTo(a: BigInteger, r: BigInteger) {
     let i = 0,
       c = 0,
       m = Math.min(a.t, this.t);
@@ -704,19 +711,19 @@ export class BigInteger {
     r.clamp();
   }
 
-  add(a: any) {
+  add(a: BigInteger) {
     const r = nbi();
     this.addTo(a, r);
     return r;
   }
 
-  subtract(a: any) {
+  subtract(a: BigInteger) {
     const r = nbi();
     this.subTo(a, r);
     return r;
   }
 
-  multiply(a: any) {
+  multiply(a: BigInteger) {
     const r = nbi();
     this.multiplyTo(a, r);
     return r;
@@ -728,32 +735,32 @@ export class BigInteger {
     return r;
   }
 
-  divide(a: any) {
+  divide(a: BigInteger) {
     const r = nbi();
     this.divRemTo(a, r, null);
     return r;
   }
 
-  remainder(a: any) {
+  remainder(a: BigInteger) {
     const r = nbi();
     this.divRemTo(a, null, r);
     return r;
   }
 
-  divideAndRemainder(a: any): BigInteger[] {
+  divideAndRemainder(a: BigInteger): BigInteger[] {
     const q = nbi(),
       r = nbi();
     this.divRemTo(a, q, r);
     return [q, r];
   }
 
-  dMultiply(n: any) {
+  dMultiply(n: number) {
     this.data[this.t] = this.am(0, n - 1, this, 0, 0, this.t);
     ++this.t;
     this.clamp();
   }
 
-  dAddOffset(n: any, w: any) {
+  dAddOffset(n: number, w: number) {
     if (n == 0) return;
     while (this.t <= w) this.data[this.t++] = 0;
     this.data[w] += n;
@@ -764,12 +771,12 @@ export class BigInteger {
     }
   }
 
-  pow(e: any) {
+  pow(e: number) {
     return this.exp(e, new NullExp());
   }
 
   // "this" should be the larger one if appropriate.
-  multiplyLowerTo(a: any, n: any, r: any) {
+  multiplyLowerTo(a: BigInteger, n: number, r: BigInteger) {
     let i = Math.min(this.t + a.t, n);
     r.s = 0; // assumes a,this >= 0
     r.t = i;
@@ -781,7 +788,7 @@ export class BigInteger {
   }
 
   // "this" should be the larger one if appropriate.
-  multiplyUpperTo(a: any, n: any, r: any) {
+  multiplyUpperTo(a: BigInteger, n: number, r: BigInteger) {
     --n;
     let i = (r.t = this.t + a.t - n);
     r.s = 0; // assumes a,this >= 0
@@ -792,7 +799,7 @@ export class BigInteger {
     r.drShiftTo(1, r);
   }
 
-  modPow(e: any, m: any) {
+  modPow(e: BigInteger, m: BigInteger) {
     let i = e.bitLength(),
       k,
       r = nbv(1),
@@ -877,7 +884,7 @@ export class BigInteger {
     return z.revert(r);
   }
 
-  gcd(a: any) {
+  gcd(a: BigInteger) {
     let x = this.s < 0 ? this.negate() : this.clone();
     let y = a.s < 0 ? a.negate() : a.clone();
     if (x.compareTo(y) < 0) {
@@ -908,7 +915,7 @@ export class BigInteger {
     return y;
   }
 
-  modInt(n: any) {
+  modInt(n: number) {
     if (n <= 0) return 0;
     let d = this.DV % n,
       r = this.s < 0 ? n - 1 : 0;
@@ -918,7 +925,7 @@ export class BigInteger {
     return r;
   }
 
-  modInverse(m: any) {
+  modInverse(m: BigInteger) {
     if (this.signum() == 0) {
       // inverse module m is found.
       return BigInteger.ZERO;
@@ -972,7 +979,7 @@ export class BigInteger {
     else return d;
   }
 
-  isProbablePrime(t: any) {
+  isProbablePrime(t: number) {
     let i,
       x = this.abs();
     if (x.t == 1 && x.data[0] <= lowprimes[lowprimes.length - 1]) {
@@ -992,7 +999,7 @@ export class BigInteger {
   }
 
   // HAC 4.24, Miller-Rabin
-  millerRabin(t: any) {
+  millerRabin(t: number) {
     const n1 = this.subtract(BigInteger.ONE);
     const k = n1.getLowestSetBit();
     if (k <= 0) return false;

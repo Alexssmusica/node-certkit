@@ -1,10 +1,11 @@
+import type { BigIntegerReduction } from './BigIntegerTypes.js';
 import { BigInteger } from './BigInteger.js';
 
 function nbi(): BigInteger {
   return new BigInteger(null);
 }
 
-export class Classic {
+export class Classic implements BigIntegerReduction {
   m: BigInteger;
   constructor(m: BigInteger) {
     this.m = m;
@@ -29,7 +30,7 @@ export class Classic {
   }
 }
 
-export class Montgomery {
+export class Montgomery implements BigIntegerReduction {
   m: BigInteger;
   mp: number;
   mpl: number;
@@ -83,7 +84,7 @@ export class Montgomery {
   }
 }
 
-export class NullExp {
+export class NullExp implements BigIntegerReduction {
   convert(x: BigInteger): BigInteger {
     return x;
   }
@@ -98,7 +99,7 @@ export class NullExp {
   }
 }
 
-export class Barrett {
+export class Barrett implements BigIntegerReduction {
   r2: BigInteger;
   q3: BigInteger;
   mu: BigInteger;
