@@ -3,12 +3,9 @@ import type { X509Runtime, X509Validators } from './X509Types.js';
 
 export class X509Asn1 {
   static create(ctx: X509Runtime): X509Validators {
-    const asn1 = ctx.asn1 as {
-      Class: Record<string, number>;
-      Type: Record<string, number>;
-    };
+    const asn1 = ctx.asn1;
     const oids = ctx.oids;
-    const publicKeyValidator = (ctx.rsa as { publicKeyValidator: Asn1Validator }).publicKeyValidator;
+    const publicKeyValidator = ctx.rsa.publicKeyValidator;
 
     const shortNames: Record<string, string> = {
       CN: oids['commonName']!,
@@ -256,7 +253,7 @@ export class X509Asn1 {
             {
               name: 'rsapss.hashAlgorithm.AlgorithmIdentifier',
               tagClass: asn1.Class.UNIVERSAL,
-              type: asn1.Class.SEQUENCE,
+              type: asn1.Type.SEQUENCE,
               constructed: true,
               optional: true,
               value: [
@@ -281,7 +278,7 @@ export class X509Asn1 {
             {
               name: 'rsapss.maskGenAlgorithm.AlgorithmIdentifier',
               tagClass: asn1.Class.UNIVERSAL,
-              type: asn1.Class.SEQUENCE,
+              type: asn1.Type.SEQUENCE,
               constructed: true,
               optional: true,
               value: [
@@ -321,7 +318,7 @@ export class X509Asn1 {
             {
               name: 'rsapss.saltLength.saltLength',
               tagClass: asn1.Class.UNIVERSAL,
-              type: asn1.Class.INTEGER,
+              type: asn1.Type.INTEGER,
               constructed: false,
               capture: 'saltLength'
             }
@@ -336,7 +333,7 @@ export class X509Asn1 {
             {
               name: 'rsapss.trailer.trailer',
               tagClass: asn1.Class.UNIVERSAL,
-              type: asn1.Class.INTEGER,
+              type: asn1.Type.INTEGER,
               constructed: false,
               capture: 'trailer'
             }

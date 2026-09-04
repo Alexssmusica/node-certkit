@@ -1,7 +1,7 @@
-import type { Asn1Validator } from '../asn1/Asn1Types.js';
+import type { Asn1NamespaceObject, Asn1Validator } from '../asn1/Asn1Types.js';
 import type { Pkcs12Validators } from './Pkcs12Types.js';
 
-export function createPkcs12Validators(asn1: any): Pkcs12Validators {
+export function createPkcs12Validators(asn1: Asn1NamespaceObject): Pkcs12Validators {
   const contentInfoValidator = {
     name: 'ContentInfo',
     tagClass: asn1.Class.UNIVERSAL,
@@ -178,7 +178,7 @@ export function createPkcs12Validators(asn1: any): Pkcs12Validators {
           {
             name: 'CertBag.certValue[0]',
             tagClass: asn1.Class.UNIVERSAL,
-            type: asn1.Class.OCTETSTRING,
+            type: asn1.Type.OCTETSTRING,
             constructed: false,
             capture: 'cert'
           }

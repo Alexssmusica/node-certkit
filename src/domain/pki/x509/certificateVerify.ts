@@ -8,24 +8,12 @@ import type {
   X509Certificate
 } from './X509Types.js';
 
-type VerifyCtx = X509Runtime & {
-  util: { isArray: (v: unknown) => boolean };
-  pki: {
-    certificateError: CertificateErrorMap;
-    verifyCertificateChain: (
-      caStore: X509CaStore,
-      chain: X509Certificate[],
-      options?: VerifyOptions | VerifyCallback
-    ) => boolean;
-  };
-};
-
 export class CertificateVerify {
   static attach(ctx: X509Runtime): void {
-    const c = ctx as VerifyCtx;
+    const c = ctx;
     const pki = c.pki;
 
-    pki.certificateError = {
+    const certificateError: CertificateErrorMap = {
       bad_certificate: 'certkit.pki.BadCertificate',
       unsupported_certificate: 'certkit.pki.UnsupportedCertificate',
       certificate_revoked: 'certkit.pki.CertificateRevoked',
@@ -33,6 +21,7 @@ export class CertificateVerify {
       certificate_unknown: 'certkit.pki.CertificateUnknown',
       unknown_ca: 'certkit.pki.UnknownCertificateAuthority'
     };
+    pki.certificateError = certificateError;
 
     pki.verifyCertificateChain = function (
       caStore: X509CaStore,
@@ -64,7 +53,7 @@ export class CertificateVerify {
           if (validityCheckDate < cert.validity.notBefore || validityCheckDate > cert.validity.notAfter) {
             error = {
               message: 'Certificate is not valid yet or has expired.',
-              error: pki.certificateError.certificate_expired,
+              error: certificateError.certificate_expired,
               notBefore: cert.validity.notBefore,
               notAfter: cert.validity.notAfter,
               now: validityCheckDate
@@ -101,7 +90,7 @@ export class CertificateVerify {
             if (!verified) {
               error = {
                 message: 'Certificate signature is invalid.',
-                error: pki.certificateError.bad_certificate
+                error: certificateError.bad_certificate
               };
             }
           }
@@ -109,7 +98,7 @@ export class CertificateVerify {
           if (error === null && (!parent || selfSigned) && !caStore.hasCertificate(cert)) {
             error = {
               message: 'Certificate is not trusted.',
-              error: pki.certificateError.unknown_ca
+              error: certificateError.unknown_ca
             };
           }
         }
@@ -117,7 +106,7 @@ export class CertificateVerify {
         if (error === null && parent && !cert.isIssuer(parent as X509Certificate)) {
           error = {
             message: 'Certificate issuer is invalid.',
-            error: pki.certificateError.bad_certificate
+            error: certificateError.bad_certificate
           };
         }
 
@@ -131,7 +120,7 @@ export class CertificateVerify {
             if (ext.critical && !(ext.name! in se)) {
               error = {
                 message: 'Certificate has an unsupported critical extension.',
-                error: pki.certificateError.unsupported_certificate
+                error: certificateError.unsupported_certificate
               };
             }
           }
@@ -149,20 +138,20 @@ export class CertificateVerify {
                   'If the certificate is the only one in the chain or ' +
                   "isn't the first then the certificate must be a " +
                   'valid CA.',
-                error: pki.certificateError.bad_certificate
+                error: certificateError.bad_certificate
               };
             }
           }
           if (error === null && bcExt === null) {
             error = {
               message: 'Certificate is missing basicConstraints extension and cannot ' + 'be used as a CA.',
-              error: pki.certificateError.bad_certificate
+              error: certificateError.bad_certificate
             };
           }
           if (error === null && bcExt !== null && !bcExt.cA) {
             error = {
               message: 'Certificate basicConstraints indicates the certificate ' + 'is not a CA.',
-              error: pki.certificateError.bad_certificate
+              error: certificateError.bad_certificate
             };
           }
           if (error === null && bcExt !== null && bcExt.cA) {
@@ -170,7 +159,7 @@ export class CertificateVerify {
               error = {
                 message:
                   'Certificate basicConstraints indicates CA but keyUsage extension is missing or lacks keyCertSign.',
-                error: pki.certificateError.bad_certificate
+                error: certificateError.bad_certificate
               };
             }
           }
@@ -179,7 +168,7 @@ export class CertificateVerify {
             if (pathLen > (bcExt.pathLenConstraint as number)) {
               error = {
                 message: 'Certificate basicConstraints pathLenConstraint violated.',
-                error: pki.certificateError.bad_certificate
+                error: certificateError.bad_certificate
               };
             }
           }
@@ -193,7 +182,7 @@ export class CertificateVerify {
           if (vfd === true) {
             error = {
               message: 'The application rejected the certificate.',
-              error: pki.certificateError.bad_certificate
+              error: certificateError.bad_certificate
             };
           }
 

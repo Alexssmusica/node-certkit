@@ -1,23 +1,25 @@
 import type { Asn1Object } from '../../asn1/Asn1Types.js';
+import type { CertkitPki } from '../CertkitPkiTypes.js';
+import type { RsaPublicKey } from '../RsaTypes.js';
 import type { X509Validators } from './X509Types.js';
 import type { X509Runtime } from './X509Runtime.js';
 import type {
+  AttributeLookup,
   DerError,
   DnAttribute,
   DnAttributeInput,
   MessageDigest,
   PrivateKey,
-  X509AttachCtx,
   X509CertificationRequest,
   X509Helpers
 } from './X509Types.js';
 
 export class CertificationRequest {
   static attach(ctx: X509Runtime, validators: X509Validators, h: X509Helpers): void {
-    const c = ctx as X509AttachCtx;
+    const c = ctx;
     const asn1 = c.asn1;
     const oids = c.oids;
-    const pki = c.pki;
+    const pki = c.pki as CertkitPki;
     const {
       getAttribute,
       readSignatureParameters,
@@ -68,31 +70,31 @@ export class CertificationRequest {
           type: 'certification request'
         });
 
-        const bytes = asn1.toDer(csr.certificationRequestInfo);
+        const bytes = asn1.toDer(csr.certificationRequestInfo!);
         csr.md.update(bytes.getBytes());
       }
 
       const smd = c.md.sha1.create();
-      csr.subject.getField = function (sn: any) {
+      csr.subject.getField = function (sn: string | AttributeLookup) {
         return getAttribute(csr.subject, sn);
       };
-      csr.subject.addField = function (attr: any) {
+      csr.subject.addField = function (attr: DnAttributeInput) {
         fillMissingFields([attr]);
-        csr.subject.attributes.push(attr);
+        csr.subject.attributes.push(attr as DnAttribute);
       };
-      csr.subject.attributes = pki.RDNAttributesAsArray(capture.certificationRequestInfoSubject, smd);
+      csr.subject.attributes = pki.RDNAttributesAsArray(capture.certificationRequestInfoSubject as Asn1Object, smd);
       csr.subject.hash = smd.digest().toHex();
 
-      csr.publicKey = pki.publicKeyFromAsn1(capture.subjectPublicKeyInfo);
+      csr.publicKey = pki.publicKeyFromAsn1(capture.subjectPublicKeyInfo as Asn1Object);
 
-      csr.getAttribute = function (sn: any) {
+      csr.getAttribute = function (sn: string | AttributeLookup) {
         return getAttribute(csr, sn);
       };
-      csr.addAttribute = function (attr: any) {
+      csr.addAttribute = function (attr: DnAttributeInput) {
         fillMissingFields([attr]);
-        csr.attributes.push(attr);
+        csr.attributes.push(attr as DnAttribute);
       };
-      csr.attributes = pki.CRIAttributesAsArray(capture.certificationRequestInfoAttributes || []);
+      csr.attributes = pki.CRIAttributesAsArray((capture.certificationRequestInfoAttributes || []) as Asn1Object);
 
       return csr;
     };
@@ -105,24 +107,24 @@ export class CertificationRequest {
       csr.siginfo = { algorithmOid: null };
 
       csr.subject = {} as X509CertificationRequest['subject'];
-      csr.subject.getField = function (sn: any) {
+      csr.subject.getField = function (sn: string | AttributeLookup) {
         return getAttribute(csr.subject, sn);
       };
-      csr.subject.addField = function (attr: any) {
+      csr.subject.addField = function (attr: DnAttributeInput) {
         fillMissingFields([attr]);
-        csr.subject.attributes.push(attr);
+        csr.subject.attributes.push(attr as DnAttribute);
       };
       csr.subject.attributes = [];
       csr.subject.hash = null;
 
       csr.publicKey = null;
       csr.attributes = [];
-      csr.getAttribute = function (sn: any) {
+      csr.getAttribute = function (sn: string | AttributeLookup) {
         return getAttribute(csr, sn);
       };
-      csr.addAttribute = function (attr: any) {
+      csr.addAttribute = function (attr: DnAttributeInput) {
         fillMissingFields([attr]);
-        csr.attributes.push(attr);
+        csr.attributes.push(attr as DnAttribute);
       };
       csr.md = null;
 
@@ -150,7 +152,7 @@ export class CertificationRequest {
         csr.signatureOid = csr.siginfo.algorithmOid = algorithmOid;
 
         csr.certificationRequestInfo = pki.getCertificationRequestInfo(csr);
-        const bytes = asn1.toDer(csr.certificationRequestInfo);
+        const bytes = asn1.toDer(csr.certificationRequestInfo!);
 
         csr.md.update(bytes.getBytes());
         csr.signature = key.sign(csr.md);
@@ -189,7 +191,7 @@ export class CertificationRequest {
       const cri = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
         asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, asn1.integerToDer(csr.version).getBytes()),
         dnToAsn1(csr.subject),
-        pki.publicKeyToAsn1(csr.publicKey),
+        pki.publicKeyToAsn1(csr.publicKey as RsaPublicKey),
         CRIAttributesToAsn1(csr)
       ]);
 

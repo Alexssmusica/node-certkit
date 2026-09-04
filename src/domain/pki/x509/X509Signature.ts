@@ -1,13 +1,56 @@
 import type { Asn1Object } from '../../asn1/Asn1Codec.js';
+import type { CertkitMgfNamespace } from '../../../presentation/CertkitTypes.js';
+import type { MdRegistry } from '../../digest/DigestTypes.js';
+import type { MessageDigest as MgfMessageDigest } from '../MgfTypes.js';
 import type {
   DerError,
+  MdDigestKey,
   MessageDigest,
   SignatureDeps,
+  SignatureParameters,
   X509Certificate,
   X509CertificationRequest,
   X509SignatureHelpers,
   X509Validators
 } from './X509Types.js';
+
+function resolveMdDigestKey(
+  oids: Record<string, string>,
+  md: MdRegistry,
+  algorithmOid: string,
+  errorMessage: string
+): MdDigestKey {
+  const name = oids[algorithmOid];
+  if (name === undefined || name === 'algorithms' || !(name in md)) {
+    const error = new Error(errorMessage) as DerError;
+    error.oid = algorithmOid;
+    error.name = name;
+    throw error;
+  }
+  return name as MdDigestKey;
+}
+
+function resolveMgfCreate(
+  oids: Record<string, string>,
+  mgf: CertkitMgfNamespace,
+  algorithmOid: string
+): (md: MgfMessageDigest) => { generate: (seed: string, maskLen: number) => string } {
+  const mgfScheme = oids[algorithmOid];
+  if (mgfScheme === undefined || !(mgfScheme in mgf)) {
+    const error = new Error('Unsupported MGF function.') as DerError;
+    error.oid = algorithmOid;
+    error.name = mgfScheme;
+    throw error;
+  }
+  const factory = mgf[mgfScheme as keyof CertkitMgfNamespace];
+  if (!factory || typeof factory !== 'object' || !('create' in factory)) {
+    const error = new Error('Unsupported MGF function.') as DerError;
+    error.oid = algorithmOid;
+    error.name = mgfScheme;
+    throw error;
+  }
+  return factory.create as (md: MgfMessageDigest) => { generate: (seed: string, maskLen: number) => string };
+}
 
 export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509Validators): X509SignatureHelpers {
   const { asn1, oids, md, pss, mgf } = deps;
@@ -41,8 +84,8 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
    * @param fillDefaults Whether to use return default values where omitted
    * @return signature parameter object
    */
-  const readSignatureParameters = function (oid: any, obj: any, fillDefaults: any) {
-    let params: any = {};
+  const readSignatureParameters = function (oid: string, obj: Asn1Object, fillDefaults: boolean): SignatureParameters {
+    let params: SignatureParameters = {};
 
     if (oid !== oids['RSASSA-PSS']) {
       return params;
@@ -63,7 +106,7 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
       };
     }
 
-    const capture: any = {};
+    const capture: Record<string, unknown> = {};
     const errors: string[] = [];
     if (!asn1.validate(obj, validators.rsassaPssParameterValidator, capture, errors)) {
       const error = new Error('Cannot read RSASSA-PSS parameter block.') as DerError;
@@ -73,18 +116,18 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
 
     if (capture.hashOid !== undefined) {
       params.hash = params.hash || {};
-      params.hash.algorithmOid = asn1.derToOid(capture.hashOid);
+      params.hash.algorithmOid = asn1.derToOid(capture.hashOid as string);
     }
 
     if (capture.maskGenOid !== undefined) {
       params.mgf = params.mgf || {};
-      params.mgf.algorithmOid = asn1.derToOid(capture.maskGenOid);
+      params.mgf.algorithmOid = asn1.derToOid(capture.maskGenOid as string);
       params.mgf.hash = params.mgf.hash || {};
-      params.mgf.hash.algorithmOid = asn1.derToOid(capture.maskGenHashOid);
+      params.mgf.hash.algorithmOid = asn1.derToOid(capture.maskGenHashOid as string);
     }
 
     if (capture.saltLength !== undefined) {
-      params.saltLength = capture.saltLength.charCodeAt(0);
+      params.saltLength = (capture.saltLength as string).charCodeAt(0);
     }
 
     return params;
@@ -98,21 +141,21 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
    *   type: a human readable type for error messages
    * @return a created md instance. throws if unknown oid.
    */
-  const createSignatureDigest = function (options: any) {
+  const createSignatureDigest = function (options: { signatureOid: string; type: string }): MessageDigest {
     switch (oids[options.signatureOid]) {
       case 'sha1WithRSAEncryption':
       case 'sha1WithRSASignature':
-        return md.sha1.create();
+        return md.sha1.create() as MessageDigest;
       case 'md5WithRSAEncryption':
-        return md.md5.create();
+        return md.md5.create() as MessageDigest;
       case 'sha256WithRSAEncryption':
-        return md.sha256.create();
+        return md.sha256.create() as MessageDigest;
       case 'sha384WithRSAEncryption':
-        return md.sha384.create();
+        return md.sha384.create() as MessageDigest;
       case 'sha512WithRSAEncryption':
-        return md.sha512.create();
+        return md.sha512.create() as MessageDigest;
       case 'RSASSA-PSS':
-        return md.sha256.create();
+        return md.sha256.create() as MessageDigest;
       default:
         const error = new Error(
           'Could not compute ' + options.type + ' digest. ' + 'Unknown signature OID.'
@@ -138,7 +181,7 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
     signature: string | null;
   }) {
     const issuer = options.certificate;
-    const subject = (options.subject || options.certificate) as X509Certificate;
+    const subject = options.subject || options.certificate;
     let scheme;
 
     switch (subject.signatureOid) {
@@ -146,40 +189,37 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
       case oids.sha1WithRSASignature:
         break;
       case oids['RSASSA-PSS']: {
-        let hash, mgfScheme;
-        const signatureParameters = subject.signatureParameters as unknown as {
-          mgf: { hash: { algorithmOid: string }; algorithmOid: string };
-          hash: { algorithmOid: string };
-          saltLength: number;
-        };
-
-        hash = oids[signatureParameters.mgf.hash.algorithmOid];
-        if (hash === undefined || md[hash] === undefined) {
-          const error = new Error('Unsupported MGF hash function.') as DerError;
-          error.oid = signatureParameters.mgf.hash.algorithmOid;
-          error.name = hash;
-          throw error;
+        const signatureParameters = subject.signatureParameters;
+        if (
+          !signatureParameters?.mgf?.hash?.algorithmOid ||
+          !signatureParameters.mgf.algorithmOid ||
+          !signatureParameters.hash?.algorithmOid
+        ) {
+          throw new Error('Missing RSASSA-PSS signature parameters.');
         }
 
-        mgfScheme = oids[signatureParameters.mgf.algorithmOid];
-        if (mgfScheme === undefined || mgf[mgfScheme] === undefined) {
-          const error = new Error('Unsupported MGF function.') as DerError;
-          error.oid = signatureParameters.mgf.algorithmOid;
-          error.name = mgfScheme;
-          throw error;
-        }
+        const mgfHashKey = resolveMdDigestKey(
+          oids,
+          md,
+          signatureParameters.mgf.hash.algorithmOid,
+          'Unsupported MGF hash function.'
+        );
 
-        mgfScheme = mgf[mgfScheme].create(md[hash].create());
+        const mgfCreate = resolveMgfCreate(oids, mgf, signatureParameters.mgf.algorithmOid);
+        const mgfScheme = mgfCreate(md[mgfHashKey].create() as MgfMessageDigest);
 
-        hash = oids[signatureParameters.hash.algorithmOid];
-        if (hash === undefined || md[hash] === undefined) {
-          const error = new Error('Unsupported RSASSA-PSS hash function.') as DerError;
-          error.oid = signatureParameters.hash.algorithmOid;
-          error.name = hash;
-          throw error;
-        }
+        const hashKey = resolveMdDigestKey(
+          oids,
+          md,
+          signatureParameters.hash.algorithmOid,
+          'Unsupported RSASSA-PSS hash function.'
+        );
 
-        scheme = pss.create(md[hash].create(), mgfScheme, signatureParameters.saltLength);
+        scheme = pss.create({
+          md: md[hashKey].create() as MgfMessageDigest,
+          mgf: mgfScheme,
+          saltLength: signatureParameters.saltLength
+        });
         break;
       }
     }
@@ -188,11 +228,7 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
       throw new Error('Certificate is missing a public key.');
     }
 
-    return issuer.publicKey.verify(
-      options.md.digest().getBytes() as unknown as Parameters<typeof issuer.publicKey.verify>[0],
-      options.signature as string,
-      scheme
-    );
+    return issuer.publicKey.verify(options.md.digest().getBytes(), options.signature as string, scheme);
   };
 
   /**
@@ -202,12 +238,12 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
    * @param params The signature parameters object
    * @return ASN.1 object representing signature parameters
    */
-  function signatureParametersToAsn1(oid: any, params: any) {
+  function signatureParametersToAsn1(oid: string, params: SignatureParameters) {
     switch (oid) {
       case oids['RSASSA-PSS']: {
         const parts = [];
 
-        if (params.hash.algorithmOid !== undefined) {
+        if (params.hash?.algorithmOid !== undefined) {
           parts.push(
             asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [
               asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
@@ -223,7 +259,7 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
           );
         }
 
-        if (params.mgf.algorithmOid !== undefined) {
+        if (params.mgf?.algorithmOid !== undefined) {
           parts.push(
             asn1.create(asn1.Class.CONTEXT_SPECIFIC, 1, true, [
               asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
@@ -238,7 +274,7 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
                     asn1.Class.UNIVERSAL,
                     asn1.Type.OID,
                     false,
-                    asn1.oidToDer(params.mgf.hash.algorithmOid).getBytes()
+                    asn1.oidToDer(params.mgf.hash!.algorithmOid!).getBytes()
                   ),
                   asn1.create(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, '')
                 ])

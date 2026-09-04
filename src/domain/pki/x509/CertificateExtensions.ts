@@ -1,4 +1,5 @@
-import type { CertificateExtensionFromAsn1Options, X509AttachCtx, X509Extension } from './X509Types.js';
+import type { Asn1Object } from '../../asn1/Asn1Types.js';
+import type { CertificateExtensionFromAsn1Options, GeneralName, X509Extension } from './X509Types.js';
 
 /**
  * Converts an ASN.1 extensions object (with extension sequences as its
@@ -56,14 +57,16 @@ import type { CertificateExtensionFromAsn1Options, X509AttachCtx, X509Extension 
  * @return the array.
  */
 export function certificateExtensionsFromAsn1(
-  exts: any,
+  exts: Asn1Object,
   options?: CertificateExtensionFromAsn1Options
 ): X509Extension[] {
   const rval: X509Extension[] = [];
-  for (let i = 0; i < exts.value.length; ++i) {
-    const extseq = exts.value[i];
-    for (let ei = 0; ei < extseq.value.length; ++ei) {
-      rval.push(certificateExtensionFromAsn1(extseq.value[ei], options));
+  const sequences = exts.value as Asn1Object[];
+  for (let i = 0; i < sequences.length; ++i) {
+    const extseq = sequences[i]!;
+    const extensions = extseq.value as Asn1Object[];
+    for (let ei = 0; ei < extensions.length; ++ei) {
+      rval.push(certificateExtensionFromAsn1(extensions[ei]!, options));
     }
   }
 
@@ -77,35 +80,41 @@ export function certificateExtensionsFromAsn1(
  *
  * @return the parsed extension as an object.
  */
-export function certificateExtensionFromAsn1(ext: any, options?: CertificateExtensionFromAsn1Options): X509Extension {
+export function certificateExtensionFromAsn1(
+  ext: Asn1Object,
+  options?: CertificateExtensionFromAsn1Options
+): X509Extension {
   const ctx = options!.ctx;
   const asn1 = ctx.asn1;
   const oids = ctx.oids;
-  const util = ctx.util as Record<string, any>;
+  const util = ctx.util;
 
   // an extension has:
   // [0] extnID      OBJECT IDENTIFIER
   // [1] critical    BOOLEAN DEFAULT FALSE
   // [2] extnValue   OCTET STRING
   const e: X509Extension = {};
-  e.id = asn1.derToOid(ext.value[0].value);
+  const fields = ext.value as Asn1Object[];
+  e.id = asn1.derToOid(fields[0]!.value as string);
   e.critical = false;
-  if (ext.value[1].type === asn1.Type.BOOLEAN) {
-    e.critical = ext.value[1].value.charCodeAt(0) !== 0x00;
-    e.value = ext.value[2].value;
+  if (fields[1]!.type === asn1.Type.BOOLEAN) {
+    e.critical = (fields[1]!.value as string).charCodeAt(0) !== 0x00;
+    e.value = fields[2]!.value as string;
   } else {
-    e.value = ext.value[1].value;
+    e.value = fields[1]!.value as string;
   }
   if (e.id && e.id in oids) {
     e.name = oids[e.id];
+    const rawValue = e.value as string;
 
     if (e.name === 'keyUsage') {
-      const ev = asn1.fromDer(e.value);
+      const ev = asn1.fromDer(rawValue);
+      const bits = ev.value as string;
       let b2 = 0x00;
       let b3 = 0x00;
-      if (ev.value.length > 1) {
-        b2 = ev.value.charCodeAt(1);
-        b3 = ev.value.length > 2 ? ev.value.charCodeAt(2) : 0;
+      if (bits.length > 1) {
+        b2 = bits.charCodeAt(1);
+        b3 = bits.length > 2 ? bits.charCodeAt(2) : 0;
       }
       e.digitalSignature = (b2 & 0x80) === 0x80;
       e.nonRepudiation = (b2 & 0x40) === 0x40;
@@ -117,25 +126,27 @@ export function certificateExtensionFromAsn1(ext: any, options?: CertificateExte
       e.encipherOnly = (b2 & 0x01) === 0x01;
       e.decipherOnly = (b3 & 0x80) === 0x80;
     } else if (e.name === 'basicConstraints') {
-      const ev = asn1.fromDer(e.value);
-      if (ev.value.length > 0 && ev.value[0].type === asn1.Type.BOOLEAN) {
-        e.cA = ev.value[0].value.charCodeAt(0) !== 0x00;
+      const ev = asn1.fromDer(rawValue);
+      const seq = ev.value as Asn1Object[];
+      if (seq.length > 0 && seq[0]!.type === asn1.Type.BOOLEAN) {
+        e.cA = (seq[0]!.value as string).charCodeAt(0) !== 0x00;
       } else {
         e.cA = false;
       }
-      let value = null;
-      if (ev.value.length > 0 && ev.value[0].type === asn1.Type.INTEGER) {
-        value = ev.value[0].value;
-      } else if (ev.value.length > 1) {
-        value = ev.value[1].value;
+      let value: string | null = null;
+      if (seq.length > 0 && seq[0]!.type === asn1.Type.INTEGER) {
+        value = seq[0]!.value as string;
+      } else if (seq.length > 1) {
+        value = seq[1]!.value as string;
       }
       if (value !== null) {
         e.pathLenConstraint = asn1.derToInteger(value);
       }
     } else if (e.name === 'extKeyUsage') {
-      const ev = asn1.fromDer(e.value);
-      for (let vi = 0; vi < ev.value.length; ++vi) {
-        const oid = asn1.derToOid(ev.value[vi].value);
+      const ev = asn1.fromDer(rawValue);
+      const usages = ev.value as Asn1Object[];
+      for (let vi = 0; vi < usages.length; ++vi) {
+        const oid = asn1.derToOid(usages[vi]!.value as string);
         if (oid in oids) {
           e[oids[oid]] = true;
         } else {
@@ -143,10 +154,11 @@ export function certificateExtensionFromAsn1(ext: any, options?: CertificateExte
         }
       }
     } else if (e.name === 'nsCertType') {
-      const ev = asn1.fromDer(e.value);
+      const ev = asn1.fromDer(rawValue);
+      const bits = ev.value as string;
       let b2 = 0x00;
-      if (ev.value.length > 1) {
-        b2 = ev.value.charCodeAt(1);
+      if (bits.length > 1) {
+        b2 = bits.charCodeAt(1);
       }
       e.client = (b2 & 0x80) === 0x80;
       e.server = (b2 & 0x40) === 0x40;
@@ -159,14 +171,15 @@ export function certificateExtensionFromAsn1(ext: any, options?: CertificateExte
     } else if (e.name === 'subjectAltName' || e.name === 'issuerAltName') {
       e.altNames = [];
 
-      let gn;
-      const ev = asn1.fromDer(e.value);
-      for (let n = 0; n < ev.value.length; ++n) {
-        gn = ev.value[n];
+      let gn: Asn1Object;
+      const ev = asn1.fromDer(rawValue);
+      const names = ev.value as Asn1Object[];
+      for (let n = 0; n < names.length; ++n) {
+        gn = names[n]!;
 
-        const altName: any = {
+        const altName: GeneralName = {
           type: gn.type,
-          value: gn.value
+          value: gn.value as string
         };
         e.altNames.push(altName);
 
@@ -176,18 +189,18 @@ export function certificateExtensionFromAsn1(ext: any, options?: CertificateExte
           case 6:
             break;
           case 7:
-            altName.ip = util.bytesToIP(gn.value);
+            altName.ip = util.bytesToIP(gn.value as string);
             break;
           case 8:
-            altName.oid = asn1.derToOid(gn.value);
+            altName.oid = asn1.derToOid(gn.value as string);
             break;
           default:
             break;
         }
       }
     } else if (e.name === 'subjectKeyIdentifier') {
-      const ev = asn1.fromDer(e.value);
-      e.subjectKeyIdentifier = util.bytesToHex(ev.value);
+      const ev = asn1.fromDer(rawValue);
+      e.subjectKeyIdentifier = util.bytesToHex(ev.value as string);
     }
   }
   return e;

@@ -1,17 +1,22 @@
-import type { Asn1Object, Asn1Validator } from '../asn1/Asn1Types.js';
+import type { Asn1NamespaceObject, Asn1Object, Asn1Validator, Pkcs7Asn1NamespaceObject } from '../asn1/Asn1Types.js';
+import type { MdRegistry } from '../digest/DigestTypes.js';
+import type { UtilNamespaceObject } from '../util/UtilTypes.js';
+import type { FortunaRandomNamespace } from '../../infrastructure/random/RandomTypes.js';
+import type { CertkitHmacNamespace } from '../../presentation/CertkitTypes.js';
+import type { CertkitPbeNamespace, CertkitPkiForPkcs12 } from './CertkitPkiTypes.js';
 import type { RsaPrivateKey } from './RsaTypes.js';
 import type { X509Certificate } from './x509/X509Types.js';
 
 export type Pkcs12Deps = {
-  asn1: any;
+  asn1: Asn1NamespaceObject;
   oids: Record<string, string>;
-  md: any;
-  util: any;
-  hmac: any;
-  pbe: any;
-  random: any;
-  pki: any;
-  pkcs7: { asn1: any };
+  md: MdRegistry;
+  util: UtilNamespaceObject;
+  hmac: CertkitHmacNamespace;
+  pbe: Pick<CertkitPbeNamespace, 'generatePkcs12Key' | 'getCipher'>;
+  random: FortunaRandomNamespace;
+  pki: Partial<CertkitPkiForPkcs12>;
+  pkcs7: { asn1: Pick<Pkcs7Asn1NamespaceObject, 'encryptedDataValidator'> };
 };
 
 export type Pkcs12Validators = {

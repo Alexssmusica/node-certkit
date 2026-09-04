@@ -20,7 +20,7 @@ export function createFillMissingExtensionFields(deps: ExtensionFillDeps): FillM
    *
    * @return the extension.
    */
-  return function fillMissingExtensionFields(e: any, options?: any) {
+  return function fillMissingExtensionFields(e: X509Extension, options?: { cert?: X509Certificate }): X509Extension {
     options = options || {};
 
     if (typeof e.name === 'undefined') {
@@ -93,17 +93,23 @@ export function createFillMissingExtensionFields(deps: ExtensionFillDeps): FillM
       e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false, value);
     } else if (e.name === 'basicConstraints') {
       e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
+      const bcSeq = e.value.value as Asn1Object[];
       if (e.cA) {
-        e.value.value.push(asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BOOLEAN, false, String.fromCharCode(0xff)));
+        bcSeq.push(asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BOOLEAN, false, String.fromCharCode(0xff)));
       }
       if ('pathLenConstraint' in e) {
-        e.value.value.push(
-          asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, asn1.integerToDer(e.pathLenConstraint).getBytes())
+        bcSeq.push(
+          asn1.create(
+            asn1.Class.UNIVERSAL,
+            asn1.Type.INTEGER,
+            false,
+            asn1.integerToDer(e.pathLenConstraint!).getBytes()
+          )
         );
       }
     } else if (e.name === 'extKeyUsage') {
       e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
-      const seq = e.value.value;
+      const seq = e.value.value as Asn1Object[];
       for (const key in e) {
         if (e[key] !== true) {
           continue;
@@ -158,43 +164,52 @@ export function createFillMissingExtensionFields(deps: ExtensionFillDeps): FillM
       e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false, value);
     } else if (e.name === 'subjectAltName' || e.name === 'issuerAltName') {
       e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
+      const altNameSeq = e.value.value as Asn1Object[];
 
-      let altName;
-      for (let n = 0; n < e.altNames.length; ++n) {
-        altName = e.altNames[n];
-        let value = altName.value;
+      for (let n = 0; n < e.altNames!.length; ++n) {
+        const altName = e.altNames![n]!;
+        let value: string = altName.value ?? '';
         if (altName.type === 7 && altName.ip) {
-          value = util.bytesFromIP(altName.ip);
-          if (value === null) {
+          value = util.bytesFromIP(altName.ip) ?? '';
+          if (value === '') {
             const error = new Error('Extension "ip" value is not a valid IPv4 or IPv6 address.') as DerError;
             error.extension = e;
             throw error;
           }
         } else if (altName.type === 8) {
           if (altName.oid) {
-            value = asn1.oidToDer(asn1.oidToDer(altName.oid));
+            value = asn1.oidToDer(altName.oid).getBytes();
           } else {
-            value = asn1.oidToDer(value);
+            value = asn1.oidToDer(value).getBytes();
           }
         }
-        e.value.value.push(asn1.create(asn1.Class.CONTEXT_SPECIFIC, altName.type, false, value));
+        altNameSeq.push(asn1.create(asn1.Class.CONTEXT_SPECIFIC, altName.type, false, value));
       }
-    } else if (e.name === 'nsComment' && options.cert) {
+    } else if (e.name === 'nsComment' && options.cert && e.comment) {
       if (!/^[\x00-\x7F]*$/.test(e.comment) || e.comment.length < 1 || e.comment.length > 128) {
         throw new Error('Invalid "nsComment" content.');
       }
       e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.IA5STRING, false, e.comment);
     } else if (e.name === 'subjectKeyIdentifier' && options.cert) {
-      const ski = options.cert.generateSubjectKeyIdentifier();
-      e.subjectKeyIdentifier = ski.toHex();
-      e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, ski.getBytes());
+      const skiDigest = options.cert.generateSubjectKeyIdentifier() as unknown as {
+        toHex(): string;
+        getBytes(): string;
+      };
+      e.subjectKeyIdentifier = skiDigest.toHex();
+      e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, skiDigest.getBytes());
     } else if (e.name === 'authorityKeyIdentifier' && options.cert) {
       e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
-      const seq = e.value.value;
+      const seq = e.value.value as Asn1Object[];
 
       if (e.keyIdentifier) {
         const keyIdentifier =
-          e.keyIdentifier === true ? options.cert.generateSubjectKeyIdentifier().getBytes() : e.keyIdentifier;
+          e.keyIdentifier === true
+            ? (
+                options.cert.generateSubjectKeyIdentifier() as unknown as {
+                  getBytes(): string;
+                }
+              ).getBytes()
+            : e.keyIdentifier;
         seq.push(asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, false, keyIdentifier));
       }
 
@@ -213,33 +228,35 @@ export function createFillMissingExtensionFields(deps: ExtensionFillDeps): FillM
       }
     } else if (e.name === 'cRLDistributionPoints') {
       e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
-      const seq = e.value.value;
+      const seq = e.value.value as Asn1Object[];
 
       const subSeq = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
 
       const fullNameGeneralNames = asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, []);
       let altName;
-      for (let n = 0; n < e.altNames.length; ++n) {
-        altName = e.altNames[n];
-        let value = altName.value;
-        if (altName.type === 7 && altName.ip) {
-          value = util.bytesFromIP(altName.ip);
-          if (value === null) {
+      for (let n = 0; n < e.altNames!.length; ++n) {
+        altName = e.altNames![n];
+        let value: string = altName!.value ?? '';
+        if (altName!.type === 7 && altName!.ip) {
+          value = util.bytesFromIP(altName!.ip) ?? '';
+          if (value === '') {
             const error = new Error('Extension "ip" value is not a valid IPv4 or IPv6 address.') as DerError;
             error.extension = e;
             throw error;
           }
-        } else if (altName.type === 8) {
-          if (altName.oid) {
-            value = asn1.oidToDer(asn1.oidToDer(altName.oid));
+        } else if (altName!.type === 8) {
+          if (altName!.oid) {
+            value = asn1.oidToDer(altName!.oid).getBytes();
           } else {
-            value = asn1.oidToDer(value);
+            value = asn1.oidToDer(value).getBytes();
           }
         }
-        fullNameGeneralNames.value.push(asn1.create(asn1.Class.CONTEXT_SPECIFIC, altName.type, false, value));
+        (fullNameGeneralNames.value as Asn1Object[]).push(
+          asn1.create(asn1.Class.CONTEXT_SPECIFIC, altName!.type, false, value)
+        );
       }
 
-      subSeq.value.push(asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [fullNameGeneralNames]));
+      (subSeq.value as Asn1Object[]).push(asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [fullNameGeneralNames]));
       seq.push(subSeq);
     }
 

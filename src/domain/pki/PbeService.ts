@@ -1,7 +1,20 @@
 /* Migrated from lib/pbe.js */
+import type { Asn1Object } from '../asn1/Asn1Types.js';
+import type { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import type { BlockDigest, MdRegistry } from '../digest/DigestTypes.js';
 import { createPbeValidators } from './PbeAsn1.js';
 import type { PbeDeps } from './PbeTypes.js';
-import type { CertkitPbeNamespace, CertkitPkiPbeMethods } from './CertkitPkiTypes.js';
+import type {
+  CertkitPbeNamespace,
+  CertkitPkiPbeMethods,
+  EncryptPrivateKeyInfoOptions,
+  PbeDecryptCipher
+} from './CertkitPkiTypes.js';
+import type { RsaPrivateKey } from './RsaTypes.js';
+
+import type { PemMessage } from './PemTypes.js';
+
+type PbeMessageDigest = BlockDigest & { digestLength: number };
 
 export type { PbeDeps } from './PbeTypes.js';
 
@@ -13,8 +26,8 @@ export class PbeService {
     const asn1 = deps.asn1;
     const oids = deps.oids;
     const pki = deps.pki;
-    const pbe: any = {};
-    const pkiMethods: any = {};
+    const pbe: Partial<CertkitPbeNamespace> = {};
+    const pkiMethods: Partial<CertkitPkiPbeMethods> = {};
     const { encryptedPrivateKeyValidator, PBES2AlgorithmsValidator, pkcs12PbeParamsValidator } =
       createPbeValidators(asn1);
 
@@ -58,7 +71,11 @@ export class PbeService {
      *
      * @return the ASN.1 EncryptedPrivateKeyInfo.
      */
-    pkiMethods.encryptPrivateKeyInfo = function (obj: any, password: any, options: any) {
+    pkiMethods.encryptPrivateKeyInfo = function (
+      obj: Asn1Object,
+      password: string,
+      options?: EncryptPrivateKeyInfoOptions
+    ) {
       // set default options
       options = options || {};
       options.saltSize = options.saltSize || 8;
@@ -101,10 +118,13 @@ export class PbeService {
             encOid = oids['desCBC'];
             cipherFn = deps.des.createEncryptionCipher;
             break;
-          default:
-            const error: any = new Error('Cannot encrypt private key. Unknown encryption algorithm.');
+          default: {
+            const error = new Error('Cannot encrypt private key. Unknown encryption algorithm.') as Error & {
+              algorithm?: string;
+            };
             error.algorithm = options.algorithm;
             throw error;
+          }
         }
 
         // get PRF message digest
@@ -112,13 +132,13 @@ export class PbeService {
         const md = prfAlgorithmToMessageDigest(prfAlgorithm);
 
         // encrypt private key using pbe SHA-1 and AES/DES
-        const dk = deps.pkcs5.pbkdf2(password, salt, count, dkLen, md);
+        const dk = deps.pkcs5.pbkdf2!(password, salt, count, dkLen, md);
         const iv = deps.random.getBytesSync(ivLen);
-        const cipher = cipherFn(dk);
+        const cipher = cipherFn(dk) as PbeDecryptCipher;
         cipher.start(iv);
         cipher.update(asn1.toDer(obj));
         cipher.finish();
-        encryptedData = cipher.output.getBytes();
+        encryptedData = cipher.output!.getBytes();
 
         // get PBKDF2-params
         const params = createPbkdf2Params(salt, countBytes, dkLen, prfAlgorithm);
@@ -145,13 +165,13 @@ export class PbeService {
         dkLen = 24;
 
         const saltBytes = new deps.util.ByteBuffer(salt);
-        const dk = pbe.generatePkcs12Key(password, saltBytes, 1, count, dkLen);
-        const iv = pbe.generatePkcs12Key(password, saltBytes, 2, count, dkLen);
-        const cipher = deps.des.createEncryptionCipher(dk);
+        const dk = pbe.generatePkcs12Key!(password, saltBytes, 1, count, dkLen);
+        const iv = pbe.generatePkcs12Key!(password, saltBytes, 2, count, dkLen);
+        const cipher = deps.des.createEncryptionCipher(dk) as PbeDecryptCipher;
         cipher.start(iv);
         cipher.update(asn1.toDer(obj));
         cipher.finish();
-        encryptedData = cipher.output.getBytes();
+        encryptedData = cipher.output!.getBytes();
 
         encryptionAlgorithm = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
           asn1.create(
@@ -169,7 +189,9 @@ export class PbeService {
           ])
         ]);
       } else {
-        const error: any = new Error('Cannot encrypt private key. Unknown encryption algorithm.');
+        const error = new Error('Cannot encrypt private key. Unknown encryption algorithm.') as Error & {
+          algorithm?: string;
+        };
         error.algorithm = options.algorithm;
         throw error;
       }
@@ -192,30 +214,30 @@ export class PbeService {
      *
      * @return the ASN.1 PrivateKeyInfo on success, null on failure.
      */
-    pkiMethods.decryptPrivateKeyInfo = function (obj: any, password: any) {
+    pkiMethods.decryptPrivateKeyInfo = function (obj: Asn1Object, password: string) {
       let rval = null;
 
       // get PBE params
-      const capture: any = {};
-      const errors: any[] = [];
+      const capture: Record<string, unknown> = {};
+      const errors: string[] = [];
       if (!asn1.validate(obj, encryptedPrivateKeyValidator, capture, errors)) {
-        const error: any = new Error(
+        const error = new Error(
           'Cannot read encrypted private key. ' + 'ASN.1 object is not a supported EncryptedPrivateKeyInfo.'
-        );
+        ) as Error & { errors?: string[] };
         error.errors = errors;
         throw error;
       }
 
       // get cipher
-      const oid = asn1.derToOid(capture.encryptionOid);
-      const cipher = pbe.getCipher(oid, capture.encryptionParams, password);
+      const oid = asn1.derToOid(capture.encryptionOid as string);
+      const cipher = pbe.getCipher!(oid, capture.encryptionParams as Asn1Object, password);
 
       // get encrypted data
-      const encrypted = deps.util.createBuffer(capture.encryptedData);
+      const encrypted = deps.util.createBuffer(capture.encryptedData as string);
 
       cipher.update(encrypted);
       if (cipher.finish()) {
-        rval = asn1.fromDer(cipher.output);
+        rval = asn1.fromDer(cipher.output!);
       }
 
       return rval;
@@ -229,10 +251,14 @@ export class PbeService {
      *
      * @return the PEM-formatted encrypted private key.
      */
-    pkiMethods.encryptedPrivateKeyToPem = function (epki: any, maxline: any) {
+    pkiMethods.encryptedPrivateKeyToPem = function (epki: Asn1Object, maxline?: number) {
       // convert to DER, then PEM-encode
-      const msg = {
+      const msg: PemMessage = {
         type: 'ENCRYPTED PRIVATE KEY',
+        procType: null,
+        contentDomain: null,
+        dekInfo: null,
+        headers: [],
         body: asn1.toDer(epki).getBytes()
       };
       return deps.pem.encode(msg, { maxline: maxline });
@@ -246,13 +272,13 @@ export class PbeService {
      *
      * @return the ASN.1 EncryptedPrivateKeyInfo.
      */
-    pkiMethods.encryptedPrivateKeyFromPem = function (pem: any) {
-      const msg = deps.pem.decode(pem)[0];
+    pkiMethods.encryptedPrivateKeyFromPem = function (pem: string) {
+      const msg = deps.pem.decode(pem)[0]!;
 
       if (msg.type !== 'ENCRYPTED PRIVATE KEY') {
-        const error: any = new Error(
+        const error = new Error(
           'Could not convert encrypted private key from PEM; ' + 'PEM header type is "ENCRYPTED PRIVATE KEY".'
-        );
+        ) as Error & { headerType?: string };
         error.headerType = msg.type;
         throw error;
       }
@@ -290,14 +316,18 @@ export class PbeService {
      *
      * @return the PEM-encoded ASN.1 EncryptedPrivateKeyInfo.
      */
-    pkiMethods.encryptRsaPrivateKey = function (rsaKey: any, password: any, options: any) {
+    pkiMethods.encryptRsaPrivateKey = function (
+      rsaKey: RsaPrivateKey,
+      password: string,
+      options?: EncryptPrivateKeyInfoOptions
+    ) {
       // standard PKCS#8
       options = options || {};
       if (!options.legacy) {
         // encrypt PrivateKeyInfo
-        let rval = pki.wrapRsaPrivateKey(pki.privateKeyToAsn1(rsaKey));
-        rval = pkiMethods.encryptPrivateKeyInfo(rval, password, options);
-        return pkiMethods.encryptedPrivateKeyToPem(rval);
+        let rval = pki.wrapRsaPrivateKey!(pki.privateKeyToAsn1!(rsaKey));
+        rval = pkiMethods.encryptPrivateKeyInfo!(rval, password, options);
+        return pkiMethods.encryptedPrivateKeyToPem!(rval);
       }
 
       // legacy non-PKCS#8
@@ -336,32 +366,35 @@ export class PbeService {
           iv = deps.random.getBytesSync(8);
           cipherFn = deps.des.createEncryptionCipher;
           break;
-        default:
-          const error: any = new Error(
+        default: {
+          const error = new Error(
             'Could not encrypt RSA private key; unsupported ' + 'encryption algorithm "' + options.algorithm + '".'
-          );
+          ) as Error & { algorithm?: string };
           error.algorithm = options.algorithm;
           throw error;
+        }
       }
 
       // encrypt private key using OpenSSL legacy key derivation
-      const dk = pbe.opensslDeriveBytes(password, iv.substr(0, 8), dkLen);
-      const cipher = cipherFn(dk);
+      const dk = pbe.opensslDeriveBytes!(password, iv.substr(0, 8), dkLen);
+      const cipher = cipherFn(dk) as PbeDecryptCipher;
       cipher.start(iv);
-      cipher.update(asn1.toDer(pki.privateKeyToAsn1(rsaKey)));
+      cipher.update(asn1.toDer(pki.privateKeyToAsn1!(rsaKey)));
       cipher.finish();
 
-      const msg = {
+      const msg: PemMessage = {
         type: 'RSA PRIVATE KEY',
         procType: {
           version: '4',
           type: 'ENCRYPTED'
         },
+        contentDomain: null,
         dekInfo: {
           algorithm: algorithm,
           parameters: deps.util.bytesToHex(iv).toUpperCase()
         },
-        body: cipher.output.getBytes()
+        headers: [],
+        body: cipher.output!.getBytes()
       };
       return deps.pem.encode(msg);
     };
@@ -374,24 +407,24 @@ export class PbeService {
      *
      * @return the RSA key on success, null on failure.
      */
-    pkiMethods.decryptRsaPrivateKey = function (pem: any, password: any) {
-      let rval = null;
+    pkiMethods.decryptRsaPrivateKey = function (pem: string, password: string): RsaPrivateKey {
+      let body = '';
 
-      const msg = deps.pem.decode(pem)[0];
+      const msg = deps.pem.decode(pem)[0]!;
 
       if (msg.type !== 'ENCRYPTED PRIVATE KEY' && msg.type !== 'PRIVATE KEY' && msg.type !== 'RSA PRIVATE KEY') {
-        const error: any = new Error(
+        const error = new Error(
           'Could not convert private key from PEM; PEM header type ' +
             'is not "ENCRYPTED PRIVATE KEY", "PRIVATE KEY", or "RSA PRIVATE KEY".'
-        );
-        error.headerType = error;
+        ) as Error & { headerType?: string };
+        error.headerType = msg.type;
         throw error;
       }
 
       if (msg.procType && msg.procType.type === 'ENCRYPTED') {
         let dkLen;
         let cipherFn;
-        switch (msg.dekInfo.algorithm) {
+        switch (msg.dekInfo!.algorithm) {
           case 'DES-CBC':
             dkLen = 8;
             cipherFn = deps.des.createDecryptionCipher;
@@ -414,57 +447,58 @@ export class PbeService {
             break;
           case 'RC2-40-CBC':
             dkLen = 5;
-            cipherFn = function (key: any) {
-              return deps.rc2.createDecryptionCipher(key, 40);
+            cipherFn = function (key: string) {
+              return deps.rc2.createDecryptionCipher(deps.util.createBuffer(key), 40);
             };
             break;
           case 'RC2-64-CBC':
             dkLen = 8;
-            cipherFn = function (key: any) {
-              return deps.rc2.createDecryptionCipher(key, 64);
+            cipherFn = function (key: string) {
+              return deps.rc2.createDecryptionCipher(deps.util.createBuffer(key), 64);
             };
             break;
           case 'RC2-128-CBC':
             dkLen = 16;
-            cipherFn = function (key: any) {
-              return deps.rc2.createDecryptionCipher(key, 128);
+            cipherFn = function (key: string) {
+              return deps.rc2.createDecryptionCipher(deps.util.createBuffer(key), 128);
             };
             break;
-          default:
-            const error: any = new Error(
-              'Could not decrypt private key; unsupported ' + 'encryption algorithm "' + msg.dekInfo.algorithm + '".'
-            );
-            error.algorithm = msg.dekInfo.algorithm;
+          default: {
+            const error = new Error(
+              'Could not decrypt private key; unsupported ' + 'encryption algorithm "' + msg.dekInfo!.algorithm + '".'
+            ) as Error & { algorithm?: string };
+            error.algorithm = msg.dekInfo!.algorithm;
             throw error;
+          }
         }
 
         // use OpenSSL legacy key derivation
-        const iv = deps.util.hexToBytes(msg.dekInfo.parameters);
-        const dk = pbe.opensslDeriveBytes(password, iv.substr(0, 8), dkLen);
-        const cipher = cipherFn(dk);
+        const iv = deps.util.hexToBytes(msg.dekInfo!.parameters!);
+        const dk = pbe.opensslDeriveBytes!(password, iv.substr(0, 8), dkLen);
+        const cipher = cipherFn(dk) as PbeDecryptCipher;
         cipher.start(iv);
         cipher.update(deps.util.createBuffer(msg.body));
         if (cipher.finish()) {
-          rval = cipher.output.getBytes();
+          body = cipher.output!.getBytes();
         } else {
-          return rval;
+          return null as unknown as RsaPrivateKey;
         }
       } else {
-        rval = msg.body;
+        body = msg.body;
       }
 
+      let keyObj: Asn1Object;
       if (msg.type === 'ENCRYPTED PRIVATE KEY') {
-        rval = pkiMethods.decryptPrivateKeyInfo(asn1.fromDer(rval), password);
+        const decrypted = pkiMethods.decryptPrivateKeyInfo!(asn1.fromDer(body), password);
+        if (decrypted === null) {
+          return null as unknown as RsaPrivateKey;
+        }
+        keyObj = decrypted;
       } else {
-        // decryption already performed above
-        rval = asn1.fromDer(rval);
+        keyObj = asn1.fromDer(body);
       }
 
-      if (rval !== null) {
-        rval = pki.privateKeyFromAsn1(rval);
-      }
-
-      return rval;
+      return pki.privateKeyFromAsn1!(keyObj);
     };
 
     /**
@@ -480,18 +514,26 @@ export class PbeService {
      *
      * @return a ByteBuffer with the bytes derived from the password.
      */
-    pbe.generatePkcs12Key = function (password: any, salt: any, id: any, iter: any, n: any, md: any) {
+    pbe.generatePkcs12Key = function (
+      password: string | null | undefined,
+      salt: ByteStringBuffer,
+      id: number,
+      iter: number,
+      n: number,
+      md?: BlockDigest
+    ) {
+      let digest = md as PbeMessageDigest | undefined;
       let j, l;
 
-      if (typeof md === 'undefined' || md === null) {
+      if (typeof digest === 'undefined' || digest === null) {
         if (!('sha1' in deps.md)) {
           throw new Error('"sha1" hash algorithm unavailable.');
         }
-        md = deps.md.sha1.create();
+        digest = deps.md.sha1.create() as PbeMessageDigest;
       }
 
-      const u = md.digestLength;
-      const v = md.blockLength;
+      const u = digest.digestLength;
+      const v = digest.blockLength;
       const result = new deps.util.ByteBuffer();
 
       /* Convert password to Unicode byte buffer + trailing 0-byte. */
@@ -546,9 +588,9 @@ export class PbeService {
         buf.putBytes(D.bytes());
         buf.putBytes(I.bytes());
         for (let round = 0; round < iter; round++) {
-          md.start();
-          md.update(buf.getBytes());
-          buf = md.digest();
+          digest.start();
+          digest.update(buf.getBytes());
+          buf = digest.digest();
         }
 
         /* b) Concatenate copies of Ai to create a string B of length v bytes (the
@@ -592,20 +634,24 @@ export class PbeService {
      *
      * @return new cipher object instance.
      */
-    pbe.getCipher = function (oid: any, params: any, password: any) {
+    pbe.getCipher = function (oid: string, params: Asn1Object, password: string) {
       switch (oid) {
         case oids['pkcs5PBES2']:
-          return pbe.getCipherForPBES2(oid, params, password);
+          return pbe.getCipherForPBES2!(oid, params, password);
 
         case oids['pbeWithSHAAnd3-KeyTripleDES-CBC']:
         case oids['pbewithSHAAnd40BitRC2-CBC']:
-          return pbe.getCipherForPKCS12PBE(oid, params, password);
+          return pbe.getCipherForPKCS12PBE!(oid, params, password);
 
-        default:
-          const error: any = new Error('Cannot read encrypted PBE data block. Unsupported OID.');
+        default: {
+          const error = new Error('Cannot read encrypted PBE data block. Unsupported OID.') as Error & {
+            oid?: string;
+            supportedOids?: string[];
+          };
           error.oid = oid;
           error.supportedOids = ['pkcs5PBES2', 'pbeWithSHAAnd3-KeyTripleDES-CBC', 'pbewithSHAAnd40BitRC2-CBC'];
           throw error;
+        }
       }
     };
 
@@ -621,30 +667,30 @@ export class PbeService {
      *
      * @return new cipher object instance.
      */
-    pbe.getCipherForPBES2 = function (oid: any, params: any, password: any) {
+    pbe.getCipherForPBES2 = function (oid: string, params: Asn1Object, password: string) {
       // get PBE params
-      const capture: any = {};
-      const errors: any[] = [];
+      const capture: Record<string, unknown> = {};
+      const errors: string[] = [];
       if (!asn1.validate(params, PBES2AlgorithmsValidator, capture, errors)) {
-        const error: any = new Error(
+        const error = new Error(
           'Cannot read password-based-encryption algorithm ' +
             'parameters. ASN.1 object is not a supported EncryptedPrivateKeyInfo.'
-        );
+        ) as Error & { errors?: string[] };
         error.errors = errors;
         throw error;
       }
 
       // check oids
-      oid = asn1.derToOid(capture.kdfOid);
+      oid = asn1.derToOid(capture.kdfOid as string);
       if (oid !== oids['pkcs5PBKDF2']) {
-        const error: any = new Error(
+        const error = new Error(
           'Cannot read encrypted private key. ' + 'Unsupported key derivation function OID.'
-        );
+        ) as Error & { oid?: string; supportedOids?: string[] };
         error.oid = oid;
         error.supportedOids = ['pkcs5PBKDF2'];
         throw error;
       }
-      oid = asn1.derToOid(capture.encOid);
+      oid = asn1.derToOid(capture.encOid as string);
       if (
         oid !== oids['aes128-CBC'] &&
         oid !== oids['aes192-CBC'] &&
@@ -652,16 +698,21 @@ export class PbeService {
         oid !== oids['des-EDE3-CBC'] &&
         oid !== oids['desCBC']
       ) {
-        const error: any = new Error('Cannot read encrypted private key. ' + 'Unsupported encryption scheme OID.');
+        const error = new Error(
+          'Cannot read encrypted private key. ' + 'Unsupported encryption scheme OID.'
+        ) as Error & {
+          oid?: string;
+          supportedOids?: string[];
+        };
         error.oid = oid;
         error.supportedOids = ['aes128-CBC', 'aes192-CBC', 'aes256-CBC', 'des-EDE3-CBC', 'desCBC'];
         throw error;
       }
 
       // set PBE params
-      const salt = capture.kdfSalt;
-      let count = deps.util.createBuffer(capture.kdfIterationCount);
-      count = count.getInt(count.length() << 3);
+      const salt = capture.kdfSalt as string;
+      const countBuffer = deps.util.createBuffer(capture.kdfIterationCount as string);
+      const count = countBuffer.getInt(countBuffer.length() << 3);
       let dkLen;
       let cipherFn;
       switch (oids[oid]) {
@@ -688,12 +739,12 @@ export class PbeService {
       }
 
       // get PRF message digest
-      const md = prfOidToMessageDigest(capture.prfOid);
+      const md = prfOidToMessageDigest(capture.prfOid as string | undefined);
 
       // decrypt private key using pbe with chosen PRF and AES/DES
-      const dk = deps.pkcs5.pbkdf2(password, salt, count, dkLen, md);
-      const iv = capture.encIv;
-      const cipher = cipherFn(dk);
+      const dk = deps.pkcs5.pbkdf2!(password, salt, count, dkLen!, md);
+      const iv = capture.encIv as string;
+      const cipher = cipherFn!(dk) as PbeDecryptCipher;
       cipher.start(iv);
 
       return cipher;
@@ -711,22 +762,22 @@ export class PbeService {
      *
      * @return the new cipher object instance.
      */
-    pbe.getCipherForPKCS12PBE = function (oid: any, params: any, password: any) {
+    pbe.getCipherForPKCS12PBE = function (oid: string, params: Asn1Object, password: string) {
       // get PBE params
-      const capture: any = {};
-      const errors: any[] = [];
+      const capture: Record<string, unknown> = {};
+      const errors: string[] = [];
       if (!asn1.validate(params, pkcs12PbeParamsValidator, capture, errors)) {
-        const error: any = new Error(
+        const error = new Error(
           'Cannot read password-based-encryption algorithm ' +
             'parameters. ASN.1 object is not a supported EncryptedPrivateKeyInfo.'
-        );
+        ) as Error & { errors?: string[] };
         error.errors = errors;
         throw error;
       }
 
-      const salt = deps.util.createBuffer(capture.salt);
-      let count = deps.util.createBuffer(capture.iterations);
-      count = count.getInt(count.length() << 3);
+      const salt = deps.util.createBuffer(capture.salt as string);
+      const iterationsBuffer = deps.util.createBuffer(capture.iterations as string);
+      const count = iterationsBuffer.getInt(iterationsBuffer.length() << 3);
 
       let dkLen, dIvLen, cipherFn;
       switch (oid) {
@@ -739,26 +790,27 @@ export class PbeService {
         case oids['pbewithSHAAnd40BitRC2-CBC']:
           dkLen = 5;
           dIvLen = 8;
-          cipherFn = function (key: any, iv: any) {
+          cipherFn = function (key: ByteStringBuffer, iv: ByteStringBuffer) {
             const cipher = deps.rc2.createDecryptionCipher(key, 40);
             cipher.start(iv, null);
-            return cipher;
+            return cipher as PbeDecryptCipher;
           };
           break;
 
-        default:
-          const error: any = new Error('Cannot read PKCS #12 PBE data block. Unsupported OID.');
+        default: {
+          const error = new Error('Cannot read PKCS #12 PBE data block. Unsupported OID.') as Error & { oid?: string };
           error.oid = oid;
           throw error;
+        }
       }
 
       // get PRF message digest
-      const md = prfOidToMessageDigest(capture.prfOid);
-      const key = pbe.generatePkcs12Key(password, salt, 1, count, dkLen, md);
+      const md = prfOidToMessageDigest(capture.prfOid as string | undefined);
+      const key = pbe.generatePkcs12Key!(password, salt, 1, count, dkLen!, md);
       md.start();
-      const iv = pbe.generatePkcs12Key(password, salt, 2, count, dIvLen, md);
+      const iv = pbe.generatePkcs12Key!(password, salt, 2, count, dIvLen!, md);
 
-      return cipherFn(key, iv);
+      return cipherFn!(key, iv, null) as PbeDecryptCipher;
     };
 
     /**
@@ -772,28 +824,35 @@ export class PbeService {
      * @param [options] the options to use:
      *          [md] an optional message digest object to use.
      */
-    pbe.opensslDeriveBytes = function (password: any, salt: any, dkLen: any, md: any) {
-      if (typeof md === 'undefined' || md === null) {
+    pbe.opensslDeriveBytes = function (
+      password: string,
+      salt: ByteStringBuffer | string | null,
+      dkLen: number,
+      md?: BlockDigest
+    ) {
+      let digest = md as PbeMessageDigest | undefined;
+      if (typeof digest === 'undefined' || digest === null) {
         if (!('md5' in deps.md)) {
           throw new Error('"md5" hash algorithm unavailable.');
         }
-        md = deps.md.md5.create();
+        digest = deps.md.md5.create() as PbeMessageDigest;
       }
-      if (salt === null) {
-        salt = '';
+      let saltValue = salt;
+      if (saltValue === null) {
+        saltValue = '';
       }
-      const digests = [hash(md, password + salt)];
+      const digests = [hash(digest, password + saltValue)];
       for (let length = 16, i = 1; length < dkLen; ++i, length += 16) {
-        digests.push(hash(md, digests[i - 1] + password + salt));
+        digests.push(hash(digest, digests[i - 1]! + password + saltValue));
       }
       return digests.join('').substr(0, dkLen);
     };
 
-    function hash(md: any, bytes: any) {
+    function hash(md: BlockDigest, bytes: string) {
       return md.start().update(bytes).digest().getBytes();
     }
 
-    function prfOidToMessageDigest(prfOid: any) {
+    function prfOidToMessageDigest(prfOid?: string): PbeMessageDigest {
       // get PRF algorithm, default to SHA-1
       let prfAlgorithm;
       if (!prfOid) {
@@ -801,7 +860,7 @@ export class PbeService {
       } else {
         prfAlgorithm = oids[asn1.derToOid(prfOid)];
         if (!prfAlgorithm) {
-          const error: any = new Error('Unsupported PRF OID.');
+          const error = new Error('Unsupported PRF OID.') as Error & { oid?: string; supported?: string[] };
           error.oid = prfOid;
           error.supported = ['hmacWithSHA1', 'hmacWithSHA224', 'hmacWithSHA256', 'hmacWithSHA384', 'hmacWithSHA512'];
           throw error;
@@ -810,32 +869,36 @@ export class PbeService {
       return prfAlgorithmToMessageDigest(prfAlgorithm);
     }
 
-    function prfAlgorithmToMessageDigest(prfAlgorithm: any) {
-      let factory = deps.md;
-      switch (prfAlgorithm) {
+    function prfAlgorithmToMessageDigest(prfAlgorithm: string): PbeMessageDigest {
+      let factory: MdRegistry | MdRegistry['sha512'] = deps.md;
+      let algorithm = prfAlgorithm;
+      switch (algorithm) {
         case 'hmacWithSHA224':
           factory = deps.md.sha512;
-          prfAlgorithm = prfAlgorithm.substr(8).toLowerCase();
+          algorithm = algorithm.substr(8).toLowerCase();
           break;
         case 'hmacWithSHA1':
         case 'hmacWithSHA256':
         case 'hmacWithSHA384':
         case 'hmacWithSHA512':
-          prfAlgorithm = prfAlgorithm.substr(8).toLowerCase();
+          algorithm = algorithm.substr(8).toLowerCase();
           break;
-        default:
-          const error: any = new Error('Unsupported PRF algorithm.');
+        default: {
+          const error = new Error('Unsupported PRF algorithm.') as Error & { algorithm?: string; supported?: string[] };
           error.algorithm = prfAlgorithm;
           error.supported = ['hmacWithSHA1', 'hmacWithSHA224', 'hmacWithSHA256', 'hmacWithSHA384', 'hmacWithSHA512'];
           throw error;
+        }
       }
-      if (!factory || !(prfAlgorithm in factory)) {
-        throw new Error('Unknown hash algorithm: ' + prfAlgorithm);
+      if (!factory || !(algorithm in factory)) {
+        throw new Error('Unknown hash algorithm: ' + algorithm);
       }
-      return factory[prfAlgorithm].create();
+      return (factory as unknown as Record<string, { create: () => BlockDigest }>)[
+        algorithm
+      ]!.create() as PbeMessageDigest;
     }
 
-    function createPbkdf2Params(salt: any, countBytes: any, dkLen: any, prfAlgorithm: any) {
+    function createPbkdf2Params(salt: string, countBytes: ByteStringBuffer, dkLen: number, prfAlgorithm: string) {
       const params = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
         // salt
         asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, salt),
@@ -844,7 +907,7 @@ export class PbeService {
       ]);
       // when PRF algorithm is not SHA-1 default, add key length and PRF algorithm
       if (prfAlgorithm !== 'hmacWithSHA1') {
-        params.value.push(
+        (params.value as Asn1Object[]).push(
           // key length
           asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, deps.util.hexToBytes(dkLen.toString(16))),
           // AlgorithmIdentifier

@@ -20,6 +20,8 @@ import type {
 import type { PemCodec } from './PemCodec.js';
 import type { Asn1Object, Asn1Validator } from '../asn1/Asn1Types.js';
 import type { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import type { PaddingFunction } from '../cipher/CipherTypes.js';
+import type { BlockDigest } from '../digest/DigestTypes.js';
 import type { BigInteger } from '../math/BigInteger.js';
 import type { Pkcs12CreateOptions, Pkcs12Pfx } from './Pkcs12Types.js';
 import type { RsaKeyPair, RsaPrivateKey, RsaPublicKey } from './RsaTypes.js';
@@ -90,19 +92,31 @@ export type CertkitRsaNamespace = {
   publicKeyValidator: Asn1Validator;
 };
 
+export type PbeDecryptCipher = {
+  output: ByteStringBuffer | null;
+  start: (iv?: string | ByteStringBuffer | null, output?: ByteStringBuffer | null) => void;
+  update: (input?: ByteStringBuffer) => void;
+  finish: (pad?: PaddingFunction) => boolean;
+};
+
 export type CertkitPbeNamespace = {
   generatePkcs12Key: (
     password: string | null | undefined,
-    salt: unknown,
+    salt: ByteStringBuffer,
     id: number,
     iter: number,
     n: number,
-    md?: unknown
-  ) => unknown;
-  getCipher: (oid: string, params: unknown, password: string) => unknown;
-  getCipherForPBES2: (oid: string, params: unknown, password: string) => unknown;
-  getCipherForPKCS12PBE: (oid: string, params: unknown, password: string) => unknown;
-  opensslDeriveBytes: (password: string, salt: unknown, dkLen: number, md?: unknown) => unknown;
+    md?: BlockDigest
+  ) => ByteStringBuffer;
+  getCipher: (oid: string, params: Asn1Object, password: string) => PbeDecryptCipher;
+  getCipherForPBES2: (oid: string, params: Asn1Object, password: string) => PbeDecryptCipher;
+  getCipherForPKCS12PBE: (oid: string, params: Asn1Object, password: string) => PbeDecryptCipher;
+  opensslDeriveBytes: (
+    password: string,
+    salt: ByteStringBuffer | string | null,
+    dkLen: number,
+    md?: BlockDigest
+  ) => string;
 };
 
 export type PublicKeyFingerprintOptions = {
@@ -119,6 +133,7 @@ export type EncryptPrivateKeyInfoOptions = {
   count?: number;
   algorithm?: string;
   prfAlgorithm?: string;
+  legacy?: boolean;
 };
 
 export type CertkitPkcs12Namespace = {
@@ -181,7 +196,7 @@ export type CertkitPki = {
     chain: X509Certificate[],
     options?: VerifyCallback | VerifyOptions
   ) => boolean;
-  RDNAttributesAsArray: (rdn: Asn1Object, md: MessageDigest) => DnAttribute[];
+  RDNAttributesAsArray: (rdn: Asn1Object, md?: MessageDigest) => DnAttribute[];
   CRIAttributesAsArray: (attributes: Asn1Object) => DnAttribute[];
   pemToDer: (pem: string) => ByteStringBuffer;
   privateKeyFromPem: (pem: string) => RsaPrivateKey;
@@ -197,6 +212,22 @@ export type CertkitPkiPbeMethods = Pick<
   | 'encryptedPrivateKeyFromPem'
   | 'encryptRsaPrivateKey'
   | 'decryptRsaPrivateKey'
+>;
+
+export type CertkitPkiForPbe = Pick<CertkitPki, 'wrapRsaPrivateKey' | 'privateKeyToAsn1' | 'privateKeyFromAsn1'>;
+
+export type CertkitPkiForPkcs12 = Pick<
+  CertkitPki,
+  | 'oids'
+  | 'decryptPrivateKeyInfo'
+  | 'privateKeyFromAsn1'
+  | 'certificateFromAsn1'
+  | 'certificateFromPem'
+  | 'certificateToAsn1'
+  | 'wrapRsaPrivateKey'
+  | 'privateKeyToAsn1'
+  | 'encryptPrivateKeyInfo'
+  | 'pbe'
 >;
 
 export type CertkitPkiRsaAttach = Pick<

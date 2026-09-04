@@ -32,9 +32,7 @@ export class PkiFacade {
       rc2: deps.rc2,
       pem: deps.pem,
       random: deps.random,
-      pbkdf2: deps.pbkdf2,
       pkcs5: deps.pkcs5,
-      cipher: deps.cipher,
       pki: deps.pki
     });
     Object.assign(deps.pki, pkiMethods);

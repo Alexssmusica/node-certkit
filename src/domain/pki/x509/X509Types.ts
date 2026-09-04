@@ -1,16 +1,26 @@
-import type { Asn1Object, Asn1Validator, DerError } from '../../asn1/Asn1Types.js';
+import type { Asn1NamespaceObject, Asn1Object, Asn1Validator, DerError } from '../../asn1/Asn1Types.js';
+import type { MdRegistry } from '../../digest/DigestTypes.js';
+import type { UtilNamespaceObject } from '../../util/UtilTypes.js';
+import type { FortunaRandomNamespace } from '../../../infrastructure/random/RandomTypes.js';
+import type {
+  CertkitMgfNamespace,
+  CertkitPemNamespace,
+  CertkitPssNamespace
+} from '../../../presentation/CertkitTypes.js';
+import type { CertkitPki, CertkitRsaNamespace } from '../CertkitPkiTypes.js';
+import type { RsaPrivateKey, RsaPublicKey } from '../RsaTypes.js';
 
 export type X509Runtime = {
-  asn1: Record<string, unknown>;
+  asn1: Asn1NamespaceObject;
   oids: Record<string, string>;
-  md: Record<string, unknown>;
-  util: Record<string, unknown>;
-  pem: Record<string, unknown>;
-  rsa: Record<string, unknown>;
-  pss: Record<string, unknown>;
-  mgf: Record<string, unknown>;
-  random: Record<string, unknown>;
-  pki: Record<string, unknown>;
+  md: MdRegistry;
+  util: UtilNamespaceObject;
+  pem: CertkitPemNamespace;
+  rsa: CertkitRsaNamespace;
+  pss: CertkitPssNamespace;
+  mgf: CertkitMgfNamespace;
+  random: FortunaRandomNamespace;
+  pki: Partial<CertkitPki>;
 };
 
 export type X509Deps = X509Runtime;
@@ -24,16 +34,18 @@ export type X509Validators = {
   rdnValidator: Asn1Validator;
 };
 
+export type MdDigestKey = Exclude<keyof MdRegistry, 'algorithms'>;
+
 export type SignatureDeps = {
-  asn1: Record<string, any>;
+  asn1: Asn1NamespaceObject;
   oids: Record<string, string>;
-  md: Record<string, { create: () => MessageDigest }>;
-  pss: { create: (...args: unknown[]) => unknown };
-  mgf: Record<string, any>;
+  md: MdRegistry;
+  pss: CertkitPssNamespace;
+  mgf: CertkitMgfNamespace;
 };
 
 export type X509SignatureHelpers = {
-  readSignatureParameters: (oid: string, obj: Asn1Object, fillDefaults: boolean) => any;
+  readSignatureParameters: (oid: string, obj: Asn1Object, fillDefaults: boolean) => SignatureParameters;
   createSignatureDigest: (options: { signatureOid: string; type: string }) => MessageDigest;
   verifySignature: (options: {
     certificate: X509Certificate | X509CertificationRequest;
@@ -41,20 +53,20 @@ export type X509SignatureHelpers = {
     md: MessageDigest;
     signature: string | null;
   }) => boolean;
-  signatureParametersToAsn1: (oid: string, params: any) => Asn1Object;
+  signatureParametersToAsn1: (oid: string, params: SignatureParameters) => Asn1Object;
 };
 
 export type ExtensionFillDeps = {
-  asn1: Record<string, any>;
+  asn1: Asn1NamespaceObject;
   oids: Record<string, string>;
-  util: Record<string, any>;
+  util: UtilNamespaceObject;
   dnToAsn1: (obj: { attributes: DnAttribute[] }) => Asn1Object;
 };
 
 export type FillMissingExtensionFields = (e: X509Extension, options?: { cert?: X509Certificate }) => X509Extension;
 
 export type CertificateExtensionFromAsn1Options = {
-  ctx: X509AttachCtx;
+  ctx: X509Runtime;
 };
 
 export type DnAttribute = {
@@ -86,11 +98,20 @@ export type DistinguishedName = {
   uniqueId?: string;
 };
 
+export type GeneralName = {
+  type: number;
+  value: string;
+  ip?: string | null;
+  oid?: string;
+};
+
+export type X509ExtensionValue = string | boolean | number | GeneralName[] | DistinguishedName | Asn1Object | undefined;
+
 export type X509Extension = {
   id?: string;
   name?: string;
   critical?: boolean;
-  value?: string;
+  value?: string | Asn1Object;
   digitalSignature?: boolean;
   nonRepudiation?: boolean;
   keyEncipherment?: boolean;
@@ -102,16 +123,34 @@ export type X509Extension = {
   decipherOnly?: boolean;
   cA?: boolean;
   pathLenConstraint?: number;
-  altNames?: unknown[];
+  client?: boolean;
+  server?: boolean;
+  email?: boolean;
+  objsign?: boolean;
+  reserved?: boolean;
+  sslCA?: boolean;
+  emailCA?: boolean;
+  objCA?: boolean;
+  altNames?: GeneralName[];
   subjectKeyIdentifier?: string;
-  authorityKeyIdentifier?: unknown;
+  keyIdentifier?: string | boolean;
+  authorityCertIssuer?: DistinguishedName | boolean;
+  serialNumber?: string | boolean;
+  comment?: string;
   nsComment?: string;
-  [key: string]: unknown;
+  [key: string]: X509ExtensionValue | undefined;
+};
+
+export type SignatureAlgorithmIdentifier = {
+  algorithmOid?: string;
+  algorithm?: string;
 };
 
 export type SignatureParameters = {
-  hash?: { algorithm: string; oid?: string };
-  mgf?: { algorithm: string; oid?: string };
+  hash?: SignatureAlgorithmIdentifier;
+  mgf?: SignatureAlgorithmIdentifier & {
+    hash?: SignatureAlgorithmIdentifier;
+  };
   saltLength?: number;
 };
 
@@ -132,15 +171,9 @@ export type MessageDigest = {
   start?: () => void;
 };
 
-export type PublicKey = {
-  n: unknown;
-  e: unknown;
-  verify: (md: MessageDigest, signature: string, scheme?: unknown) => boolean;
-};
+export type PublicKey = Pick<RsaPublicKey, 'n' | 'e' | 'verify'>;
 
-export type PrivateKey = {
-  sign: (md: MessageDigest) => string;
-};
+export type PrivateKey = Pick<RsaPrivateKey, 'sign'>;
 
 export type X509Certificate = {
   version: number;
@@ -236,21 +269,6 @@ export type AttributeLookup = {
   type?: string;
   name?: string;
   shortName?: string;
-};
-
-/** Runtime context passed to x509 attach methods (shared, certificate, CSR). */
-export type X509AttachCtx = X509Runtime & {
-  asn1: Record<string, any>;
-  oids: Record<string, string>;
-  md: Record<string, { create: () => MessageDigest }>;
-  pki: Record<string, any>;
-  util?: Record<string, any>;
-  pss?: { create: (...args: unknown[]) => unknown };
-  mgf?: Record<string, any>;
-  pem?: {
-    decode: (pem: string) => Array<{ type: string; body: string; procType?: { type: string } }>;
-    encode: (msg: { type: string; body: string }, options?: { maxline?: number }) => string;
-  };
 };
 
 export type X509Helpers = {

@@ -524,7 +524,7 @@ describe('x509', () => {
     const ext = cert.extensions[index];
     expect(ext).toBeDefined();
     expect(ext!.value).toBeDefined();
-    expect(ASN1.fromDer(ext!.value!).value).toBe(dummyTestStr);
+    expect(ASN1.fromDer(ext!.value as string).value).toBe(dummyTestStr);
 
     // verify certificate chain
     const caStore = PKI.createCaStore();

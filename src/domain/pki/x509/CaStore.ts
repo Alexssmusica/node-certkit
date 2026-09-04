@@ -1,26 +1,13 @@
 import type { X509Runtime } from './X509Runtime.js';
+import type { CertkitPki } from '../CertkitPkiTypes.js';
 import type { X509Helpers } from './X509Types.js';
 import type { DistinguishedName, X509CaStore, X509Certificate } from './X509Types.js';
 
-type CaStoreCtx = X509Runtime & {
-  util: { isArray: (v: unknown) => boolean };
-  md: { sha1: { create: () => { update: (b: string) => void; digest: () => { toHex: () => string } } } };
-  asn1: {
-    toDer: (obj: unknown) => { getBytes: () => string };
-  };
-  pki: {
-    certificateFromPem: (pem: string) => X509Certificate;
-    certificateToAsn1: (cert: X509Certificate) => unknown;
-    RDNAttributesAsArray: (rdn: unknown, md?: unknown) => DistinguishedName['attributes'];
-    createCaStore: (certs?: Array<X509Certificate | string>) => X509CaStore;
-  };
-};
-
 export class CaStore {
   static attach(ctx: X509Runtime, h: X509Helpers): void {
-    const c = ctx as CaStoreCtx;
+    const c = ctx;
     const asn1 = c.asn1;
-    const pki = c.pki;
+    const pki = c.pki as CertkitPki;
     const dnToAsn1 = h.dnToAsn1;
 
     pki.createCaStore = function (certs?: Array<X509Certificate | string>): X509CaStore {
@@ -144,8 +131,8 @@ export class CaStore {
   static #getBySubject(
     caStore: X509CaStore,
     subject: DistinguishedName,
-    ctx: CaStoreCtx,
-    pki: CaStoreCtx['pki'],
+    ctx: X509Runtime,
+    pki: CertkitPki,
     dnToAsn1: X509Helpers['dnToAsn1']
   ): X509Certificate | X509Certificate[] | null {
     CaStore.#ensureSubjectHasHash(subject, ctx, pki, dnToAsn1);
@@ -154,8 +141,8 @@ export class CaStore {
 
   static #ensureSubjectHasHash(
     subject: DistinguishedName,
-    ctx: CaStoreCtx,
-    pki: CaStoreCtx['pki'],
+    ctx: X509Runtime,
+    pki: CertkitPki,
     dnToAsn1: X509Helpers['dnToAsn1']
   ): void {
     if (!subject.hash) {

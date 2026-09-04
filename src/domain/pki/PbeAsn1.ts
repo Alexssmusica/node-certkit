@@ -1,7 +1,7 @@
-import type { Asn1Validator } from '../asn1/Asn1Types.js';
+import type { Asn1NamespaceObject, Asn1Validator } from '../asn1/Asn1Types.js';
 import type { PbeValidators } from './PbeTypes.js';
 
-export function createPbeValidators(asn1: any): PbeValidators {
+export function createPbeValidators(asn1: Asn1NamespaceObject): PbeValidators {
   const encryptedPrivateKeyValidator = {
     name: 'EncryptedPrivateKeyInfo',
     tagClass: asn1.Class.UNIVERSAL,

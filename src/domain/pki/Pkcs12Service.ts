@@ -1,22 +1,38 @@
 /* Migrated from lib/pkcs12.js */
+import type { Asn1Object, Asn1Value } from '../asn1/Asn1Types.js';
+import { isArray } from '../util/typeChecks.js';
 import { createPkcs12Validators } from './Pkcs12Asn1.js';
-import type { Pkcs12Deps } from './Pkcs12Types.js';
+import type {
+  Pkcs12Bag,
+  Pkcs12Bags,
+  Pkcs12BagsFilter,
+  Pkcs12CreateOptions,
+  Pkcs12Deps,
+  Pkcs12Pfx
+} from './Pkcs12Types.js';
 import type { CertkitPkcs12Namespace } from './CertkitPkiTypes.js';
+import type { RsaPrivateKey } from './RsaTypes.js';
+import type { X509Certificate } from './x509/X509Types.js';
 
 export type { Pkcs12Deps } from './Pkcs12Types.js';
 
 export class Pkcs12Service {
   static createCertkitNamespace(deps: Pkcs12Deps): CertkitPkcs12Namespace {
     const asn1 = deps.asn1;
-    const p12: any = {};
+    const pkiOids = deps.pki.oids!;
+    const p12: Partial<CertkitPkcs12Namespace> = {};
     const { contentInfoValidator, pfxValidator, safeBagValidator, attributeValidator, certBagValidator } =
       createPkcs12Validators(asn1);
 
+    function firstAsn1Child(value: Asn1Value): Asn1Object {
+      return (Array.isArray(value) ? value[0] : value) as Asn1Object;
+    }
+
     // OID for the content type is 'data'
-    function createDataContentInfo(contentBytes: any) {
+    function createDataContentInfo(contentBytes: string) {
       return asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
         // contentType
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(deps.pki.oids.data).getBytes()),
+        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(pkiOids.data).getBytes()),
         // content
         asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [
           asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, contentBytes)
@@ -36,7 +52,12 @@ export class Pkcs12Service {
      *
      * @return an array of matching bags.
      */
-    function _getBagsByAttribute(safeContents: any, attrName: any, attrValue: any, bagType: any) {
+    function _getBagsByAttribute(
+      safeContents: Pkcs12Pfx['safeContents'],
+      attrName: string | null,
+      attrValue: string | null,
+      bagType?: string
+    ): Pkcs12Bag[] {
       const result = [];
 
       for (let i = 0; i < safeContents.length; i++) {
@@ -50,7 +71,11 @@ export class Pkcs12Service {
             result.push(bag);
             continue;
           }
-          if (bag.attributes[attrName] !== undefined && bag.attributes[attrName].indexOf(attrValue) >= 0) {
+          if (
+            bag.attributes[attrName] !== undefined &&
+            attrValue !== null &&
+            bag.attributes[attrName]!.indexOf(attrValue) >= 0
+          ) {
             result.push(bag);
           }
         }
@@ -68,7 +93,7 @@ export class Pkcs12Service {
      *
      * @return PKCS#12 PFX object.
      */
-    p12.pkcs12FromAsn1 = function (obj: any, strict: any, password: any) {
+    p12.pkcs12FromAsn1 = function (obj: Asn1Object, strict?: boolean | string, password?: string) {
       // handle args
       if (typeof strict === 'string') {
         password = strict;
@@ -78,16 +103,18 @@ export class Pkcs12Service {
       }
 
       // validate PFX and capture data
-      const capture: any = {};
-      const errors: any[] = [];
+      const capture: Record<string, unknown> = {};
+      const errors: string[] = [];
       if (!asn1.validate(obj, pfxValidator, capture, errors)) {
-        const error: any = new Error('Cannot read PKCS#12 PFX. ' + 'ASN.1 object is not an PKCS#12 PFX.');
-        error.errors = error;
+        const error = new Error('Cannot read PKCS#12 PFX. ' + 'ASN.1 object is not an PKCS#12 PFX.') as Error & {
+          errors?: string[];
+        };
+        error.errors = errors;
         throw error;
       }
 
-      const pfx = {
-        version: capture.version.charCodeAt(0),
+      const pfx: Pkcs12Pfx = {
+        version: (capture.version as string).charCodeAt(0),
         safeContents: [],
 
         /**
@@ -103,18 +130,18 @@ export class Pkcs12Service {
          *           attribute was given but a bag type, the map key will be the
          *           bag type.
          */
-        getBags: function (filter: any) {
-          const rval: any = {};
+        getBags: function (filter: Pkcs12BagsFilter) {
+          const rval: Pkcs12Bags = {};
 
           let localKeyId;
           if ('localKeyId' in filter) {
             localKeyId = filter.localKeyId;
-          } else if ('localKeyIdHex' in filter) {
+          } else if ('localKeyIdHex' in filter && filter.localKeyIdHex) {
             localKeyId = deps.util.hexToBytes(filter.localKeyIdHex);
           }
 
           // filter on bagType only
-          if (localKeyId === undefined && !('friendlyName' in filter) && 'bagType' in filter) {
+          if (localKeyId === undefined && !('friendlyName' in filter) && filter.bagType) {
             rval[filter.bagType] = _getBagsByAttribute(pfx.safeContents, null, null, filter.bagType);
           }
 
@@ -125,7 +152,7 @@ export class Pkcs12Service {
             rval.friendlyName = _getBagsByAttribute(
               pfx.safeContents,
               'friendlyName',
-              filter.friendlyName,
+              filter.friendlyName!,
               filter.bagType
             );
           }
@@ -143,7 +170,7 @@ export class Pkcs12Service {
          *
          * @return an array of bags with matching friendlyName attribute.
          */
-        getBagsByFriendlyName: function (friendlyName: any, bagType: any) {
+        getBagsByFriendlyName: function (friendlyName: string, bagType?: string) {
           return _getBagsByAttribute(pfx.safeContents, 'friendlyName', friendlyName, bagType);
         },
 
@@ -157,24 +184,24 @@ export class Pkcs12Service {
          *
          * @return an array of bags with matching localKeyId attribute.
          */
-        getBagsByLocalKeyId: function (localKeyId: any, bagType: any) {
+        getBagsByLocalKeyId: function (localKeyId: string, bagType?: string) {
           return _getBagsByAttribute(pfx.safeContents, 'localKeyId', localKeyId, bagType);
         }
       };
 
-      if (capture.version.charCodeAt(0) !== 3) {
-        const error: any = new Error('PKCS#12 PFX of version other than 3 not supported.');
-        error.version = capture.version.charCodeAt(0);
+      if ((capture.version as string).charCodeAt(0) !== 3) {
+        const error = new Error('PKCS#12 PFX of version other than 3 not supported.') as Error & { version?: number };
+        error.version = (capture.version as string).charCodeAt(0);
         throw error;
       }
 
-      if (asn1.derToOid(capture.contentType) !== deps.pki.oids.data) {
-        const error: any = new Error('Only PKCS#12 PFX in password integrity mode supported.');
-        error.oid = asn1.derToOid(capture.contentType);
+      if (asn1.derToOid(capture.contentType as string) !== pkiOids.data) {
+        const error = new Error('Only PKCS#12 PFX in password integrity mode supported.') as Error & { oid?: string };
+        error.oid = asn1.derToOid(capture.contentType as string);
         throw error;
       }
 
-      let data = capture.content.value[0];
+      let data = firstAsn1Child((capture.content as Asn1Object).value);
       if (data.tagClass !== asn1.Class.UNIVERSAL || data.type !== asn1.Type.OCTETSTRING) {
         throw new Error('PKCS#12 authSafe content data is not an OCTET STRING.');
       }
@@ -184,25 +211,25 @@ export class Pkcs12Service {
       if (capture.mac) {
         let md = null;
         let macKeyBytes = 0;
-        const macAlgorithm = asn1.derToOid(capture.macAlgorithm);
+        const macAlgorithm = asn1.derToOid(capture.macAlgorithm as string);
         switch (macAlgorithm) {
-          case deps.pki.oids.sha1:
+          case pkiOids.sha1:
             md = deps.md.sha1.create();
             macKeyBytes = 20;
             break;
-          case deps.pki.oids.sha256:
+          case pkiOids.sha256:
             md = deps.md.sha256.create();
             macKeyBytes = 32;
             break;
-          case deps.pki.oids.sha384:
+          case pkiOids.sha384:
             md = deps.md.sha384.create();
             macKeyBytes = 48;
             break;
-          case deps.pki.oids.sha512:
+          case pkiOids.sha512:
             md = deps.md.sha512.create();
             macKeyBytes = 64;
             break;
-          case deps.pki.oids.md5:
+          case pkiOids.md5:
             md = deps.md.md5.create();
             macKeyBytes = 16;
             break;
@@ -212,15 +239,15 @@ export class Pkcs12Service {
         }
 
         // verify MAC (iterations default to 1)
-        const macSalt = new deps.util.ByteBuffer(capture.macSalt);
+        const macSalt = new deps.util.ByteBuffer(capture.macSalt as string);
         const macIterations =
-          'macIterations' in capture ? parseInt(deps.util.bytesToHex(capture.macIterations), 16) : 1;
-        const macKey = p12.generateKey(password, macSalt, 3, macIterations, macKeyBytes, md);
+          'macIterations' in capture ? parseInt(deps.util.bytesToHex(capture.macIterations as string), 16) : 1;
+        const macKey = p12.generateKey!(password, macSalt, 3, macIterations, macKeyBytes, md);
         const mac = deps.hmac.create();
         mac.start(md, macKey);
-        mac.update(data.value);
+        mac.update(data.value as string);
         const macValue = mac.getMac();
-        if (macValue.getBytes() !== capture.macDigest) {
+        if (macValue.getBytes() !== (capture.macDigest as string)) {
           throw new Error('PKCS#12 MAC could not be verified. Invalid password?');
         }
       } else if (Array.isArray(obj.value) && obj.value.length > 2) {
@@ -228,7 +255,7 @@ export class Pkcs12Service {
         throw new Error('Invalid PKCS#12. macData field present but MAC was not validated.');
       }
 
-      _decodeAuthenticatedSafe(pfx, data.value, strict, password);
+      _decodeAuthenticatedSafe(pfx, data.value as string, strict, password);
       return pfx;
     };
 
@@ -244,13 +271,14 @@ export class Pkcs12Service {
      *
      * @param data the ASN.1 Data object to transform.
      */
-    function _decodePkcs7Data(data: any) {
+    function _decodePkcs7Data(data: Asn1Object): Asn1Object {
       // handle special case of "chunked" data content: an octet string composed
       // of other octet strings
       if (data.composed || data.constructed) {
         const value = deps.util.createBuffer();
-        for (let i = 0; i < data.value.length; ++i) {
-          value.putBytes(data.value[i].value);
+        const chunks = data.value as Asn1Object[];
+        for (let i = 0; i < chunks.length; ++i) {
+          value.putBytes(chunks[i]!.value as string);
         }
         data.composed = data.constructed = false;
         data.value = value.getBytes();
@@ -268,52 +296,54 @@ export class Pkcs12Service {
      * @param strict true to use strict DER decoding, false not to.
      * @param {String} password Password to decrypt with (optional).
      */
-    function _decodeAuthenticatedSafe(pfx: any, authSafe: any, strict: any, password: any) {
-      authSafe = asn1.fromDer(authSafe, strict); /* actually it's BER encoded */
+    function _decodeAuthenticatedSafe(pfx: Pkcs12Pfx, authSafe: string, strict: boolean, password?: string) {
+      const authSafeAsn1 = asn1.fromDer(authSafe, strict); /* actually it's BER encoded */
 
       if (
-        authSafe.tagClass !== asn1.Class.UNIVERSAL ||
-        authSafe.type !== asn1.Type.SEQUENCE ||
-        authSafe.constructed !== true
+        authSafeAsn1.tagClass !== asn1.Class.UNIVERSAL ||
+        authSafeAsn1.type !== asn1.Type.SEQUENCE ||
+        authSafeAsn1.constructed !== true
       ) {
         throw new Error('PKCS#12 AuthenticatedSafe expected to be a ' + 'SEQUENCE OF ContentInfo');
       }
 
-      for (let i = 0; i < authSafe.value.length; i++) {
-        const contentInfo = authSafe.value[i];
+      for (let i = 0; i < (authSafeAsn1.value as Asn1Object[]).length; i++) {
+        const contentInfo = (authSafeAsn1.value as Asn1Object[])[i]!;
 
         // validate contentInfo and capture data
-        const capture: any = {};
-        const errors: any[] = [];
+        const capture: Record<string, unknown> = {};
+        const errors: string[] = [];
         if (!asn1.validate(contentInfo, contentInfoValidator, capture, errors)) {
-          const error: any = new Error('Cannot read ContentInfo.');
+          const error = new Error('Cannot read ContentInfo.') as Error & { errors?: string[] };
           error.errors = errors;
           throw error;
         }
 
-        const obj: any = {
-          encrypted: false
+        const obj: { encrypted: boolean; safeBags: Pkcs12Bag[] } = {
+          encrypted: false,
+          safeBags: []
         };
-        let safeContents = null;
-        const data = capture.content.value[0];
-        switch (asn1.derToOid(capture.contentType)) {
-          case deps.pki.oids.data:
+        let safeContents: string | null = null;
+        const data = firstAsn1Child((capture.content as Asn1Object).value);
+        switch (asn1.derToOid(capture.contentType as string)) {
+          case pkiOids.data:
             if (data.tagClass !== asn1.Class.UNIVERSAL || data.type !== asn1.Type.OCTETSTRING) {
               throw new Error('PKCS#12 SafeContents Data is not an OCTET STRING.');
             }
-            safeContents = _decodePkcs7Data(data).value;
+            safeContents = _decodePkcs7Data(data).value as string;
             break;
-          case deps.pki.oids.encryptedData:
+          case pkiOids.encryptedData:
             safeContents = _decryptSafeContents(data, password);
             obj.encrypted = true;
             break;
-          default:
-            const error: any = new Error('Unsupported PKCS#12 contentType.');
-            error.contentType = asn1.derToOid(capture.contentType);
+          default: {
+            const error = new Error('Unsupported PKCS#12 contentType.') as Error & { contentType?: string };
+            error.contentType = asn1.derToOid(capture.contentType as string);
             throw error;
+          }
         }
 
-        obj.safeBags = _decodeSafeContents(safeContents, strict, password);
+        obj.safeBags = _decodeSafeContents(safeContents!, strict, password);
         pfx.safeContents.push(obj);
       }
     }
@@ -326,36 +356,36 @@ export class Pkcs12Service {
      *
      * @return The decrypted SafeContents (ASN.1 object).
      */
-    function _decryptSafeContents(data: any, password: any) {
-      const capture: any = {};
-      const errors: any[] = [];
+    function _decryptSafeContents(data: Asn1Object, password?: string) {
+      const capture: Record<string, unknown> = {};
+      const errors: string[] = [];
       if (!asn1.validate(data, deps.pkcs7.asn1.encryptedDataValidator, capture, errors)) {
-        const error: any = new Error('Cannot read EncryptedContentInfo.');
+        const error = new Error('Cannot read EncryptedContentInfo.') as Error & { errors?: string[] };
         error.errors = errors;
         throw error;
       }
 
-      let oid = asn1.derToOid(capture.contentType);
-      if (oid !== deps.pki.oids.data) {
-        const error: any = new Error('PKCS#12 EncryptedContentInfo ContentType is not Data.');
+      let oid = asn1.derToOid(capture.contentType as string);
+      if (oid !== pkiOids.data) {
+        const error = new Error('PKCS#12 EncryptedContentInfo ContentType is not Data.') as Error & { oid?: string };
         error.oid = oid;
         throw error;
       }
 
       // get cipher
-      oid = asn1.derToOid(capture.encAlgorithm);
-      const cipher = deps.pki.pbe.getCipher(oid, capture.encParameter, password);
+      oid = asn1.derToOid(capture.encAlgorithm as string);
+      const cipher = deps.pki.pbe!.getCipher(oid, capture.encParameter as Asn1Object, password as string);
 
       // get encrypted data
-      const encryptedContentAsn1 = _decodePkcs7Data(capture.encryptedContentAsn1);
-      const encrypted = deps.util.createBuffer(encryptedContentAsn1.value);
+      const encryptedContentAsn1 = _decodePkcs7Data(capture.encryptedContentAsn1 as Asn1Object);
+      const encrypted = deps.util.createBuffer(encryptedContentAsn1.value as string);
 
       cipher.update(encrypted);
       if (!cipher.finish()) {
         throw new Error('Failed to decrypt PKCS#12 SafeContents.');
       }
 
-      return cipher.output.getBytes();
+      return cipher.output!.getBytes();
     }
 
     /**
@@ -369,53 +399,53 @@ export class Pkcs12Service {
      *
      * @return {Array} Array of Bag objects.
      */
-    function _decodeSafeContents(safeContents: any, strict: any, password: any) {
+    function _decodeSafeContents(safeContents: string, strict: boolean, password?: string): Pkcs12Bag[] {
       // if strict and no safe contents, return empty safes
       if (!strict && safeContents.length === 0) {
         return [];
       }
 
       // actually it's BER-encoded
-      safeContents = asn1.fromDer(safeContents, strict);
+      const safeContentsAsn1 = asn1.fromDer(safeContents, strict);
 
       if (
-        safeContents.tagClass !== asn1.Class.UNIVERSAL ||
-        safeContents.type !== asn1.Type.SEQUENCE ||
-        safeContents.constructed !== true
+        safeContentsAsn1.tagClass !== asn1.Class.UNIVERSAL ||
+        safeContentsAsn1.type !== asn1.Type.SEQUENCE ||
+        safeContentsAsn1.constructed !== true
       ) {
         throw new Error('PKCS#12 SafeContents expected to be a SEQUENCE OF SafeBag.');
       }
 
-      const res = [];
-      for (let i = 0; i < safeContents.value.length; i++) {
-        const safeBag = safeContents.value[i];
+      const res: Pkcs12Bag[] = [];
+      for (let i = 0; i < (safeContentsAsn1.value as Asn1Object[]).length; i++) {
+        const safeBag = (safeContentsAsn1.value as Asn1Object[])[i]!;
 
         // validate SafeBag and capture data
-        const capture: any = {};
-        const errors: any[] = [];
+        const capture: Record<string, unknown> = {};
+        const errors: string[] = [];
         if (!asn1.validate(safeBag, safeBagValidator, capture, errors)) {
-          const error: any = new Error('Cannot read SafeBag.');
+          const error = new Error('Cannot read SafeBag.') as Error & { errors?: string[] };
           error.errors = errors;
           throw error;
         }
 
         /* Create bag object and push to result array. */
-        const bag: any = {
-          type: asn1.derToOid(capture.bagId),
-          attributes: _decodeBagAttributes(capture.bagAttributes)
+        const bag: Pkcs12Bag = {
+          type: asn1.derToOid(capture.bagId as string),
+          attributes: _decodeBagAttributes(capture.bagAttributes as Asn1Object[] | undefined)
         };
         res.push(bag);
 
         let validator, decoder;
-        let bagAsn1 = capture.bagValue.value[0];
+        let bagAsn1 = firstAsn1Child((capture.bagValue as Asn1Object).value);
         switch (bag.type) {
-          case deps.pki.oids.pkcs8ShroudedKeyBag:
-          case deps.pki.oids.keyBag: {
-            if (bag.type === deps.pki.oids.pkcs8ShroudedKeyBag) {
+          case pkiOids.pkcs8ShroudedKeyBag:
+          case pkiOids.keyBag: {
+            if (bag.type === pkiOids.pkcs8ShroudedKeyBag) {
               /* bagAsn1 has a EncryptedPrivateKeyInfo, which we need to decrypt.
              Afterwards we can handle it like a keyBag,
              which is a PrivateKeyInfo. */
-              bagAsn1 = deps.pki.decryptPrivateKeyInfo(bagAsn1, password);
+              bagAsn1 = deps.pki.decryptPrivateKeyInfo!(bagAsn1, password as string)!;
               if (bagAsn1 === null) {
                 throw new Error('Unable to decrypt PKCS#8 ShroudedKeyBag, wrong password?');
               }
@@ -425,7 +455,7 @@ export class Pkcs12Service {
            PKI module, hence we don't have to do validation/capturing here,
            just pass what we already got. */
             try {
-              bag.key = deps.pki.privateKeyFromAsn1(bagAsn1);
+              bag.key = deps.pki.privateKeyFromAsn1!(bagAsn1);
             } catch {
               // ignore unknown key type, pass asn1 value
               bag.key = null;
@@ -434,22 +464,24 @@ export class Pkcs12Service {
             continue; /* Nothing more to do. */
           }
 
-          case deps.pki.oids.certBag:
+          case pkiOids.certBag:
             /* A PKCS#12 certBag can wrap both X.509 and sdsi certificates.
            Therefore put the SafeBag content through another validator to
            capture the fields.  Afterwards check & store the results. */
             validator = certBagValidator;
             decoder = function () {
-              if (asn1.derToOid(capture.certId) !== deps.pki.oids.x509Certificate) {
-                const error: any = new Error('Unsupported certificate type, only X.509 supported.');
-                error.oid = asn1.derToOid(capture.certId);
+              if (asn1.derToOid(capture.certId as string) !== pkiOids.x509Certificate) {
+                const error = new Error('Unsupported certificate type, only X.509 supported.') as Error & {
+                  oid?: string;
+                };
+                error.oid = asn1.derToOid(capture.certId as string);
                 throw error;
               }
 
               // true=produce cert hash
-              const certAsn1 = asn1.fromDer(capture.cert, strict);
+              const certAsn1 = asn1.fromDer(capture.cert as string, strict);
               try {
-                bag.cert = deps.pki.certificateFromAsn1(certAsn1, true);
+                bag.cert = deps.pki.certificateFromAsn1!(certAsn1, true);
               } catch {
                 // ignore unknown cert type, pass asn1 value
                 bag.cert = null;
@@ -458,15 +490,16 @@ export class Pkcs12Service {
             };
             break;
 
-          default:
-            const error: any = new Error('Unsupported PKCS#12 SafeBag type.');
+          default: {
+            const error = new Error('Unsupported PKCS#12 SafeBag type.') as Error & { oid?: string };
             error.oid = bag.type;
             throw error;
+          }
         }
 
         /* Validate SafeBag value (i.e. CertBag, etc.) and capture data if needed. */
         if (validator !== undefined && !asn1.validate(bagAsn1, validator, capture, errors)) {
-          const error: any = new Error('Cannot read PKCS#12 ' + validator.name);
+          const error = new Error('Cannot read PKCS#12 ' + validator.name) as Error & { errors?: string[] };
           error.errors = errors;
           throw error;
         }
@@ -485,28 +518,29 @@ export class Pkcs12Service {
      *
      * @return the decoded attributes.
      */
-    function _decodeBagAttributes(attributes: any) {
-      const decodedAttrs: any = {};
+    function _decodeBagAttributes(attributes?: Asn1Object[]) {
+      const decodedAttrs: Record<string, string[]> = {};
 
       if (attributes !== undefined) {
         for (let i = 0; i < attributes.length; ++i) {
-          const capture: any = {};
-          const errors: any[] = [];
-          if (!asn1.validate(attributes[i], attributeValidator, capture, errors)) {
-            const error: any = new Error('Cannot read PKCS#12 BagAttribute.');
+          const capture: Record<string, unknown> = {};
+          const errors: string[] = [];
+          if (!asn1.validate(attributes[i]!, attributeValidator, capture, errors)) {
+            const error = new Error('Cannot read PKCS#12 BagAttribute.') as Error & { errors?: string[] };
             error.errors = errors;
             throw error;
           }
 
-          const oid = asn1.derToOid(capture.oid);
-          if (deps.pki.oids[oid] === undefined) {
+          const oid = asn1.derToOid(capture.oid as string);
+          if (pkiOids[oid] === undefined) {
             // unsupported attribute type, ignore.
             continue;
           }
 
-          decodedAttrs[deps.pki.oids[oid]] = [];
-          for (let j = 0; j < capture.values.length; ++j) {
-            decodedAttrs[deps.pki.oids[oid]].push(capture.values[j].value);
+          decodedAttrs[pkiOids[oid]] = [];
+          const values = capture.values as Asn1Object[];
+          for (let j = 0; j < values.length; ++j) {
+            decodedAttrs[pkiOids[oid]]!.push(values[j]!.value as string);
           }
         }
       }
@@ -543,12 +577,17 @@ export class Pkcs12Service {
      *
      * @return the PKCS#12 PFX ASN.1 object.
      */
-    p12.toPkcs12Asn1 = function (key: any, cert: any, password: any, options: any) {
+    p12.toPkcs12Asn1 = function (
+      key: RsaPrivateKey | null,
+      cert: X509Certificate | X509Certificate[] | string | string[] | null,
+      password: string | null,
+      options?: Pkcs12CreateOptions
+    ) {
       // set default options
       options = options || {};
       options.saltSize = options.saltSize || 8;
       options.count = options.count || 2048;
-      options.algorithm = options.algorithm || options.encAlgorithm || 'aes128';
+      options.algorithm = (options.algorithm || options.encAlgorithm || 'aes128') as Pkcs12CreateOptions['algorithm'];
       if (!('useMac' in options)) {
         options.useMac = true;
       }
@@ -562,22 +601,22 @@ export class Pkcs12Service {
       let localKeyId = options.localKeyId;
       let bagAttrs;
       if (localKeyId !== null) {
-        localKeyId = deps.util.hexToBytes(localKeyId);
+        localKeyId = deps.util.hexToBytes(localKeyId as string);
       } else if (options.generateLocalKeyId) {
         // use SHA-1 of paired cert, if available
         if (cert) {
           let pairedCert = deps.util.isArray(cert) ? cert[0] : cert;
           if (typeof pairedCert === 'string') {
-            pairedCert = deps.pki.certificateFromPem(pairedCert);
+            pairedCert = deps.pki.certificateFromPem!(pairedCert);
           }
           const sha1 = deps.md.sha1.create();
-          sha1.update(asn1.toDer(deps.pki.certificateToAsn1(pairedCert)).getBytes());
+          sha1.update(asn1.toDer(deps.pki.certificateToAsn1!(pairedCert)).getBytes());
           localKeyId = sha1.digest().getBytes();
         } else {
           // FIXME: consider using SHA-1 of public key (which can be generated
           // from private key components), see: cert.generateSubjectKeyIdentifier
           // generate random bytes
-          localKeyId = deps.random.getBytes(20);
+          localKeyId = deps.random.getBytesSync(20);
         }
       }
 
@@ -587,7 +626,7 @@ export class Pkcs12Service {
           // localKeyID
           asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
             // attrId
-            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(deps.pki.oids.localKeyId).getBytes()),
+            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(pkiOids.localKeyId).getBytes()),
             // attrValues
             asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SET, true, [
               asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, localKeyId)
@@ -600,15 +639,10 @@ export class Pkcs12Service {
           // friendlyName
           asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
             // attrId
-            asn1.create(
-              asn1.Class.UNIVERSAL,
-              asn1.Type.OID,
-              false,
-              asn1.oidToDer(deps.pki.oids.friendlyName).getBytes()
-            ),
+            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(pkiOids.friendlyName).getBytes()),
             // attrValues
             asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SET, true, [
-              asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BMPSTRING, false, options.friendlyName)
+              asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BMPSTRING, false, options.friendlyName!)
             ])
           ])
         );
@@ -622,10 +656,10 @@ export class Pkcs12Service {
       const contents = [];
 
       // create safe bag(s) for certificate chain
-      let chain = [];
+      let chain: Array<string | X509Certificate> = [];
       if (cert !== null) {
         if (deps.util.isArray(cert)) {
-          chain = cert;
+          chain = cert as Array<string | X509Certificate>;
         } else {
           chain = [cert];
         }
@@ -636,15 +670,15 @@ export class Pkcs12Service {
         // convert cert from PEM as necessary
         cert = chain[i];
         if (typeof cert === 'string') {
-          cert = deps.pki.certificateFromPem(cert);
+          cert = deps.pki.certificateFromPem!(cert);
         }
 
         // SafeBag
         const certBagAttrs = i === 0 ? bagAttrs : undefined;
-        const certAsn1 = deps.pki.certificateToAsn1(cert);
+        const certAsn1 = deps.pki.certificateToAsn1!(cert);
         const certSafeBag = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
           // bagId
-          asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(deps.pki.oids.certBag).getBytes()),
+          asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(pkiOids.certBag).getBytes()),
           // bagValue
           asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [
             // CertBag
@@ -654,7 +688,7 @@ export class Pkcs12Service {
                 asn1.Class.UNIVERSAL,
                 asn1.Type.OID,
                 false,
-                asn1.oidToDer(deps.pki.oids.x509Certificate).getBytes()
+                asn1.oidToDer(pkiOids.x509Certificate).getBytes()
               ),
               // certValue (x509Certificate)
               asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [
@@ -663,7 +697,7 @@ export class Pkcs12Service {
             ])
           ]),
           // bagAttributes (OPTIONAL)
-          certBagAttrs
+          ...(certBagAttrs ? [certBagAttrs] : [])
         ]);
         certSafeBags.push(certSafeBag);
       }
@@ -681,19 +715,19 @@ export class Pkcs12Service {
       let keyBag = null;
       if (key !== null) {
         // SafeBag
-        const pkAsn1 = deps.pki.wrapRsaPrivateKey(deps.pki.privateKeyToAsn1(key));
+        const pkAsn1 = deps.pki.wrapRsaPrivateKey!(deps.pki.privateKeyToAsn1!(key));
         if (password === null) {
           // no encryption
           keyBag = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
             // bagId
-            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(deps.pki.oids.keyBag).getBytes()),
+            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(pkiOids.keyBag).getBytes()),
             // bagValue
             asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [
               // PrivateKeyInfo
               pkAsn1
             ]),
             // bagAttributes (OPTIONAL)
-            bagAttrs
+            ...(bagAttrs ? [bagAttrs] : [])
           ]);
         } else {
           // encrypted PrivateKeyInfo
@@ -703,15 +737,15 @@ export class Pkcs12Service {
               asn1.Class.UNIVERSAL,
               asn1.Type.OID,
               false,
-              asn1.oidToDer(deps.pki.oids.pkcs8ShroudedKeyBag).getBytes()
+              asn1.oidToDer(pkiOids.pkcs8ShroudedKeyBag).getBytes()
             ),
             // bagValue
             asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [
               // EncryptedPrivateKeyInfo
-              deps.pki.encryptPrivateKeyInfo(pkAsn1, password, options)
+              deps.pki.encryptPrivateKeyInfo!(pkAsn1, password, options)
             ]),
             // bagAttributes (OPTIONAL)
-            bagAttrs
+            ...(bagAttrs ? [bagAttrs] : [])
           ]);
         }
 
@@ -730,10 +764,10 @@ export class Pkcs12Service {
       if (options.useMac) {
         // MacData
         const sha1 = deps.md.sha1.create();
-        const macSalt = new deps.util.ByteBuffer(deps.random.getBytes(options.saltSize));
+        const macSalt = new deps.util.ByteBuffer(deps.random.getBytesSync(options.saltSize));
         const count = options.count;
         // 160-bit key
-        const key = p12.generateKey(password, macSalt, 3, count, 20);
+        const key = p12.generateKey!(password, macSalt, 3, count, 20);
         const mac = deps.hmac.create();
         mac.start(sha1, key);
         mac.update(asn1.toDer(safe).getBytes());
@@ -744,7 +778,7 @@ export class Pkcs12Service {
             // digestAlgorithm
             asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
               // algorithm = SHA-1
-              asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(deps.pki.oids.sha1).getBytes()),
+              asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(pkiOids.sha1).getBytes()),
               // parameters = Null
               asn1.create(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, '')
             ]),
@@ -764,7 +798,7 @@ export class Pkcs12Service {
         asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, asn1.integerToDer(3).getBytes()),
         // PKCS#7 ContentInfo
         createDataContentInfo(asn1.toDer(safe).getBytes()),
-        macData
+        ...(macData ? [macData] : [])
       ]);
     };
 
