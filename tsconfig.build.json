@@ -10,7 +10,6 @@
   "include": [
     "src/presentation/**/*.ts",
     "src/domain/**/*.ts",
-    "src/application/**/*.ts",
     "src/infrastructure/**/*.ts"
   ],
   "exclude": ["node_modules", "dist", "tests"]

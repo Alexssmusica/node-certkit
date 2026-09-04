@@ -202,10 +202,10 @@ The default export is a flat namespace assembled at load time. Main areas:
 | `certkit.pss` | RSA-PSS |
 | `certkit.mgf` / `certkit.mgf1` | Mask generation functions |
 
-Additional exports from the package entry:
+Named exports from the package entry:
 
 ```js
-import certkit, {createCertkit, LoadPkcs12UseCase} from 'node-certkit';
+import certkit, {createCertkit} from 'node-certkit';
 ```
 
 ## Testing
