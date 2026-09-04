@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/Alexssmusica/node-certkit/compare/v1.0.3...v1.1.0) (2026-09-04)
+
+
+### Features
+
+* **security:** endurecer parser ASN.1, PEM, modos de cifra e defaults de KDF ([af1f977](https://github.com/Alexssmusica/node-certkit/commit/af1f97797215610049a956d72288443898bce047)), closes [PKCS#7](https://github.com/PKCS/issues/7)
+
 ## [1.0.3](https://github.com/Alexssmusica/node-certkit/compare/v1.0.2...v1.0.3) (2026-09-04)
 
 
