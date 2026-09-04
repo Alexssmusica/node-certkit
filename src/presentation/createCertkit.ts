@@ -37,7 +37,7 @@ import {
 } from './assemblePki.js';
 import type { AssembledCertkit } from './CertkitTypes.js';
 import type { MutableCertkit } from './CertkitAssemblyTypes.js';
-import { wireCrossNamespaceAliases, type CertkitNamespace } from './wireAliases.js';
+import { wireCrossNamespaceAliases } from './wireAliases.js';
 
 export type Certkit = AssembledCertkit;
 
@@ -75,7 +75,7 @@ export function createCertkit(): Certkit {
   assemblePkcs12(f);
   assemblePkiFinalize(f, rsaService);
 
-  wireCrossNamespaceAliases(f as unknown as CertkitNamespace);
+  wireCrossNamespaceAliases(f);
   return certkit as AssembledCertkit;
 }
 

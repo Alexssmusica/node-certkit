@@ -31,7 +31,7 @@ export function assembleCipher(certkit: MutableCertkit): void {
 }
 
 export function assembleCipherModes(certkit: MutableCertkit): void {
-  certkit.cipher = certkit.cipher || {};
+  certkit.cipher = certkit.cipher || CipherNamespace.createCertkitNamespace();
   const modes = CipherModes.createCertkitModes();
   certkit.cipher.modes = certkit.cipher.modes || modes;
   Object.assign(certkit.cipher.modes as object, modes);

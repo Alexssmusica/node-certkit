@@ -8,34 +8,38 @@ import { PssScheme } from '../domain/pki/PssScheme.js';
 import { RsaService } from '../domain/pki/RsaService.js';
 import { NodeCryptoProvider } from '../infrastructure/crypto/NodeCryptoProvider.js';
 import { NodePrimeGenerator } from '../infrastructure/prime/NodePrimeGenerator.js';
+import type { CertkitPbeNamespace } from '../domain/pki/CertkitPkiTypes.js';
+import type { CertkitMgfNamespace } from './CertkitTypes.js';
+import type { MdRegistry } from '../domain/digest/DigestTypes.js';
+import type { RsaServiceDeps } from '../domain/pki/RsaTypes.js';
 import type { MutableCertkit, RsaService as RsaServiceType } from './CertkitAssemblyTypes.js';
 
 function createPkiDeps(certkit: MutableCertkit, includePbe = false): PkiFacadeDeps {
   certkit.pki = certkit.pki || {};
-  const deps = {
+  const deps: PkiFacadeDeps = {
     asn1: certkit.asn1!,
-    oids: (certkit.pki.oids as Record<string, string>) || certkit.oids!,
-    md: certkit.md!,
-    util: certkit.util as Record<string, unknown>,
+    oids: certkit.pki.oids || certkit.oids!,
+    md: certkit.md! as MdRegistry,
+    util: certkit.util!,
     pem: certkit.pem!,
-    aes: certkit.aes as Record<string, unknown>,
-    des: certkit.des as Record<string, unknown>,
-    rc2: certkit.rc2 as Record<string, unknown>,
-    random: certkit.random as Record<string, unknown>,
-    pbkdf2: certkit.pbkdf2 as unknown as Record<string, unknown>,
-    pkcs5: certkit.pkcs5 as Record<string, unknown>,
-    cipher: certkit.cipher as Record<string, unknown>,
-    hmac: certkit.hmac as Record<string, unknown>,
-    pss: certkit.pss as Record<string, unknown>,
-    mgf: certkit.mgf as Record<string, unknown>,
+    aes: certkit.aes!,
+    des: certkit.des!,
+    rc2: certkit.rc2!,
+    random: certkit.random!,
+    pbkdf2: certkit.pbkdf2!,
+    pkcs5: certkit.pkcs5!,
+    cipher: certkit.cipher!,
+    hmac: certkit.hmac!,
+    pss: certkit.pss!,
+    mgf: certkit.mgf! as CertkitMgfNamespace,
     pkcs7: { asn1: certkit.pkcs7!.asn1! },
     pki: certkit.pki
-  } as unknown as PkiFacadeDeps;
+  };
   if (includePbe) {
     return {
       ...deps,
-      pbe: (certkit.pki.pbe as Record<string, unknown>) || certkit.pbe!
-    } as PkiFacadeDeps & { pbe: Record<string, unknown> };
+      pbe: (certkit.pki.pbe || certkit.pbe!) as CertkitPbeNamespace
+    } as PkiFacadeDeps & { pbe: CertkitPbeNamespace };
   }
   return deps;
 }
@@ -64,7 +68,7 @@ export function assembleMgf1(certkit: MutableCertkit): void {
 }
 
 export function assembleMgf(certkit: MutableCertkit): void {
-  const mgf1 = (certkit.mgf1 || Mgf1.createCertkitNamespace()) as Parameters<typeof Mgf.createCertkitNamespace>[0];
+  const mgf1 = certkit.mgf1 || Mgf1.createCertkitNamespace();
   const mgf = Mgf.createCertkitNamespace(mgf1);
   certkit.mgf = certkit.mgf || mgf;
   Object.assign(certkit.mgf, mgf);
@@ -90,16 +94,16 @@ export function assembleRsa(certkit: MutableCertkit): RsaServiceType {
 
   const nativeCrypto = new NodeCryptoProvider();
   const rsaService = new RsaService({
-    oids: (certkit.pki.oids as Record<string, string>) || {},
+    oids: certkit.pki.oids || {},
     asn1: certkit.asn1!,
-    random: certkit.random!,
+    random: certkit.random! as RsaServiceDeps['random'],
     primeGenerator: new NodePrimeGenerator(certkit.random),
     nativeCrypto,
     usePureJavaScript: certkit.options?.usePureJavaScript ?? false
   });
 
   rsaService.attachToPki(certkit.pki);
-  certkit.rsa = certkit.pki.rsa as Record<string, unknown>;
+  certkit.rsa = certkit.pki.rsa!;
   return rsaService;
 }
 
@@ -116,7 +120,7 @@ export function assembleX509(certkit: MutableCertkit): void {
 }
 
 export function assemblePkcs12(certkit: MutableCertkit): void {
-  const deps = createPkiDeps(certkit, true) as PkiFacadeDeps & { pbe: Record<string, unknown> };
+  const deps = createPkiDeps(certkit, true) as PkiFacadeDeps & { pbe: CertkitPbeNamespace };
   const p12 = PkiFacade.attachPkcs12(deps);
   certkit.pkcs12 = certkit.pkcs12 || p12;
   Object.assign(certkit.pkcs12, p12);

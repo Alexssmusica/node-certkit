@@ -2,30 +2,9 @@
  * Cross-namespace alias wiring for the flat certkit object.
  * Centralizes cross-namespace aliases for the flat certkit object.
  */
-export interface CertkitNamespace {
-  options: { usePureJavaScript: boolean };
-  pkcs5?: { pbkdf2?: unknown };
-  pbkdf2?: unknown;
-  pkcs7?: { asn1?: unknown };
-  pkcs7asn1?: unknown;
-  mgf?: { mgf1?: unknown };
-  mgf1?: unknown;
-  pki?: { oids?: Record<string, string>; rsa?: unknown };
-  oids?: Record<string, string>;
-  rsa?: unknown;
-  sha512?: {
-    sha384?: unknown;
-    sha256?: unknown;
-    sha224?: unknown;
-  };
-  sha384?: unknown;
-  md?: Record<string, unknown> & {
-    algorithms?: Record<string, unknown>;
-  };
-  [key: string]: unknown;
-}
+import type { MutableCertkit } from './CertkitAssemblyTypes.js';
 
-export function wireCrossNamespaceAliases(certkit: CertkitNamespace): void {
+export function wireCrossNamespaceAliases(certkit: MutableCertkit): void {
   // certkit.pkcs5.pbkdf2 ↔ certkit.pbkdf2
   if (certkit.pbkdf2) {
     certkit.pkcs5 = certkit.pkcs5 || {};
@@ -82,8 +61,8 @@ export function wireCrossNamespaceAliases(certkit: CertkitNamespace): void {
     const md = certkit.md;
     const algorithms = md.algorithms || (md.algorithms = {});
 
-    md.sha512 = md.sha512 || certkit.sha512;
-    algorithms.sha512 = algorithms.sha512 || certkit.sha512;
+    md.sha512 = md.sha512 || (certkit.sha512 as NonNullable<typeof md.sha512>);
+    algorithms.sha512 = algorithms.sha512 || (certkit.sha512 as NonNullable<typeof algorithms.sha512>);
 
     const sha384 = certkit.sha384 || certkit.sha512.sha384;
     if (sha384) {
