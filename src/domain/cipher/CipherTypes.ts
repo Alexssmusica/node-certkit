@@ -10,27 +10,31 @@ import type { OfbMode } from './OfbMode.js';
 import type { CtrMode } from './CtrMode.js';
 import type { GcmMode } from './GcmMode.js';
 
+export type SymmetricCipherKey = string | number[] | ByteStringBuffer;
+
+export type DesCipherKey = string | ByteStringBuffer;
+
 export type CipherApi<TMode> = {
   createCipher: (
     algorithm: string,
-    key: unknown
+    key: SymmetricCipherKey
   ) => {
     start: (...args: unknown[]) => void;
   };
   createDecipher: (
     algorithm: string,
-    key: unknown
+    key: SymmetricCipherKey
   ) => {
     start: (...args: unknown[]) => void;
   };
-  registerAlgorithm: (name: string, factory: () => unknown) => void;
+  registerAlgorithm: (name: string, factory: () => CipherAlgorithm) => void;
   modes: Record<string, new (options: CipherModeOptions) => TMode>;
 };
 
 export type ModeConstructor<TMode> = CipherApi<TMode>['modes'][string];
 
 export type CreateCipherOptions = {
-  key?: unknown;
+  key?: SymmetricCipherKey;
   output?: ByteStringBuffer | null;
   decrypt?: boolean;
   mode?: string;
@@ -100,13 +104,13 @@ export type CipherModesObject = {
   gcm: typeof GcmMode;
 };
 
-export type CipherAlgorithmFactory = () => unknown;
+export type CipherAlgorithmFactory = () => CipherAlgorithm;
 
 export type CipherNamespaceObject = {
   algorithms: Record<string, CipherAlgorithmFactory>;
   modes: CipherModesObject;
-  createCipher: (algorithm: string | unknown, key: unknown) => BlockCipher;
-  createDecipher: (algorithm: string | unknown, key: unknown) => BlockCipher;
+  createCipher: (algorithm: string | CipherAlgorithm, key: SymmetricCipherKey) => BlockCipher;
+  createDecipher: (algorithm: string | CipherAlgorithm, key: SymmetricCipherKey) => BlockCipher;
   registerAlgorithm: (name: string, algorithm: CipherAlgorithmFactory) => void;
   getAlgorithm: (name: string) => CipherAlgorithmFactory | null;
   BlockCipher: typeof BlockCipher;
@@ -127,11 +131,21 @@ export type Rc2NamespaceObject = {
   createDecryptionCipher: typeof Rc2Cipher.createDecryptionCipher;
 };
 
-export type AesNamespaceObject = Record<string, unknown> & {
-  startEncrypting: (...args: unknown[]) => unknown;
-  createEncryptionCipher: (...args: unknown[]) => unknown;
-  startDecrypting: (...args: unknown[]) => unknown;
-  createDecryptionCipher: (...args: unknown[]) => unknown;
+export type AesNamespaceObject = {
+  startEncrypting: (
+    key: SymmetricCipherKey,
+    iv: SymmetricCipherKey | null,
+    output: ByteStringBuffer | null,
+    mode?: string
+  ) => BlockCipher;
+  createEncryptionCipher: (key: SymmetricCipherKey, mode?: string) => BlockCipher;
+  startDecrypting: (
+    key: SymmetricCipherKey,
+    iv: SymmetricCipherKey | null,
+    output: ByteStringBuffer | null,
+    mode?: string
+  ) => BlockCipher;
+  createDecryptionCipher: (key: SymmetricCipherKey, mode?: string) => BlockCipher;
   Algorithm: typeof AesAlgorithm;
   _expandKey: (key: number[], decrypt: boolean) => number[];
   _updateBlock: (w: number[], input: number[], output: number[], decrypt: boolean) => void;
@@ -145,10 +159,20 @@ export type AesTables = {
   imix: number[][];
 };
 
-export type DesNamespaceObject = Record<string, unknown> & {
-  startEncrypting: (...args: unknown[]) => unknown;
-  createEncryptionCipher: (...args: unknown[]) => unknown;
-  startDecrypting: (...args: unknown[]) => unknown;
-  createDecryptionCipher: (...args: unknown[]) => unknown;
+export type DesNamespaceObject = {
+  startEncrypting: (
+    key: DesCipherKey,
+    iv: DesCipherKey | null,
+    output: ByteStringBuffer | null,
+    mode?: string
+  ) => BlockCipher;
+  createEncryptionCipher: (key: DesCipherKey, mode?: string) => BlockCipher;
+  startDecrypting: (
+    key: DesCipherKey,
+    iv: DesCipherKey | null,
+    output: ByteStringBuffer | null,
+    mode?: string
+  ) => BlockCipher;
+  createDecryptionCipher: (key: DesCipherKey, mode?: string) => BlockCipher;
   Algorithm: typeof DesAlgorithm;
 };

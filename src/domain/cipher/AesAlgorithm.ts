@@ -3,7 +3,13 @@ import { UtilNamespace } from '../util/UtilNamespace.js';
 import { isArray } from '../util/typeChecks.js';
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { BlockCipherApi } from './CipherTypes.js';
-import { CipherApi, CreateCipherOptions, ModeConstructor, type AesNamespaceObject } from './CipherTypes.js';
+import {
+  CipherApi,
+  CreateCipherOptions,
+  ModeConstructor,
+  type AesNamespaceObject,
+  type SymmetricCipherKey
+} from './CipherTypes.js';
 import { ensureAesTables } from './AesTables.js';
 
 type InitializeOptions = {
@@ -52,7 +58,12 @@ const Nb = 4;
  *
  * @return the cipher.
  */
-function startEncrypting(key: unknown, iv: unknown, output: ByteStringBuffer | null, mode?: string) {
+function startEncrypting(
+  key: SymmetricCipherKey,
+  iv: SymmetricCipherKey | null,
+  output: ByteStringBuffer | null,
+  mode?: string
+) {
   const cipher = _createCipher({
     key: key,
     output: output,
@@ -78,7 +89,7 @@ function startEncrypting(key: unknown, iv: unknown, output: ByteStringBuffer | n
  *
  * @return the cipher.
  */
-function createEncryptionCipher(key: unknown, mode?: string) {
+function createEncryptionCipher(key: SymmetricCipherKey, mode?: string) {
   return _createCipher({
     key: key,
     output: null,
@@ -106,7 +117,12 @@ function createEncryptionCipher(key: unknown, mode?: string) {
  *
  * @return the cipher.
  */
-function startDecrypting(key: unknown, iv: unknown, output: ByteStringBuffer | null, mode?: string) {
+function startDecrypting(
+  key: SymmetricCipherKey,
+  iv: SymmetricCipherKey | null,
+  output: ByteStringBuffer | null,
+  mode?: string
+) {
   const cipher = _createCipher({
     key: key,
     output: output,
@@ -132,7 +148,7 @@ function startDecrypting(key: unknown, iv: unknown, output: ByteStringBuffer | n
  *
  * @return the cipher.
  */
-function createDecryptionCipher(key: unknown, mode?: string) {
+function createDecryptionCipher(key: SymmetricCipherKey, mode?: string) {
   return _createCipher({
     key: key,
     output: null,
@@ -166,11 +182,12 @@ function _createCipher(options?: CreateCipherOptions) {
   const mode = (options.mode || 'CBC').toUpperCase();
   const algorithm = 'AES-' + mode;
 
+  const key = options.key!;
   let cipher;
   if (options.decrypt) {
-    cipher = cipherApi.createDecipher(algorithm, options.key);
+    cipher = cipherApi.createDecipher(algorithm, key);
   } else {
-    cipher = cipherApi.createCipher(algorithm, options.key);
+    cipher = cipherApi.createCipher(algorithm, key);
   }
 
   // backwards compatible start API

@@ -6,6 +6,7 @@ import {
   CipherApi,
   CreateCipherOptions,
   ModeConstructor,
+  type DesCipherKey,
   type DesNamespaceObject
 } from './CipherTypes.js';
 
@@ -68,7 +69,7 @@ let cipherApi: CipherApi<DesAlgorithm['mode']>;
  *
  * @return the cipher.
  */
-function startEncrypting(key: unknown, iv: unknown, output: ByteStringBuffer | null, mode?: string) {
+function startEncrypting(key: DesCipherKey, iv: DesCipherKey | null, output: ByteStringBuffer | null, mode?: string) {
   const cipher = _createCipher({
     key: key,
     output: output,
@@ -93,7 +94,7 @@ function startEncrypting(key: unknown, iv: unknown, output: ByteStringBuffer | n
  *
  * @return the cipher.
  */
-function createEncryptionCipher(key: unknown, mode?: string) {
+function createEncryptionCipher(key: DesCipherKey, mode?: string) {
   return _createCipher({
     key: key,
     output: null,
@@ -122,7 +123,7 @@ function createEncryptionCipher(key: unknown, mode?: string) {
  *
  * @return the cipher.
  */
-function startDecrypting(key: unknown, iv: unknown, output: ByteStringBuffer | null, mode?: string) {
+function startDecrypting(key: DesCipherKey, iv: DesCipherKey | null, output: ByteStringBuffer | null, mode?: string) {
   const cipher = _createCipher({
     key: key,
     output: output,
@@ -147,7 +148,7 @@ function startDecrypting(key: unknown, iv: unknown, output: ByteStringBuffer | n
  *
  * @return the cipher.
  */
-function createDecryptionCipher(key: unknown, mode?: string) {
+function createDecryptionCipher(key: DesCipherKey, mode?: string) {
   return _createCipher({
     key: key,
     output: null,
@@ -180,11 +181,12 @@ function _createCipher(options?: CreateCipherOptions) {
   const mode = (options.mode || 'CBC').toUpperCase();
   const algorithm = 'DES-' + mode;
 
+  const key = options.key!;
   let cipher;
   if (options.decrypt) {
-    cipher = cipherApi.createDecipher(algorithm, options.key);
+    cipher = cipherApi.createDecipher(algorithm, key);
   } else {
-    cipher = cipherApi.createCipher(algorithm, options.key);
+    cipher = cipherApi.createCipher(algorithm, key);
   }
 
   // backwards compatible start API

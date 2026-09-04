@@ -1,11 +1,13 @@
 import type { Asn1Codec } from './Asn1Codec.js';
 
+export type Asn1Value = string | Asn1Object | Asn1Object[];
+
 export type Asn1Object = {
   tagClass: number;
   type: number;
   constructed: boolean;
   composed: boolean;
-  value: unknown;
+  value: Asn1Value;
   bitStringContents?: string;
   original?: Asn1Object;
 };
@@ -30,7 +32,7 @@ export type Asn1Validator = {
   captureBitStringValue?: string;
 };
 
-export type Asn1NamespaceObject = Record<string, unknown> & {
+export type Asn1NamespaceObject = {
   Class: typeof Asn1Codec.Class;
   Type: typeof Asn1Codec.Type;
   maxDepth: number;
