@@ -1,6 +1,6 @@
 {
   "name": "node-certkit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Node-only TypeScript PKI and cryptography library for certificate handling (PKCS#12, X.509, RSA).",
   "author": "Alexssmusica",
   "license": "MIT",

@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/Alexssmusica/node-certkit/compare/v1.0.0...v1.0.1) (2026-09-04)
+
+
+### Bug Fixes
+
+* erro de build ([fc41bd7](https://github.com/Alexssmusica/node-certkit/commit/fc41bd7279a2d0068993c0e9a4b0c3e20ee92f73))
+
 # 1.0.0 (2026-09-04)
 
 
