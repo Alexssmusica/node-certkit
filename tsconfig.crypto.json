@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false
+  },
+  "include": [
+    "src/domain/math/**/*.ts",
+    "src/domain/cipher/**/*.ts",
+    "src/domain/digest/**/*.ts"
+  ]
+}

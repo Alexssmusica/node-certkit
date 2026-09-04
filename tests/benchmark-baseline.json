@@ -1,0 +1,24 @@
+{
+  "recordedAt": "2026-09-02T22:28:30.436Z",
+  "nodeVersion": "v24.18.1",
+  "results": [
+    {
+      "name": "sha256",
+      "iterations": 5000,
+      "totalMs": 21.11,
+      "msPerOp": 0.004
+    },
+    {
+      "name": "aes-cbc-encrypt",
+      "iterations": 2000,
+      "totalMs": 583.59,
+      "msPerOp": 0.292
+    },
+    {
+      "name": "rsa-generateKeyPair-512",
+      "iterations": 3,
+      "totalMs": 14.4,
+      "msPerOp": 4.801
+    }
+  ]
+}

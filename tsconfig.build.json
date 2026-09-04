@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.crypto.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": false,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": [
+    "src/presentation/**/*.ts",
+    "src/domain/**/*.ts",
+    "src/application/**/*.ts",
+    "src/infrastructure/**/*.ts"
+  ],
+  "exclude": ["node_modules", "dist", "tests"]
+}

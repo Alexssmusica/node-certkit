@@ -1,0 +1,77 @@
+{
+  "name": "node-certkit",
+  "version": "1.0.0",
+  "description": "Node-only TypeScript PKI and cryptography library for certificate handling (PKCS#12, X.509, RSA).",
+  "type": "module",
+  "author": "Alexssmusica",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Alexssmusica/node-certkit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Alexssmusica/node-certkit/issues"
+  },
+  "homepage": "https://github.com/Alexssmusica/node-certkit#readme",
+  "sideEffects": false,
+  "main": "./dist/presentation/index.js",
+  "types": "./dist/presentation/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/presentation/index.d.ts",
+      "default": "./dist/presentation/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "prebuild": "node --input-type=module -e \"import fs from 'node:fs'; fs.rmSync('dist', {recursive: true, force: true})\"",
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:types": "tsc -p tsconfig.test.json --noEmit",
+    "test:security": "vitest run tests/security",
+    "lint": "eslint src/",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@typescript-eslint/eslint-plugin": "^8.69.0",
+    "@typescript-eslint/parser": "^8.69.0",
+    "eslint": "^9.22.0",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.0"
+  },
+  "keywords": [
+    "aes",
+    "asn.1",
+    "asn1",
+    "crypto",
+    "cryptography",
+    "csr",
+    "des",
+    "hmac",
+    "md5",
+    "pbkdf2",
+    "pem",
+    "pkcs8",
+    "pkcs12",
+    "pki",
+    "prng",
+    "rc2",
+    "rsa",
+    "sha1",
+    "sha256",
+    "sha512",
+    "typescript",
+    "x.509",
+    "x509",
+    "certificate",
+    "pfx"
+  ]
+}

@@ -1,0 +1,1335 @@
+{
+  "md5.create": {
+    "label": "md5.create",
+    "ownKeys": [
+      "algorithm",
+      "blockLength",
+      "digest",
+      "digestLength",
+      "fullMessageLength",
+      "messageLength",
+      "messageLength64",
+      "messageLengthSize",
+      "start",
+      "update"
+    ],
+    "methods": {
+      "digest": {
+        "type": "function",
+        "length": 0
+      },
+      "start": {
+        "type": "function",
+        "length": 0
+      },
+      "update": {
+        "type": "function",
+        "length": 2
+      }
+    },
+    "properties": {
+      "algorithm": {
+        "type": "string"
+      },
+      "blockLength": {
+        "type": "number"
+      },
+      "digestLength": {
+        "type": "number"
+      },
+      "fullMessageLength": {
+        "type": "array",
+        "length": 2
+      },
+      "messageLength": {
+        "type": "number"
+      },
+      "messageLength64": {
+        "type": "array",
+        "length": 2
+      },
+      "messageLengthSize": {
+        "type": "number"
+      }
+    },
+    "protoMethods": {}
+  },
+  "sha1.create": {
+    "label": "sha1.create",
+    "ownKeys": [
+      "algorithm",
+      "blockLength",
+      "digest",
+      "digestLength",
+      "fullMessageLength",
+      "messageLength",
+      "messageLength64",
+      "messageLengthSize",
+      "start",
+      "update"
+    ],
+    "methods": {
+      "digest": {
+        "type": "function",
+        "length": 0
+      },
+      "start": {
+        "type": "function",
+        "length": 0
+      },
+      "update": {
+        "type": "function",
+        "length": 2
+      }
+    },
+    "properties": {
+      "algorithm": {
+        "type": "string"
+      },
+      "blockLength": {
+        "type": "number"
+      },
+      "digestLength": {
+        "type": "number"
+      },
+      "fullMessageLength": {
+        "type": "array",
+        "length": 2
+      },
+      "messageLength": {
+        "type": "number"
+      },
+      "messageLength64": {
+        "type": "array",
+        "length": 2
+      },
+      "messageLengthSize": {
+        "type": "number"
+      }
+    },
+    "protoMethods": {}
+  },
+  "sha256.create": {
+    "label": "sha256.create",
+    "ownKeys": [
+      "algorithm",
+      "blockLength",
+      "digest",
+      "digestLength",
+      "fullMessageLength",
+      "messageLength",
+      "messageLength64",
+      "messageLengthSize",
+      "start",
+      "update"
+    ],
+    "methods": {
+      "digest": {
+        "type": "function",
+        "length": 0
+      },
+      "start": {
+        "type": "function",
+        "length": 0
+      },
+      "update": {
+        "type": "function",
+        "length": 2
+      }
+    },
+    "properties": {
+      "algorithm": {
+        "type": "string"
+      },
+      "blockLength": {
+        "type": "number"
+      },
+      "digestLength": {
+        "type": "number"
+      },
+      "fullMessageLength": {
+        "type": "array",
+        "length": 2
+      },
+      "messageLength": {
+        "type": "number"
+      },
+      "messageLength64": {
+        "type": "array",
+        "length": 2
+      },
+      "messageLengthSize": {
+        "type": "number"
+      }
+    },
+    "protoMethods": {}
+  },
+  "sha512.create": {
+    "label": "sha512.create",
+    "ownKeys": [
+      "algorithm",
+      "blockLength",
+      "digest",
+      "digestLength",
+      "fullMessageLength",
+      "messageLength",
+      "messageLength128",
+      "messageLengthSize",
+      "start",
+      "update"
+    ],
+    "methods": {
+      "digest": {
+        "type": "function",
+        "length": 0
+      },
+      "start": {
+        "type": "function",
+        "length": 0
+      },
+      "update": {
+        "type": "function",
+        "length": 2
+      }
+    },
+    "properties": {
+      "algorithm": {
+        "type": "string"
+      },
+      "blockLength": {
+        "type": "number"
+      },
+      "digestLength": {
+        "type": "number"
+      },
+      "fullMessageLength": {
+        "type": "array",
+        "length": 4
+      },
+      "messageLength": {
+        "type": "number"
+      },
+      "messageLength128": {
+        "type": "array",
+        "length": 4
+      },
+      "messageLengthSize": {
+        "type": "number"
+      }
+    },
+    "protoMethods": {}
+  },
+  "hmac.create": {
+    "label": "hmac.create",
+    "ownKeys": [
+      "digest",
+      "getMac",
+      "start",
+      "update"
+    ],
+    "methods": {
+      "digest": {
+        "type": "function",
+        "length": 0
+      },
+      "getMac": {
+        "type": "function",
+        "length": 0
+      },
+      "start": {
+        "type": "function",
+        "length": 2
+      },
+      "update": {
+        "type": "function",
+        "length": 1
+      }
+    },
+    "properties": {},
+    "protoMethods": {}
+  },
+  "cipher.createCipher(AES-CBC)": {
+    "label": "cipher.createCipher(AES-CBC)",
+    "ownKeys": [
+      "_decrypt",
+      "_finish",
+      "_input",
+      "_op",
+      "algorithm",
+      "blockSize",
+      "mode",
+      "output"
+    ],
+    "methods": {
+      "_op": {
+        "type": "function",
+        "length": 3
+      }
+    },
+    "properties": {
+      "_decrypt": {
+        "type": "boolean"
+      },
+      "_finish": {
+        "type": "boolean"
+      },
+      "_input": {
+        "type": "null"
+      },
+      "algorithm": {
+        "type": "object"
+      },
+      "blockSize": {
+        "type": "number"
+      },
+      "mode": {
+        "type": "object"
+      },
+      "output": {
+        "type": "null"
+      }
+    },
+    "protoMethods": {
+      "finish": {
+        "type": "function",
+        "length": 1
+      },
+      "start": {
+        "type": "function",
+        "length": 1
+      },
+      "update": {
+        "type": "function",
+        "length": 1
+      }
+    }
+  },
+  "prng.create": {
+    "label": "prng.create",
+    "ownKeys": [
+      "collect",
+      "collectInt",
+      "generate",
+      "generateSync",
+      "generated",
+      "key",
+      "keyBytes",
+      "plugin",
+      "pool",
+      "pools",
+      "reseeds",
+      "seed",
+      "seedFile",
+      "seedFileSync",
+      "time"
+    ],
+    "methods": {
+      "collect": {
+        "type": "function",
+        "length": 1
+      },
+      "collectInt": {
+        "type": "function",
+        "length": 2
+      },
+      "generate": {
+        "type": "function",
+        "length": 2
+      },
+      "generateSync": {
+        "type": "function",
+        "length": 1
+      },
+      "seedFile": {
+        "type": "function",
+        "length": 2
+      },
+      "seedFileSync": {
+        "type": "function",
+        "length": 1
+      }
+    },
+    "properties": {
+      "generated": {
+        "type": "number"
+      },
+      "key": {
+        "type": "null"
+      },
+      "keyBytes": {
+        "type": "string"
+      },
+      "plugin": {
+        "type": "object"
+      },
+      "pool": {
+        "type": "number"
+      },
+      "pools": {
+        "type": "array",
+        "length": 32
+      },
+      "reseeds": {
+        "type": "number"
+      },
+      "seed": {
+        "type": "null"
+      },
+      "time": {
+        "type": "null"
+      }
+    },
+    "protoMethods": {}
+  },
+  "random": {
+    "label": "random",
+    "ownKeys": [
+      "collect",
+      "collectInt",
+      "createInstance",
+      "generate",
+      "generateSync",
+      "generated",
+      "getBytes",
+      "getBytesSync",
+      "key",
+      "keyBytes",
+      "plugin",
+      "pool",
+      "pools",
+      "reseeds",
+      "seed",
+      "seedFile",
+      "seedFileSync",
+      "time"
+    ],
+    "methods": {
+      "collect": {
+        "type": "function",
+        "length": 1
+      },
+      "collectInt": {
+        "type": "function",
+        "length": 2
+      },
+      "createInstance": {
+        "type": "function",
+        "length": 0
+      },
+      "generate": {
+        "type": "function",
+        "length": 2
+      },
+      "generateSync": {
+        "type": "function",
+        "length": 1
+      },
+      "getBytes": {
+        "type": "function",
+        "length": 2
+      },
+      "getBytesSync": {
+        "type": "function",
+        "length": 1
+      },
+      "seedFile": {
+        "type": "function",
+        "length": 2
+      },
+      "seedFileSync": {
+        "type": "function",
+        "length": 1
+      }
+    },
+    "properties": {
+      "generated": {
+        "type": "number"
+      },
+      "key": {
+        "type": "array",
+        "length": 44
+      },
+      "keyBytes": {
+        "type": "string"
+      },
+      "plugin": {
+        "type": "object"
+      },
+      "pool": {
+        "type": "number"
+      },
+      "pools": {
+        "type": "array",
+        "length": 32
+      },
+      "reseeds": {
+        "type": "number"
+      },
+      "seed": {
+        "type": "array",
+        "length": 4
+      },
+      "time": {
+        "type": "null"
+      }
+    },
+    "protoMethods": {}
+  },
+  "pki.createCertificate": {
+    "label": "pki.createCertificate",
+    "ownKeys": [
+      "extensions",
+      "generateSubjectKeyIdentifier",
+      "getExtension",
+      "isIssuer",
+      "issued",
+      "issuer",
+      "md",
+      "publicKey",
+      "serialNumber",
+      "setExtensions",
+      "setIssuer",
+      "setSubject",
+      "siginfo",
+      "sign",
+      "signature",
+      "signatureOid",
+      "subject",
+      "validity",
+      "verify",
+      "verifySubjectKeyIdentifier",
+      "version"
+    ],
+    "methods": {
+      "generateSubjectKeyIdentifier": {
+        "type": "function",
+        "length": 0
+      },
+      "getExtension": {
+        "type": "function",
+        "length": 1
+      },
+      "isIssuer": {
+        "type": "function",
+        "length": 1
+      },
+      "issued": {
+        "type": "function",
+        "length": 1
+      },
+      "setExtensions": {
+        "type": "function",
+        "length": 1
+      },
+      "setIssuer": {
+        "type": "function",
+        "length": 2
+      },
+      "setSubject": {
+        "type": "function",
+        "length": 2
+      },
+      "sign": {
+        "type": "function",
+        "length": 2
+      },
+      "verify": {
+        "type": "function",
+        "length": 1
+      },
+      "verifySubjectKeyIdentifier": {
+        "type": "function",
+        "length": 0
+      }
+    },
+    "properties": {
+      "extensions": {
+        "type": "array",
+        "length": 0
+      },
+      "issuer": {
+        "type": "object"
+      },
+      "md": {
+        "type": "null"
+      },
+      "publicKey": {
+        "type": "null"
+      },
+      "serialNumber": {
+        "type": "string"
+      },
+      "siginfo": {
+        "type": "object"
+      },
+      "signature": {
+        "type": "null"
+      },
+      "signatureOid": {
+        "type": "null"
+      },
+      "subject": {
+        "type": "object"
+      },
+      "validity": {
+        "type": "object"
+      },
+      "version": {
+        "type": "number"
+      }
+    },
+    "protoMethods": {}
+  },
+  "pki.createCertificationRequest": {
+    "label": "pki.createCertificationRequest",
+    "ownKeys": [
+      "addAttribute",
+      "attributes",
+      "getAttribute",
+      "md",
+      "publicKey",
+      "setAttributes",
+      "setSubject",
+      "siginfo",
+      "sign",
+      "signature",
+      "signatureOid",
+      "subject",
+      "verify",
+      "version"
+    ],
+    "methods": {
+      "addAttribute": {
+        "type": "function",
+        "length": 1
+      },
+      "getAttribute": {
+        "type": "function",
+        "length": 1
+      },
+      "setAttributes": {
+        "type": "function",
+        "length": 1
+      },
+      "setSubject": {
+        "type": "function",
+        "length": 1
+      },
+      "sign": {
+        "type": "function",
+        "length": 2
+      },
+      "verify": {
+        "type": "function",
+        "length": 0
+      }
+    },
+    "properties": {
+      "attributes": {
+        "type": "array",
+        "length": 0
+      },
+      "md": {
+        "type": "null"
+      },
+      "publicKey": {
+        "type": "null"
+      },
+      "siginfo": {
+        "type": "object"
+      },
+      "signature": {
+        "type": "null"
+      },
+      "signatureOid": {
+        "type": "null"
+      },
+      "subject": {
+        "type": "object"
+      },
+      "version": {
+        "type": "number"
+      }
+    },
+    "protoMethods": {}
+  },
+  "pki.createCaStore": {
+    "label": "pki.createCaStore",
+    "ownKeys": [
+      "addCertificate",
+      "certs",
+      "getIssuer",
+      "hasCertificate",
+      "listAllCertificates",
+      "removeCertificate"
+    ],
+    "methods": {
+      "addCertificate": {
+        "type": "function",
+        "length": 1
+      },
+      "getIssuer": {
+        "type": "function",
+        "length": 1
+      },
+      "hasCertificate": {
+        "type": "function",
+        "length": 1
+      },
+      "listAllCertificates": {
+        "type": "function",
+        "length": 0
+      },
+      "removeCertificate": {
+        "type": "function",
+        "length": 1
+      }
+    },
+    "properties": {
+      "certs": {
+        "type": "object"
+      }
+    },
+    "protoMethods": {}
+  },
+  "pkcs12.pkcs12FromAsn1": {
+    "label": "pkcs12.pkcs12FromAsn1",
+    "ownKeys": [
+      "getBags",
+      "getBagsByFriendlyName",
+      "getBagsByLocalKeyId",
+      "safeContents",
+      "version"
+    ],
+    "methods": {
+      "getBags": {
+        "type": "function",
+        "length": 1
+      },
+      "getBagsByFriendlyName": {
+        "type": "function",
+        "length": 2
+      },
+      "getBagsByLocalKeyId": {
+        "type": "function",
+        "length": 2
+      }
+    },
+    "properties": {
+      "safeContents": {
+        "type": "array",
+        "length": 2
+      },
+      "version": {
+        "type": "number"
+      }
+    },
+    "protoMethods": {}
+  },
+  "rsa.setPublicKey": {
+    "label": "rsa.setPublicKey",
+    "ownKeys": [
+      "e",
+      "encrypt",
+      "n",
+      "verify"
+    ],
+    "methods": {
+      "encrypt": {
+        "type": "function",
+        "length": 3
+      },
+      "verify": {
+        "type": "function",
+        "length": 4
+      }
+    },
+    "properties": {
+      "e": {
+        "type": "object"
+      },
+      "n": {
+        "type": "object"
+      }
+    },
+    "protoMethods": {}
+  },
+  "rsa.setPrivateKey": {
+    "label": "rsa.setPrivateKey",
+    "ownKeys": [
+      "d",
+      "dP",
+      "dQ",
+      "decrypt",
+      "e",
+      "n",
+      "p",
+      "q",
+      "qInv",
+      "sign"
+    ],
+    "methods": {
+      "decrypt": {
+        "type": "function",
+        "length": 3
+      },
+      "sign": {
+        "type": "function",
+        "length": 2
+      }
+    },
+    "properties": {
+      "d": {
+        "type": "object"
+      },
+      "dP": {
+        "type": "undefined"
+      },
+      "dQ": {
+        "type": "undefined"
+      },
+      "e": {
+        "type": "object"
+      },
+      "n": {
+        "type": "object"
+      },
+      "p": {
+        "type": "object"
+      },
+      "q": {
+        "type": "object"
+      },
+      "qInv": {
+        "type": "undefined"
+      }
+    },
+    "protoMethods": {}
+  },
+  "pss.create": {
+    "label": "pss.create",
+    "ownKeys": [
+      "encode",
+      "verify"
+    ],
+    "methods": {
+      "encode": {
+        "type": "function",
+        "length": 2
+      },
+      "verify": {
+        "type": "function",
+        "length": 3
+      }
+    },
+    "properties": {},
+    "protoMethods": {}
+  },
+  "mgf.mgf1.create": {
+    "label": "mgf.mgf1.create",
+    "ownKeys": [
+      "generate"
+    ],
+    "methods": {
+      "generate": {
+        "type": "function",
+        "length": 2
+      }
+    },
+    "properties": {},
+    "protoMethods": {}
+  },
+  "rc2.createEncryptionCipher": {
+    "label": "rc2.createEncryptionCipher",
+    "ownKeys": [
+      "finish",
+      "start",
+      "update"
+    ],
+    "methods": {
+      "finish": {
+        "type": "function",
+        "length": 1
+      },
+      "start": {
+        "type": "function",
+        "length": 2
+      },
+      "update": {
+        "type": "function",
+        "length": 1
+      }
+    },
+    "properties": {},
+    "protoMethods": {}
+  },
+  "jsbn.BigInteger": {
+    "label": "jsbn.BigInteger",
+    "ownKeys": [
+      "data",
+      "s",
+      "t"
+    ],
+    "methods": {},
+    "properties": {
+      "data": {
+        "type": "array",
+        "length": 1
+      },
+      "s": {
+        "type": "number"
+      },
+      "t": {
+        "type": "number"
+      }
+    },
+    "protoMethods": {
+      "abs": {
+        "type": "function",
+        "length": 0
+      },
+      "add": {
+        "type": "function",
+        "length": 1
+      },
+      "addTo": {
+        "type": "function",
+        "length": 2
+      },
+      "am": {
+        "type": "function",
+        "length": 6
+      },
+      "and": {
+        "type": "function",
+        "length": 1
+      },
+      "andNot": {
+        "type": "function",
+        "length": 1
+      },
+      "bitCount": {
+        "type": "function",
+        "length": 0
+      },
+      "bitLength": {
+        "type": "function",
+        "length": 0
+      },
+      "bitwiseTo": {
+        "type": "function",
+        "length": 3
+      },
+      "byteValue": {
+        "type": "function",
+        "length": 0
+      },
+      "changeBit": {
+        "type": "function",
+        "length": 2
+      },
+      "chunkSize": {
+        "type": "function",
+        "length": 1
+      },
+      "clamp": {
+        "type": "function",
+        "length": 0
+      },
+      "clearBit": {
+        "type": "function",
+        "length": 1
+      },
+      "clone": {
+        "type": "function",
+        "length": 0
+      },
+      "compareTo": {
+        "type": "function",
+        "length": 1
+      },
+      "copyTo": {
+        "type": "function",
+        "length": 1
+      },
+      "dAddOffset": {
+        "type": "function",
+        "length": 2
+      },
+      "dMultiply": {
+        "type": "function",
+        "length": 1
+      },
+      "divRemTo": {
+        "type": "function",
+        "length": 3
+      },
+      "divide": {
+        "type": "function",
+        "length": 1
+      },
+      "divideAndRemainder": {
+        "type": "function",
+        "length": 1
+      },
+      "dlShiftTo": {
+        "type": "function",
+        "length": 2
+      },
+      "drShiftTo": {
+        "type": "function",
+        "length": 2
+      },
+      "equals": {
+        "type": "function",
+        "length": 1
+      },
+      "exp": {
+        "type": "function",
+        "length": 2
+      },
+      "flipBit": {
+        "type": "function",
+        "length": 1
+      },
+      "fromInt": {
+        "type": "function",
+        "length": 1
+      },
+      "fromNumber": {
+        "type": "function",
+        "length": 3
+      },
+      "fromRadix": {
+        "type": "function",
+        "length": 2
+      },
+      "fromString": {
+        "type": "function",
+        "length": 2
+      },
+      "gcd": {
+        "type": "function",
+        "length": 1
+      },
+      "getLowestSetBit": {
+        "type": "function",
+        "length": 0
+      },
+      "intValue": {
+        "type": "function",
+        "length": 0
+      },
+      "invDigit": {
+        "type": "function",
+        "length": 0
+      },
+      "isEven": {
+        "type": "function",
+        "length": 0
+      },
+      "isProbablePrime": {
+        "type": "function",
+        "length": 1
+      },
+      "lShiftTo": {
+        "type": "function",
+        "length": 2
+      },
+      "max": {
+        "type": "function",
+        "length": 1
+      },
+      "millerRabin": {
+        "type": "function",
+        "length": 1
+      },
+      "min": {
+        "type": "function",
+        "length": 1
+      },
+      "mod": {
+        "type": "function",
+        "length": 1
+      },
+      "modInt": {
+        "type": "function",
+        "length": 1
+      },
+      "modInverse": {
+        "type": "function",
+        "length": 1
+      },
+      "modPow": {
+        "type": "function",
+        "length": 2
+      },
+      "modPowInt": {
+        "type": "function",
+        "length": 2
+      },
+      "multiply": {
+        "type": "function",
+        "length": 1
+      },
+      "multiplyLowerTo": {
+        "type": "function",
+        "length": 3
+      },
+      "multiplyTo": {
+        "type": "function",
+        "length": 2
+      },
+      "multiplyUpperTo": {
+        "type": "function",
+        "length": 3
+      },
+      "negate": {
+        "type": "function",
+        "length": 0
+      },
+      "not": {
+        "type": "function",
+        "length": 0
+      },
+      "or": {
+        "type": "function",
+        "length": 1
+      },
+      "pow": {
+        "type": "function",
+        "length": 1
+      },
+      "rShiftTo": {
+        "type": "function",
+        "length": 2
+      },
+      "remainder": {
+        "type": "function",
+        "length": 1
+      },
+      "setBit": {
+        "type": "function",
+        "length": 1
+      },
+      "shiftLeft": {
+        "type": "function",
+        "length": 1
+      },
+      "shiftRight": {
+        "type": "function",
+        "length": 1
+      },
+      "shortValue": {
+        "type": "function",
+        "length": 0
+      },
+      "signum": {
+        "type": "function",
+        "length": 0
+      },
+      "square": {
+        "type": "function",
+        "length": 0
+      },
+      "squareTo": {
+        "type": "function",
+        "length": 1
+      },
+      "subTo": {
+        "type": "function",
+        "length": 2
+      },
+      "subtract": {
+        "type": "function",
+        "length": 1
+      },
+      "testBit": {
+        "type": "function",
+        "length": 1
+      },
+      "toByteArray": {
+        "type": "function",
+        "length": 0
+      },
+      "toRadix": {
+        "type": "function",
+        "length": 1
+      },
+      "toString": {
+        "type": "function",
+        "length": 1
+      },
+      "xor": {
+        "type": "function",
+        "length": 1
+      }
+    }
+  },
+  "util.createBuffer": {
+    "label": "util.createBuffer",
+    "ownKeys": [
+      "_constructedStringLength",
+      "data",
+      "read"
+    ],
+    "methods": {},
+    "properties": {
+      "_constructedStringLength": {
+        "type": "number"
+      },
+      "data": {
+        "type": "string"
+      },
+      "read": {
+        "type": "number"
+      }
+    },
+    "protoMethods": {
+      "_optimizeConstructedString": {
+        "type": "function",
+        "length": 1
+      },
+      "at": {
+        "type": "function",
+        "length": 1
+      },
+      "bytes": {
+        "type": "function",
+        "length": 1
+      },
+      "clear": {
+        "type": "function",
+        "length": 0
+      },
+      "compact": {
+        "type": "function",
+        "length": 0
+      },
+      "copy": {
+        "type": "function",
+        "length": 0
+      },
+      "fillWithByte": {
+        "type": "function",
+        "length": 2
+      },
+      "getByte": {
+        "type": "function",
+        "length": 0
+      },
+      "getBytes": {
+        "type": "function",
+        "length": 1
+      },
+      "getInt": {
+        "type": "function",
+        "length": 1
+      },
+      "getInt16": {
+        "type": "function",
+        "length": 0
+      },
+      "getInt16Le": {
+        "type": "function",
+        "length": 0
+      },
+      "getInt24": {
+        "type": "function",
+        "length": 0
+      },
+      "getInt24Le": {
+        "type": "function",
+        "length": 0
+      },
+      "getInt32": {
+        "type": "function",
+        "length": 0
+      },
+      "getInt32Le": {
+        "type": "function",
+        "length": 0
+      },
+      "getSignedInt": {
+        "type": "function",
+        "length": 1
+      },
+      "isEmpty": {
+        "type": "function",
+        "length": 0
+      },
+      "last": {
+        "type": "function",
+        "length": 0
+      },
+      "length": {
+        "type": "function",
+        "length": 0
+      },
+      "putBuffer": {
+        "type": "function",
+        "length": 1
+      },
+      "putByte": {
+        "type": "function",
+        "length": 1
+      },
+      "putBytes": {
+        "type": "function",
+        "length": 1
+      },
+      "putInt": {
+        "type": "function",
+        "length": 2
+      },
+      "putInt16": {
+        "type": "function",
+        "length": 1
+      },
+      "putInt16Le": {
+        "type": "function",
+        "length": 1
+      },
+      "putInt24": {
+        "type": "function",
+        "length": 1
+      },
+      "putInt24Le": {
+        "type": "function",
+        "length": 1
+      },
+      "putInt32": {
+        "type": "function",
+        "length": 1
+      },
+      "putInt32Le": {
+        "type": "function",
+        "length": 1
+      },
+      "putSignedInt": {
+        "type": "function",
+        "length": 2
+      },
+      "putString": {
+        "type": "function",
+        "length": 1
+      },
+      "setAt": {
+        "type": "function",
+        "length": 2
+      },
+      "toHex": {
+        "type": "function",
+        "length": 0
+      },
+      "toString": {
+        "type": "function",
+        "length": 0
+      },
+      "truncate": {
+        "type": "function",
+        "length": 1
+      }
+    }
+  }
+}

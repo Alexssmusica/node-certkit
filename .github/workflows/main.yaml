@@ -1,0 +1,28 @@
+name: Main Checks
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    branches:
+      - '**'
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        persist-credentials: false
+    - uses: actions/setup-node@v6
+      with:
+        node-version: 24.x
+    - run: npm ci
+    - run: npm run lint
+    - run: npm run test:types
+    - run: npm test
+    - run: npm run build

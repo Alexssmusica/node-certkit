@@ -1,0 +1,4051 @@
+{
+  "certkit": {
+    "type": "object"
+  },
+  "certkit.aes": {
+    "type": "object"
+  },
+  "certkit.aes.Algorithm": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.aes._expandKey": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.aes._updateBlock": {
+    "type": "function",
+    "length": 4
+  },
+  "certkit.aes.createDecryptionCipher": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.aes.createEncryptionCipher": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.aes.startDecrypting": {
+    "type": "function",
+    "length": 4
+  },
+  "certkit.aes.startEncrypting": {
+    "type": "function",
+    "length": 4
+  },
+  "certkit.asn1": {
+    "type": "object"
+  },
+  "certkit.asn1.Class": {
+    "type": "object"
+  },
+  "certkit.asn1.Class.APPLICATION": {
+    "type": "number"
+  },
+  "certkit.asn1.Class.CONTEXT_SPECIFIC": {
+    "type": "number"
+  },
+  "certkit.asn1.Class.PRIVATE": {
+    "type": "number"
+  },
+  "certkit.asn1.Class.UNIVERSAL": {
+    "type": "number"
+  },
+  "certkit.asn1.Type": {
+    "type": "object"
+  },
+  "certkit.asn1.Type.BITSTRING": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.BMPSTRING": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.BOOLEAN": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.EMBEDDED": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.ENUMERATED": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.EXTERNAL": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.GENERALIZEDTIME": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.IA5STRING": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.INTEGER": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.NONE": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.NULL": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.OCTETSTRING": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.ODESC": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.OID": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.PRINTABLESTRING": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.REAL": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.ROID": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.SEQUENCE": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.SET": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.UTCTIME": {
+    "type": "number"
+  },
+  "certkit.asn1.Type.UTF8": {
+    "type": "number"
+  },
+  "certkit.asn1.copy": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.asn1.create": {
+    "type": "function",
+    "length": 5
+  },
+  "certkit.asn1.dateToGeneralizedTime": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.asn1.dateToUtcTime": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.asn1.derToInteger": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.asn1.derToOid": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.asn1.equals": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.asn1.fromDer": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.asn1.generalizedTimeToDate": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.asn1.getBerValueLength": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.asn1.integerToDer": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.asn1.maxDepth": {
+    "type": "number"
+  },
+  "certkit.asn1.oidToDer": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.asn1.prettyPrint": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.asn1.toDer": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.asn1.utcTimeToDate": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.asn1.validate": {
+    "type": "function",
+    "length": 4
+  },
+  "certkit.cipher": {
+    "type": "object"
+  },
+  "certkit.cipher.BlockCipher": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.cipher.algorithms": {
+    "type": "object"
+  },
+  "certkit.cipher.algorithms.3DES-CBC": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.algorithms.3DES-CFB": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.algorithms.3DES-CTR": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.algorithms.3DES-ECB": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.algorithms.3DES-OFB": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.algorithms.AES-CBC": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.algorithms.AES-CFB": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.algorithms.AES-CTR": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.algorithms.AES-ECB": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.algorithms.AES-GCM": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.algorithms.AES-OFB": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.algorithms.DES-CBC": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.algorithms.DES-CFB": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.algorithms.DES-CTR": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.algorithms.DES-ECB": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.algorithms.DES-OFB": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.cipher.createCipher": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.cipher.createDecipher": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.cipher.getAlgorithm": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.cipher.modes": {
+    "type": "object"
+  },
+  "certkit.cipher.modes.cbc": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.cipher.modes.cfb": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.cipher.modes.ctr": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.cipher.modes.ecb": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.cipher.modes.gcm": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.cipher.modes.ofb": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.cipher.registerAlgorithm": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.des": {
+    "type": "object"
+  },
+  "certkit.des.Algorithm": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.des.createDecryptionCipher": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.des.createEncryptionCipher": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.des.startDecrypting": {
+    "type": "function",
+    "length": 4
+  },
+  "certkit.des.startEncrypting": {
+    "type": "function",
+    "length": 4
+  },
+  "certkit.hmac": {
+    "type": "object"
+  },
+  "certkit.hmac.create": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.jsbn": {
+    "type": "object"
+  },
+  "certkit.jsbn.BigInteger": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.md": {
+    "type": "object"
+  },
+  "certkit.md.algorithms": {
+    "type": "object"
+  },
+  "certkit.md.algorithms.md5": {
+    "type": "object"
+  },
+  "certkit.md.algorithms.md5.create": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.md.algorithms.sha1": {
+    "type": "object"
+  },
+  "certkit.md.algorithms.sha1.create": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.md.algorithms.sha256": {
+    "type": "object"
+  },
+  "certkit.md.algorithms.sha256.create": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.md.algorithms.sha384": {
+    "type": "object"
+  },
+  "certkit.md.algorithms.sha384.create": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.md.algorithms.sha512": {
+    "type": "object"
+  },
+  "certkit.md.algorithms.sha512.create": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.md.algorithms.sha512.sha224": {
+    "type": "object"
+  },
+  "certkit.md.algorithms.sha512.sha224.create": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.md.algorithms.sha512.sha256": {
+    "type": "object"
+  },
+  "certkit.md.algorithms.sha512.sha256.create": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.md.algorithms.sha512.sha384": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.md.algorithms.sha512/224": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.md.algorithms.sha512/256": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.md.md5": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.md.sha1": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.md.sha256": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.md.sha384": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.md.sha512": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.md.sha512/224": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.md.sha512/256": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.md5": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.mgf": {
+    "type": "object"
+  },
+  "certkit.mgf.mgf1": {
+    "type": "object"
+  },
+  "certkit.mgf.mgf1.create": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.mgf1": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.oids": {
+    "type": "object"
+  },
+  "certkit.oids.1.2.840.10040.4.3": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.1.1": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.1.10": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.1.11": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.1.12": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.1.13": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.1.4": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.1.5": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.1.7": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.1.8": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.1.9": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.12.1.1": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.12.1.2": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.12.1.3": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.12.1.4": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.12.1.5": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.12.1.6": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.12.10.1.1": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.12.10.1.2": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.12.10.1.3": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.12.10.1.4": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.12.10.1.5": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.12.10.1.6": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.5.12": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.5.13": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.7.1": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.7.2": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.7.3": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.7.4": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.7.5": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.7.6": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.9.1": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.9.14": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.9.2": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.9.20": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.9.21": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.9.22.1": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.9.3": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.9.4": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.9.5": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.9.6": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.9.7": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.1.9.8": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.2.10": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.2.11": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.2.2": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.2.5": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.2.7": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.2.8": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.2.9": {
+    "type": "string"
+  },
+  "certkit.oids.1.2.840.113549.3.7": {
+    "type": "string"
+  },
+  "certkit.oids.1.3.101.112": {
+    "type": "string"
+  },
+  "certkit.oids.1.3.14.3.2.26": {
+    "type": "string"
+  },
+  "certkit.oids.1.3.14.3.2.29": {
+    "type": "string"
+  },
+  "certkit.oids.1.3.14.3.2.7": {
+    "type": "string"
+  },
+  "certkit.oids.1.3.6.1.4.1.11129.2.4.2": {
+    "type": "string"
+  },
+  "certkit.oids.1.3.6.1.4.1.311.60.2.1.2": {
+    "type": "string"
+  },
+  "certkit.oids.1.3.6.1.4.1.311.60.2.1.3": {
+    "type": "string"
+  },
+  "certkit.oids.1.3.6.1.5.5.7.1.1": {
+    "type": "string"
+  },
+  "certkit.oids.1.3.6.1.5.5.7.3.1": {
+    "type": "string"
+  },
+  "certkit.oids.1.3.6.1.5.5.7.3.2": {
+    "type": "string"
+  },
+  "certkit.oids.1.3.6.1.5.5.7.3.3": {
+    "type": "string"
+  },
+  "certkit.oids.1.3.6.1.5.5.7.3.4": {
+    "type": "string"
+  },
+  "certkit.oids.1.3.6.1.5.5.7.3.8": {
+    "type": "string"
+  },
+  "certkit.oids.2.16.840.1.101.3.4.1.2": {
+    "type": "string"
+  },
+  "certkit.oids.2.16.840.1.101.3.4.1.22": {
+    "type": "string"
+  },
+  "certkit.oids.2.16.840.1.101.3.4.1.42": {
+    "type": "string"
+  },
+  "certkit.oids.2.16.840.1.101.3.4.2.1": {
+    "type": "string"
+  },
+  "certkit.oids.2.16.840.1.101.3.4.2.2": {
+    "type": "string"
+  },
+  "certkit.oids.2.16.840.1.101.3.4.2.3": {
+    "type": "string"
+  },
+  "certkit.oids.2.16.840.1.101.3.4.2.4": {
+    "type": "string"
+  },
+  "certkit.oids.2.16.840.1.101.3.4.2.5": {
+    "type": "string"
+  },
+  "certkit.oids.2.16.840.1.101.3.4.2.6": {
+    "type": "string"
+  },
+  "certkit.oids.2.16.840.1.113730.1.1": {
+    "type": "string"
+  },
+  "certkit.oids.2.16.840.1.113730.1.13": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.1": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.10": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.11": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.12": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.13": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.14": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.15": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.16": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.17": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.18": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.19": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.2": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.20": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.21": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.22": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.23": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.24": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.25": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.26": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.27": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.28": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.29": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.3": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.30": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.31": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.32": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.33": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.34": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.35": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.36": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.37": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.4": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.46": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.5": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.54": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.6": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.7": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.8": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.29.9": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.4.10": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.4.11": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.4.12": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.4.13": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.4.15": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.4.17": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.4.3": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.4.4": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.4.42": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.4.5": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.4.6": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.4.65": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.4.7": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.4.8": {
+    "type": "string"
+  },
+  "certkit.oids.2.5.4.9": {
+    "type": "string"
+  },
+  "certkit.oids.EdDSA25519": {
+    "type": "string"
+  },
+  "certkit.oids.RSAES-OAEP": {
+    "type": "string"
+  },
+  "certkit.oids.RSASSA-PSS": {
+    "type": "string"
+  },
+  "certkit.oids.aes128-CBC": {
+    "type": "string"
+  },
+  "certkit.oids.aes192-CBC": {
+    "type": "string"
+  },
+  "certkit.oids.aes256-CBC": {
+    "type": "string"
+  },
+  "certkit.oids.authorityInfoAccess": {
+    "type": "string"
+  },
+  "certkit.oids.authorityKeyIdentifier": {
+    "type": "string"
+  },
+  "certkit.oids.basicConstraints": {
+    "type": "string"
+  },
+  "certkit.oids.businessCategory": {
+    "type": "string"
+  },
+  "certkit.oids.cRLDistributionPoints": {
+    "type": "string"
+  },
+  "certkit.oids.certBag": {
+    "type": "string"
+  },
+  "certkit.oids.certificatePolicies": {
+    "type": "string"
+  },
+  "certkit.oids.challengePassword": {
+    "type": "string"
+  },
+  "certkit.oids.clientAuth": {
+    "type": "string"
+  },
+  "certkit.oids.codeSigning": {
+    "type": "string"
+  },
+  "certkit.oids.commonName": {
+    "type": "string"
+  },
+  "certkit.oids.contentType": {
+    "type": "string"
+  },
+  "certkit.oids.counterSignature": {
+    "type": "string"
+  },
+  "certkit.oids.countryName": {
+    "type": "string"
+  },
+  "certkit.oids.crlBag": {
+    "type": "string"
+  },
+  "certkit.oids.data": {
+    "type": "string"
+  },
+  "certkit.oids.des-EDE3-CBC": {
+    "type": "string"
+  },
+  "certkit.oids.desCBC": {
+    "type": "string"
+  },
+  "certkit.oids.description": {
+    "type": "string"
+  },
+  "certkit.oids.digestedData": {
+    "type": "string"
+  },
+  "certkit.oids.dsa-with-sha1": {
+    "type": "string"
+  },
+  "certkit.oids.emailAddress": {
+    "type": "string"
+  },
+  "certkit.oids.emailProtection": {
+    "type": "string"
+  },
+  "certkit.oids.encryptedData": {
+    "type": "string"
+  },
+  "certkit.oids.envelopedData": {
+    "type": "string"
+  },
+  "certkit.oids.extKeyUsage": {
+    "type": "string"
+  },
+  "certkit.oids.extensionRequest": {
+    "type": "string"
+  },
+  "certkit.oids.friendlyName": {
+    "type": "string"
+  },
+  "certkit.oids.givenName": {
+    "type": "string"
+  },
+  "certkit.oids.hmacWithSHA1": {
+    "type": "string"
+  },
+  "certkit.oids.hmacWithSHA224": {
+    "type": "string"
+  },
+  "certkit.oids.hmacWithSHA256": {
+    "type": "string"
+  },
+  "certkit.oids.hmacWithSHA384": {
+    "type": "string"
+  },
+  "certkit.oids.hmacWithSHA512": {
+    "type": "string"
+  },
+  "certkit.oids.issuerAltName": {
+    "type": "string"
+  },
+  "certkit.oids.jurisdictionOfIncorporationCountryName": {
+    "type": "string"
+  },
+  "certkit.oids.jurisdictionOfIncorporationStateOrProvinceName": {
+    "type": "string"
+  },
+  "certkit.oids.keyBag": {
+    "type": "string"
+  },
+  "certkit.oids.keyUsage": {
+    "type": "string"
+  },
+  "certkit.oids.localKeyId": {
+    "type": "string"
+  },
+  "certkit.oids.localityName": {
+    "type": "string"
+  },
+  "certkit.oids.md2": {
+    "type": "string"
+  },
+  "certkit.oids.md5": {
+    "type": "string"
+  },
+  "certkit.oids.md5WithRSAEncryption": {
+    "type": "string"
+  },
+  "certkit.oids.messageDigest": {
+    "type": "string"
+  },
+  "certkit.oids.mgf1": {
+    "type": "string"
+  },
+  "certkit.oids.nsCertType": {
+    "type": "string"
+  },
+  "certkit.oids.nsComment": {
+    "type": "string"
+  },
+  "certkit.oids.organizationName": {
+    "type": "string"
+  },
+  "certkit.oids.organizationalUnitName": {
+    "type": "string"
+  },
+  "certkit.oids.pSpecified": {
+    "type": "string"
+  },
+  "certkit.oids.pbeWithSHAAnd128BitRC2-CBC": {
+    "type": "string"
+  },
+  "certkit.oids.pbeWithSHAAnd128BitRC4": {
+    "type": "string"
+  },
+  "certkit.oids.pbeWithSHAAnd2-KeyTripleDES-CBC": {
+    "type": "string"
+  },
+  "certkit.oids.pbeWithSHAAnd3-KeyTripleDES-CBC": {
+    "type": "string"
+  },
+  "certkit.oids.pbeWithSHAAnd40BitRC4": {
+    "type": "string"
+  },
+  "certkit.oids.pbewithSHAAnd40BitRC2-CBC": {
+    "type": "string"
+  },
+  "certkit.oids.pkcs5PBES2": {
+    "type": "string"
+  },
+  "certkit.oids.pkcs5PBKDF2": {
+    "type": "string"
+  },
+  "certkit.oids.pkcs8ShroudedKeyBag": {
+    "type": "string"
+  },
+  "certkit.oids.postalCode": {
+    "type": "string"
+  },
+  "certkit.oids.pseudonym": {
+    "type": "string"
+  },
+  "certkit.oids.rsaEncryption": {
+    "type": "string"
+  },
+  "certkit.oids.safeContentsBag": {
+    "type": "string"
+  },
+  "certkit.oids.secretBag": {
+    "type": "string"
+  },
+  "certkit.oids.serialNumber": {
+    "type": "string"
+  },
+  "certkit.oids.serverAuth": {
+    "type": "string"
+  },
+  "certkit.oids.sha1": {
+    "type": "string"
+  },
+  "certkit.oids.sha1WithRSAEncryption": {
+    "type": "string"
+  },
+  "certkit.oids.sha1WithRSASignature": {
+    "type": "string"
+  },
+  "certkit.oids.sha224": {
+    "type": "string"
+  },
+  "certkit.oids.sha256": {
+    "type": "string"
+  },
+  "certkit.oids.sha256WithRSAEncryption": {
+    "type": "string"
+  },
+  "certkit.oids.sha384": {
+    "type": "string"
+  },
+  "certkit.oids.sha384WithRSAEncryption": {
+    "type": "string"
+  },
+  "certkit.oids.sha512": {
+    "type": "string"
+  },
+  "certkit.oids.sha512-224": {
+    "type": "string"
+  },
+  "certkit.oids.sha512-256": {
+    "type": "string"
+  },
+  "certkit.oids.sha512WithRSAEncryption": {
+    "type": "string"
+  },
+  "certkit.oids.signedAndEnvelopedData": {
+    "type": "string"
+  },
+  "certkit.oids.signedData": {
+    "type": "string"
+  },
+  "certkit.oids.signingTime": {
+    "type": "string"
+  },
+  "certkit.oids.stateOrProvinceName": {
+    "type": "string"
+  },
+  "certkit.oids.streetAddress": {
+    "type": "string"
+  },
+  "certkit.oids.subjectAltName": {
+    "type": "string"
+  },
+  "certkit.oids.subjectKeyIdentifier": {
+    "type": "string"
+  },
+  "certkit.oids.surname": {
+    "type": "string"
+  },
+  "certkit.oids.timeStamping": {
+    "type": "string"
+  },
+  "certkit.oids.timestampList": {
+    "type": "string"
+  },
+  "certkit.oids.title": {
+    "type": "string"
+  },
+  "certkit.oids.unstructuredAddress": {
+    "type": "string"
+  },
+  "certkit.oids.unstructuredName": {
+    "type": "string"
+  },
+  "certkit.oids.x509Certificate": {
+    "type": "string"
+  },
+  "certkit.options": {
+    "type": "object"
+  },
+  "certkit.options.usePureJavaScript": {
+    "type": "boolean"
+  },
+  "certkit.pbe": {
+    "type": "object"
+  },
+  "certkit.pbe.generatePkcs12Key": {
+    "type": "function",
+    "length": 6
+  },
+  "certkit.pbe.getCipher": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.pbe.getCipherForPBES2": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.pbe.getCipherForPKCS12PBE": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.pbe.opensslDeriveBytes": {
+    "type": "function",
+    "length": 4
+  },
+  "certkit.pbkdf2": {
+    "type": "function",
+    "length": 6
+  },
+  "certkit.pem": {
+    "type": "object"
+  },
+  "certkit.pem.decode": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pem.encode": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pkcs1": {
+    "type": "object"
+  },
+  "certkit.pkcs1.decode_rsa_oaep": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.pkcs1.encode_rsa_oaep": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.pkcs12": {
+    "type": "object"
+  },
+  "certkit.pkcs12.generateKey": {
+    "type": "function",
+    "length": 6
+  },
+  "certkit.pkcs12.pkcs12FromAsn1": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.pkcs12.toPkcs12Asn1": {
+    "type": "function",
+    "length": 4
+  },
+  "certkit.pkcs5": {
+    "type": "object"
+  },
+  "certkit.pkcs5.pbkdf2": {
+    "type": "function",
+    "length": 6
+  },
+  "certkit.pkcs7": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.value": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.value.0": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.value.0.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.value.1": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.value.1.captureAsn1": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.value.1.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.value.1.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.value.1.optional": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.value.1.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.contentInfoValidator.value.1.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.0": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.0.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.0": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.0.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1.value": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1.value.0": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1.value.0.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1.value.1": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1.value.1.captureAsn1": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1.value.1.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.1.value.1.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.2": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.2.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.2.captureAsn1": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.2.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.2.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.encryptedDataValidator.value.1.value.2.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.value": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.value.0": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.value.0.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.value.1": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.value.1.captureAsn1": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.value.1.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.value.1.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.value.1.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.value.1.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.envelopedDataValidator.value.2": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.0": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.0.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.value": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.value.0": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.value.0.captureAsn1": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.value.1": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.value.1.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.value.1.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.value.1.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.value.1.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.1.value.1.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.value": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.value.0": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.value.0.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.value.1": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.value.1.captureAsn1": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.value.1.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.value.1.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.value.1.optional": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.2.value.1.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.3": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.3.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.3.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.3.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.3.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.recipientInfoValidator.value.3.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.0": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.0.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.1": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.1.captureAsn1": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.1.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.1.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.1.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.1.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.2": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.3": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.3.captureAsn1": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.3.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.3.optional": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.3.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.3.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.4": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.4.captureAsn1": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.4.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.4.optional": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.4.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.4.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.optional": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.0": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.value": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.value.0": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.value.0.captureAsn1": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.value.1": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.value.1.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.value.1.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.value.1.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.value.1.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.1.value.1.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.value": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.value.0": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.value.0.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.value.1": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.value.1.captureAsn1": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.value.1.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.value.1.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.value.1.optional": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.2.value.1.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.3": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.3.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.3.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.3.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.3.optional": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.3.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.3.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.4": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.4.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.4.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.4.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.4.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.4.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.5": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.5.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.5.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.5.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.5.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.5.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.6": {
+    "type": "object"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.6.capture": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.6.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.6.name": {
+    "type": "string"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.6.optional": {
+    "type": "boolean"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.6.tagClass": {
+    "type": "number"
+  },
+  "certkit.pkcs7.asn1.signedDataValidator.value.5.value.0.value.6.type": {
+    "type": "number"
+  },
+  "certkit.pkcs7asn1": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.pki": {
+    "type": "object"
+  },
+  "certkit.pki.CRIAttributesAsArray": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.RDNAttributesAsArray": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.certificateError": {
+    "type": "object"
+  },
+  "certkit.pki.certificateError.bad_certificate": {
+    "type": "string"
+  },
+  "certkit.pki.certificateError.certificate_expired": {
+    "type": "string"
+  },
+  "certkit.pki.certificateError.certificate_revoked": {
+    "type": "string"
+  },
+  "certkit.pki.certificateError.certificate_unknown": {
+    "type": "string"
+  },
+  "certkit.pki.certificateError.unknown_ca": {
+    "type": "string"
+  },
+  "certkit.pki.certificateError.unsupported_certificate": {
+    "type": "string"
+  },
+  "certkit.pki.certificateExtensionFromAsn1": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.certificateExtensionToAsn1": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.certificateExtensionsFromAsn1": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.certificateExtensionsToAsn1": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.certificateFromAsn1": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.certificateFromPem": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.pki.certificateToAsn1": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.certificateToPem": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.certificationRequestFromAsn1": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.certificationRequestFromPem": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.pki.certificationRequestToAsn1": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.certificationRequestToPem": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.createCaStore": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.createCertificate": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.pki.createCertificationRequest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.pki.decryptPrivateKeyInfo": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.decryptRsaPrivateKey": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.distinguishedNameToAsn1": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.encryptPrivateKeyInfo": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.pki.encryptRsaPrivateKey": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.pki.encryptedPrivateKeyFromPem": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.encryptedPrivateKeyToPem": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.getCertificationRequestInfo": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.getPublicKeyFingerprint": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.getTBSCertificate": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.oids": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.pki.pbe": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.pki.pemToDer": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.privateKeyFromAsn1": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.privateKeyFromPem": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.privateKeyInfoToPem": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.privateKeyToAsn1": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.privateKeyToPem": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.privateKeyToRSAPrivateKey": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.publicKeyFromAsn1": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.publicKeyFromPem": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.publicKeyToAsn1": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.publicKeyToPem": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.publicKeyToRSAPublicKey": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.publicKeyToRSAPublicKeyPem": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.publicKeyToSubjectPublicKeyInfo": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pki.rsa": {
+    "type": "object"
+  },
+  "certkit.pki.rsa.createKeyPairGenerationState": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.pki.rsa.decrypt": {
+    "type": "function",
+    "length": 4
+  },
+  "certkit.pki.rsa.encrypt": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.pki.rsa.generateKeyPair": {
+    "type": "function",
+    "length": 4
+  },
+  "certkit.pki.rsa.publicKeyValidator": {
+    "type": "object"
+  },
+  "certkit.pki.rsa.publicKeyValidator.captureAsn1": {
+    "type": "string"
+  },
+  "certkit.pki.rsa.publicKeyValidator.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pki.rsa.publicKeyValidator.name": {
+    "type": "string"
+  },
+  "certkit.pki.rsa.publicKeyValidator.tagClass": {
+    "type": "number"
+  },
+  "certkit.pki.rsa.publicKeyValidator.type": {
+    "type": "number"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value": {
+    "type": "object"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.0": {
+    "type": "object"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.0.value": {
+    "type": "object"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.0.value.0": {
+    "type": "object"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.0.value.0.capture": {
+    "type": "string"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.0.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.0.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.0.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.0.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.1": {
+    "type": "object"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.1.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.1.name": {
+    "type": "string"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.1.tagClass": {
+    "type": "number"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.1.type": {
+    "type": "number"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.1.value": {
+    "type": "object"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.1.value.0": {
+    "type": "object"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.1.value.0.captureAsn1": {
+    "type": "string"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.1.value.0.constructed": {
+    "type": "boolean"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.1.value.0.name": {
+    "type": "string"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.1.value.0.optional": {
+    "type": "boolean"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.1.value.0.tagClass": {
+    "type": "number"
+  },
+  "certkit.pki.rsa.publicKeyValidator.value.1.value.0.type": {
+    "type": "number"
+  },
+  "certkit.pki.rsa.setPrivateKey": {
+    "type": "function",
+    "length": 8
+  },
+  "certkit.pki.rsa.setPublicKey": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.rsa.stepKeyPairGenerationState": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.setRsaPrivateKey": {
+    "type": "function",
+    "length": 8
+  },
+  "certkit.pki.setRsaPublicKey": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.pki.verifyCertificateChain": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.pki.wrapRsaPrivateKey": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.prime": {
+    "type": "object"
+  },
+  "certkit.prime.generateProbablePrime": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.prng": {
+    "type": "object"
+  },
+  "certkit.prng.create": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.pss": {
+    "type": "object"
+  },
+  "certkit.pss.create": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.random": {
+    "type": "object"
+  },
+  "certkit.random.collect": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.random.collectInt": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.createInstance": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.generate": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.generateSync": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.random.generated": {
+    "type": "number"
+  },
+  "certkit.random.getBytes": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.getBytesSync": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.random.key": {
+    "type": "null"
+  },
+  "certkit.random.keyBytes": {
+    "type": "string"
+  },
+  "certkit.random.plugin": {
+    "type": "object"
+  },
+  "certkit.random.plugin.cipher": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.plugin.formatKey": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.random.plugin.formatSeed": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.random.plugin.increment": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.random.plugin.md": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pool": {
+    "type": "number"
+  },
+  "certkit.random.pools": {
+    "type": "object"
+  },
+  "certkit.random.pools.0": {
+    "type": "object"
+  },
+  "certkit.random.pools.0.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.0.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.0.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.0.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.0.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.0.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.0.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.0.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.0.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.0.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.0.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.0.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.1": {
+    "type": "object"
+  },
+  "certkit.random.pools.1.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.1.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.1.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.1.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.1.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.1.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.1.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.1.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.1.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.1.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.1.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.1.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.10": {
+    "type": "object"
+  },
+  "certkit.random.pools.10.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.10.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.10.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.10.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.10.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.10.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.10.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.10.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.10.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.10.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.10.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.10.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.11": {
+    "type": "object"
+  },
+  "certkit.random.pools.11.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.11.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.11.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.11.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.11.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.11.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.11.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.11.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.11.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.11.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.11.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.11.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.12": {
+    "type": "object"
+  },
+  "certkit.random.pools.12.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.12.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.12.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.12.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.12.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.12.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.12.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.12.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.12.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.12.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.12.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.12.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.13": {
+    "type": "object"
+  },
+  "certkit.random.pools.13.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.13.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.13.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.13.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.13.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.13.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.13.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.13.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.13.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.13.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.13.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.13.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.14": {
+    "type": "object"
+  },
+  "certkit.random.pools.14.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.14.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.14.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.14.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.14.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.14.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.14.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.14.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.14.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.14.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.14.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.14.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.15": {
+    "type": "object"
+  },
+  "certkit.random.pools.15.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.15.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.15.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.15.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.15.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.15.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.15.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.15.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.15.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.15.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.15.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.15.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.16": {
+    "type": "object"
+  },
+  "certkit.random.pools.16.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.16.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.16.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.16.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.16.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.16.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.16.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.16.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.16.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.16.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.16.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.16.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.17": {
+    "type": "object"
+  },
+  "certkit.random.pools.17.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.17.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.17.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.17.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.17.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.17.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.17.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.17.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.17.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.17.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.17.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.17.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.18": {
+    "type": "object"
+  },
+  "certkit.random.pools.18.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.18.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.18.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.18.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.18.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.18.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.18.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.18.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.18.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.18.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.18.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.18.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.19": {
+    "type": "object"
+  },
+  "certkit.random.pools.19.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.19.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.19.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.19.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.19.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.19.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.19.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.19.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.19.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.19.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.19.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.19.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.2": {
+    "type": "object"
+  },
+  "certkit.random.pools.2.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.2.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.2.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.2.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.2.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.2.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.2.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.2.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.2.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.2.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.2.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.2.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.20": {
+    "type": "object"
+  },
+  "certkit.random.pools.20.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.20.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.20.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.20.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.20.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.20.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.20.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.20.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.20.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.20.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.20.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.20.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.21": {
+    "type": "object"
+  },
+  "certkit.random.pools.21.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.21.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.21.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.21.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.21.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.21.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.21.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.21.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.21.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.21.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.21.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.21.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.22": {
+    "type": "object"
+  },
+  "certkit.random.pools.22.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.22.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.22.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.22.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.22.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.22.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.22.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.22.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.22.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.22.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.22.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.22.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.23": {
+    "type": "object"
+  },
+  "certkit.random.pools.23.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.23.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.23.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.23.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.23.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.23.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.23.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.23.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.23.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.23.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.23.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.23.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.24": {
+    "type": "object"
+  },
+  "certkit.random.pools.24.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.24.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.24.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.24.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.24.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.24.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.24.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.24.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.24.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.24.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.24.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.24.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.25": {
+    "type": "object"
+  },
+  "certkit.random.pools.25.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.25.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.25.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.25.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.25.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.25.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.25.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.25.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.25.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.25.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.25.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.25.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.26": {
+    "type": "object"
+  },
+  "certkit.random.pools.26.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.26.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.26.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.26.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.26.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.26.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.26.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.26.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.26.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.26.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.26.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.26.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.27": {
+    "type": "object"
+  },
+  "certkit.random.pools.27.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.27.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.27.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.27.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.27.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.27.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.27.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.27.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.27.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.27.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.27.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.27.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.28": {
+    "type": "object"
+  },
+  "certkit.random.pools.28.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.28.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.28.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.28.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.28.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.28.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.28.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.28.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.28.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.28.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.28.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.28.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.29": {
+    "type": "object"
+  },
+  "certkit.random.pools.29.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.29.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.29.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.29.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.29.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.29.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.29.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.29.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.29.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.29.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.29.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.29.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.3": {
+    "type": "object"
+  },
+  "certkit.random.pools.3.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.3.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.3.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.3.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.3.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.3.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.3.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.3.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.3.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.3.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.3.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.3.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.30": {
+    "type": "object"
+  },
+  "certkit.random.pools.30.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.30.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.30.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.30.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.30.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.30.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.30.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.30.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.30.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.30.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.30.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.30.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.31": {
+    "type": "object"
+  },
+  "certkit.random.pools.31.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.31.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.31.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.31.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.31.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.31.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.31.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.31.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.31.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.31.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.31.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.31.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.4": {
+    "type": "object"
+  },
+  "certkit.random.pools.4.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.4.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.4.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.4.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.4.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.4.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.4.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.4.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.4.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.4.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.4.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.4.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.5": {
+    "type": "object"
+  },
+  "certkit.random.pools.5.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.5.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.5.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.5.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.5.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.5.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.5.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.5.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.5.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.5.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.5.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.5.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.6": {
+    "type": "object"
+  },
+  "certkit.random.pools.6.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.6.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.6.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.6.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.6.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.6.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.6.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.6.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.6.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.6.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.6.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.6.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.7": {
+    "type": "object"
+  },
+  "certkit.random.pools.7.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.7.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.7.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.7.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.7.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.7.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.7.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.7.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.7.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.7.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.7.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.7.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.8": {
+    "type": "object"
+  },
+  "certkit.random.pools.8.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.8.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.8.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.8.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.8.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.8.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.8.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.8.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.8.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.8.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.8.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.8.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.pools.9": {
+    "type": "object"
+  },
+  "certkit.random.pools.9.algorithm": {
+    "type": "string"
+  },
+  "certkit.random.pools.9.blockLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.9.digest": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.9.digestLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.9.fullMessageLength": {
+    "type": "object"
+  },
+  "certkit.random.pools.9.fullMessageLength.0": {
+    "type": "number"
+  },
+  "certkit.random.pools.9.fullMessageLength.1": {
+    "type": "number"
+  },
+  "certkit.random.pools.9.messageLength": {
+    "type": "number"
+  },
+  "certkit.random.pools.9.messageLength64": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.random.pools.9.messageLengthSize": {
+    "type": "number"
+  },
+  "certkit.random.pools.9.start": {
+    "type": "function",
+    "length": 0
+  },
+  "certkit.random.pools.9.update": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.reseeds": {
+    "type": "number"
+  },
+  "certkit.random.seed": {
+    "type": "null"
+  },
+  "certkit.random.seedFile": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.random.seedFileSync": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.random.time": {
+    "type": "null"
+  },
+  "certkit.rc2": {
+    "type": "object"
+  },
+  "certkit.rc2.createDecryptionCipher": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.rc2.createEncryptionCipher": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.rc2.expandKey": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.rc2.startDecrypting": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.rc2.startEncrypting": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.rsa": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.sha1": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.sha256": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.sha384": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.sha512": {
+    "type": "object",
+    "circular": true
+  },
+  "certkit.util": {
+    "type": "object"
+  },
+  "certkit.util.ByteBuffer": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.ByteStringBuffer": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.DataBuffer": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.util.binary": {
+    "type": "object"
+  },
+  "certkit.util.binary.base58": {
+    "type": "object"
+  },
+  "certkit.util.binary.base58.decode": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.util.binary.base58.encode": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.util.binary.base64": {
+    "type": "object"
+  },
+  "certkit.util.binary.base64.decode": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.util.binary.base64.encode": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.util.binary.baseN": {
+    "type": "object"
+  },
+  "certkit.util.binary.baseN.decode": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.util.binary.baseN.encode": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.util.binary.hex": {
+    "type": "object"
+  },
+  "certkit.util.binary.hex.decode": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.util.binary.hex.encode": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.binary.raw": {
+    "type": "object"
+  },
+  "certkit.util.binary.raw.decode": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.util.binary.raw.encode": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.bytesFromIP": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.bytesFromIPv4": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.bytesFromIPv6": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.bytesToHex": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.bytesToIP": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.bytesToIPv4": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.bytesToIPv6": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.createBuffer": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.util.decode64": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.decodeUtf8": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.encode64": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.util.encodeUtf8": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.estimateCores": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.util.fillString": {
+    "type": "function",
+    "length": 2
+  },
+  "certkit.util.format": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.formatNumber": {
+    "type": "function",
+    "length": 4
+  },
+  "certkit.util.formatSize": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.globalScope": {
+    "type": "object",
+    "opaque": true
+  },
+  "certkit.util.hexToBytes": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.int32ToBytes": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.isArray": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.isArrayBuffer": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.isArrayBufferView": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.isEmpty": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.isNodejs": {
+    "type": "boolean"
+  },
+  "certkit.util.nextTick": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.setImmediate": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.text": {
+    "type": "object"
+  },
+  "certkit.util.text.utf16": {
+    "type": "object"
+  },
+  "certkit.util.text.utf16.decode": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.text.utf16.encode": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.util.text.utf8": {
+    "type": "object"
+  },
+  "certkit.util.text.utf8.decode": {
+    "type": "function",
+    "length": 1
+  },
+  "certkit.util.text.utf8.encode": {
+    "type": "function",
+    "length": 3
+  },
+  "certkit.util.xorBytes": {
+    "type": "function",
+    "length": 3
+  }
+}
