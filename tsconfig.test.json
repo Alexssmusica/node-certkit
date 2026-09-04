@@ -8,5 +8,6 @@
     "allowJs": false,
     "incremental": false
   },
-  "include": ["tests/**/*.ts", "src/**/*.ts"]
+  "include": ["tests/**/*.ts", "src/**/*.ts"],
+  "exclude": ["node_modules", "lib", "dist"]
 }
