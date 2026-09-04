@@ -1,8 +1,13 @@
 /* Migrated from lib/des.js */
 import { UtilNamespace } from '../util/UtilNamespace.js';
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
-import { BlockCipherApi } from './cipherModeUtils.js';
-import { CipherApi, CreateCipherOptions, ModeConstructor } from './CipherTypes.js';
+import {
+  BlockCipherApi,
+  CipherApi,
+  CreateCipherOptions,
+  ModeConstructor,
+  type DesNamespaceObject
+} from './CipherTypes.js';
 
 type InitializeOptions = {
   key: string | ByteStringBuffer;
@@ -10,14 +15,6 @@ type InitializeOptions = {
 };
 
 let cipherApi: CipherApi<DesAlgorithm['mode']>;
-
-export type DesNamespaceObject = Record<string, unknown> & {
-  startEncrypting: (...args: unknown[]) => unknown;
-  createEncryptionCipher: (...args: unknown[]) => unknown;
-  startDecrypting: (...args: unknown[]) => unknown;
-  createDecryptionCipher: (...args: unknown[]) => unknown;
-  Algorithm: typeof DesAlgorithm;
-};
 
 /**
  * DES (Data Encryption Standard) implementation.

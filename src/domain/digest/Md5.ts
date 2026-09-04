@@ -1,25 +1,13 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { encodeUtf8 } from '../encoding/Utf8Codec.js';
 import { UtilNamespace } from '../util/UtilNamespace.js';
+import type { Md5Digest } from './DigestTypes.js';
 
 interface Md5State {
   h0: number;
   h1: number;
   h2: number;
   h3: number;
-}
-
-export interface Md5Digest {
-  algorithm: string;
-  blockLength: number;
-  digestLength: number;
-  messageLength: number;
-  fullMessageLength: number[] | null;
-  messageLength64: number[] | null;
-  messageLengthSize: number;
-  start: () => Md5Digest;
-  update: (msg: string, encoding?: string) => Md5Digest;
-  digest: () => ByteStringBuffer;
 }
 
 /**

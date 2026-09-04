@@ -1,3 +1,5 @@
+import type { Asn1Validator } from '../asn1/Asn1Types.js';
+
 export type PbeDeps = {
   asn1: any;
   oids: Record<string, string>;
@@ -12,4 +14,10 @@ export type PbeDeps = {
   pkcs5: any;
   cipher: any;
   pki: any;
+};
+
+export type PbeValidators = {
+  encryptedPrivateKeyValidator: Asn1Validator;
+  PBES2AlgorithmsValidator: Asn1Validator;
+  pkcs12PbeParamsValidator: Asn1Validator;
 };

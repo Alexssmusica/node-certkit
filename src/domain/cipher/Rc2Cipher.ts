@@ -1,5 +1,6 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { validatePkcs7Padding } from './cipherModeUtils.js';
+import type { PaddingFunction, Rc2CipherObject, Rc2NamespaceObject } from './CipherTypes.js';
 
 const piTable = [
   0xd9, 0x78, 0xf9, 0xc4, 0x19, 0xdd, 0xb5, 0xed, 0x28, 0xe9, 0xfd, 0x79, 0x4a, 0xa0, 0xd8, 0x9d, 0xc6, 0x7e, 0x37,
@@ -26,21 +27,6 @@ const rol = function (word: number, bits: number): number {
 
 const ror = function (word: number, bits: number): number {
   return ((word & 0xffff) >> bits) | ((word << (16 - bits)) & 0xffff);
-};
-
-export type Rc2CipherObject = {
-  output?: ByteStringBuffer;
-  start: (iv?: string | ByteStringBuffer | null, output?: ByteStringBuffer | null) => void;
-  update: (input: ByteStringBuffer) => void;
-  finish: (pad?: (blockSize: number, buffer: ByteStringBuffer, decrypt: boolean) => boolean) => boolean;
-};
-
-export type Rc2NamespaceObject = {
-  expandKey: typeof Rc2Cipher.expandKey;
-  startEncrypting: typeof Rc2Cipher.startEncrypting;
-  createEncryptionCipher: typeof Rc2Cipher.createEncryptionCipher;
-  startDecrypting: typeof Rc2Cipher.startDecrypting;
-  createDecryptionCipher: typeof Rc2Cipher.createDecryptionCipher;
 };
 
 export class Rc2Cipher {

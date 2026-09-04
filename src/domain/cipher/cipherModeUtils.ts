@@ -1,5 +1,6 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { isArray } from '../util/typeChecks.js';
+import type { BlockCipherApi, CipherModeOptions, CipherModeStartOptions, PadOptions } from './CipherTypes.js';
 
 export function transformIV(iv: string | ByteStringBuffer | number[] | unknown, blockSize: number): number[] {
   if (typeof iv === 'string') {
@@ -38,30 +39,6 @@ export function inc32(block: number[]): void {
 export function from64To32(num: number): [number, number] {
   return [(num / 0x100000000) | 0, num & 0xffffffff];
 }
-
-export type BlockCipherApi = {
-  encrypt: (inBlock: number[], outBlock: number[]) => void;
-  decrypt: (inBlock: number[], outBlock: number[]) => void;
-};
-
-export type CipherModeOptions = {
-  cipher?: BlockCipherApi;
-  blockSize?: number;
-};
-
-export type CipherModeStartOptions = {
-  iv?: string | ByteStringBuffer | number[] | null;
-  decrypt?: boolean;
-  additionalData?: string | ByteStringBuffer;
-  tagLength?: number;
-  tag?: string | ByteStringBuffer;
-  overflow?: number;
-};
-
-export type PadOptions = {
-  overflow?: number;
-  decrypt?: boolean;
-};
 
 /**
  * Validate and remove PKCS#7 padding from a decrypted buffer.

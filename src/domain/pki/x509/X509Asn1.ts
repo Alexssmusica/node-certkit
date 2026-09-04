@@ -1,14 +1,5 @@
 import type { Asn1Validator } from '../../asn1/Asn1Types.js';
-import type { X509Runtime } from './X509Runtime.js';
-
-export type X509Validators = {
-  shortNames: Record<string, string>;
-  x509CertificateValidator: Asn1Validator;
-  certificationRequestValidator: Asn1Validator;
-  certificationRequestInfoValidator: Asn1Validator;
-  rsassaPssParameterValidator: Asn1Validator;
-  rdnValidator: Asn1Validator;
-};
+import type { X509Runtime, X509Validators } from './X509Types.js';
 
 export class X509Asn1 {
   static create(ctx: X509Runtime): X509Validators {

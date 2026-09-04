@@ -1,25 +1,29 @@
-import type { Asn1NamespaceObject } from '../domain/asn1/Asn1Types.js';
-import type { Pkcs7Asn1NamespaceObject } from '../domain/asn1/Pkcs7Asn1.js';
-import type { AesNamespaceObject } from '../domain/cipher/AesAlgorithm.js';
-import type { CipherNamespaceObject } from '../domain/cipher/CipherNamespace.js';
-import type { DesNamespaceObject } from '../domain/cipher/DesAlgorithm.js';
-import type { Rc2NamespaceObject } from '../domain/cipher/Rc2Cipher.js';
-import type { Md5Digest } from '../domain/digest/Md5.js';
-import type { Sha1Digest } from '../domain/digest/Sha1.js';
-import type { Sha256Digest } from '../domain/digest/Sha256.js';
-import type { Sha512Digest } from '../domain/digest/Sha512.js';
-import type { DigestFactory, MdRegistry } from '../domain/digest/MdRegistry.js';
-import type { HmacContext } from '../domain/digest/Hmac.js';
+import type { Asn1NamespaceObject, Pkcs7Asn1NamespaceObject } from '../domain/asn1/Asn1Types.js';
+import type {
+  AesNamespaceObject,
+  CipherNamespaceObject,
+  DesNamespaceObject,
+  Rc2NamespaceObject
+} from '../domain/cipher/CipherTypes.js';
+import type {
+  DigestFactory,
+  HmacContext,
+  Md5Digest,
+  MdRegistry,
+  Sha1Digest,
+  Sha256Digest,
+  Sha512Digest
+} from '../domain/digest/DigestTypes.js';
 import type { Mgf1 } from '../domain/pki/Mgf1.js';
-import type { Pbkdf2Function } from '../domain/pki/Pbkdf2.js';
+import type { Pbkdf2Function } from '../domain/pki/Pbkdf2Types.js';
 import type { PemCodec } from '../domain/pki/PemCodec.js';
 import type { Pkcs1Codec } from '../domain/pki/Pkcs1Codec.js';
 import type { PssScheme } from '../domain/pki/PssScheme.js';
-import type { MgfNamespaceObject } from '../domain/pki/Mgf.js';
+import type { MgfNamespaceObject } from '../domain/pki/MgfTypes.js';
 import type { BigInteger } from '../domain/math/BigInteger.js';
-import type { UtilNamespaceObject } from '../domain/util/UtilNamespace.js';
+import type { UtilNamespaceObject } from '../domain/util/UtilTypes.js';
 import type { PrimeService } from '../domain/prime/PrimeService.js';
-import type { FortunaRandomNamespace } from '../infrastructure/random/FortunaRandom.js';
+import type { FortunaRandomNamespace } from '../infrastructure/random/RandomTypes.js';
 import type { Fortuna } from '../infrastructure/prng/Fortuna.js';
 import type { CertkitPkcs12Namespace, CertkitPki, CertkitRsaNamespace } from '../domain/pki/CertkitPkiTypes.js';
 

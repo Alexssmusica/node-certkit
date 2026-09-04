@@ -1,23 +1,7 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { constantTimeEquals } from '../util/constantTimeEquals.js';
-import type { MessageDigest } from './Mgf1.js';
-
-export type MgfObject = {
-  generate: (seed: string, maskLen: number) => string;
-};
-
-export type PssCreateOptions = {
-  md: MessageDigest;
-  mgf: MgfObject;
-  saltLength?: number;
-  prng?: { getBytesSync(count: number): string };
-  salt?: string | ByteStringBuffer;
-};
-
-export type PssObject = {
-  encode: (md: MessageDigest, modBits: number) => string;
-  verify: (mHash: string, em: string, modBits: number) => boolean;
-};
+import type { MessageDigest } from './MgfTypes.js';
+import type { MgfObject, PssCreateOptions, PssObject } from './PssTypes.js';
 
 export class PssScheme {
   static create(options: PssCreateOptions): PssObject {

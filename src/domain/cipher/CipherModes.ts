@@ -4,15 +4,7 @@ import { CfbMode } from './CfbMode.js';
 import { OfbMode } from './OfbMode.js';
 import { CtrMode } from './CtrMode.js';
 import { GcmMode } from './GcmMode.js';
-
-export type CipherModesObject = {
-  ecb: typeof EcbMode;
-  cbc: typeof CbcMode;
-  cfb: typeof CfbMode;
-  ofb: typeof OfbMode;
-  ctr: typeof CtrMode;
-  gcm: typeof GcmMode;
-};
+import type { CipherModesObject } from './CipherTypes.js';
 
 export class CipherModes {
   static createCertkitModes(): CipherModesObject {

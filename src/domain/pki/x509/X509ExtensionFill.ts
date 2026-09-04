@@ -1,14 +1,12 @@
 import type { Asn1Object } from '../../asn1/Asn1Codec.js';
-import type { DerError, DnAttribute, X509Certificate, X509Extension } from './X509Types.js';
-
-export type ExtensionFillDeps = {
-  asn1: Record<string, any>;
-  oids: Record<string, string>;
-  util: Record<string, any>;
-  dnToAsn1: (obj: { attributes: DnAttribute[] }) => Asn1Object;
-};
-
-export type FillMissingExtensionFields = (e: X509Extension, options?: { cert?: X509Certificate }) => X509Extension;
+import type {
+  DerError,
+  DnAttribute,
+  ExtensionFillDeps,
+  FillMissingExtensionFields,
+  X509Certificate,
+  X509Extension
+} from './X509Types.js';
 
 export function createFillMissingExtensionFields(deps: ExtensionFillDeps): FillMissingExtensionFields {
   const { asn1, oids, util, dnToAsn1 } = deps;

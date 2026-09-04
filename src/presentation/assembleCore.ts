@@ -5,7 +5,8 @@ import { PemCodec } from '../domain/pki/PemCodec.js';
 import { PrimeService } from '../domain/prime/PrimeService.js';
 import { createUtilNamespace } from '../domain/util/UtilNamespace.js';
 import { Fortuna } from '../infrastructure/prng/Fortuna.js';
-import { FortunaRandom, type FortunaRandomDependencies } from '../infrastructure/random/FortunaRandom.js';
+import { FortunaRandom } from '../infrastructure/random/FortunaRandom.js';
+import type { FortunaRandomDependencies } from '../infrastructure/random/RandomTypes.js';
 import type { MutableCertkit } from './CertkitAssemblyTypes.js';
 
 export function assembleUtil(certkit: MutableCertkit): void {

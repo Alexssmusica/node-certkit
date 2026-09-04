@@ -1,4 +1,4 @@
-import type { Asn1NamespaceObject } from '../asn1/Asn1Types.js';
+import type { Asn1NamespaceObject, Asn1Validator } from '../asn1/Asn1Types.js';
 import type { BigInteger } from '../math/BigInteger.js';
 import type { NativeCryptoProvider, PemKeyCodec, PrimeGenerator } from '../ports/index.js';
 
@@ -39,4 +39,12 @@ export type RsaServiceDeps = {
   nativeCrypto?: NativeCryptoProvider | null;
   pemKeyCodec?: PemKeyCodec | null;
   usePureJavaScript?: boolean;
+};
+
+export type RsaValidators = {
+  privateKeyValidator: Asn1Validator;
+  rsaPrivateKeyValidator: Asn1Validator;
+  rsaPublicKeyValidator: Asn1Validator;
+  publicKeyValidator: Asn1Validator;
+  digestInfoValidator: Asn1Validator;
 };

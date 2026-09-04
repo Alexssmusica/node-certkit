@@ -1,10 +1,4 @@
-export type AesTables = {
-  sbox: number[];
-  isbox: number[];
-  rcon: number[];
-  mix: number[][];
-  imix: number[][];
-};
+import type { AesTables } from './CipherTypes.js';
 
 let cached: AesTables | null = null;
 

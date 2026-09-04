@@ -1,4 +1,4 @@
-import type { X509Deps } from './X509Runtime.js';
+import type { X509Deps } from './X509Types.js';
 import { X509Asn1 } from './X509Asn1.js';
 import { X509Shared } from './x509Shared.js';
 import { Certificate } from './Certificate.js';
@@ -7,7 +7,7 @@ import { CaStore } from './CaStore.js';
 import { CertificateVerify } from './certificateVerify.js';
 import type { CertkitPki } from '../CertkitPkiTypes.js';
 
-export type { X509Deps } from './X509Runtime.js';
+export type { X509Deps } from './X509Types.js';
 export { Certificate } from './Certificate.js';
 export { CertificationRequest } from './CertificationRequest.js';
 export { CaStore } from './CaStore.js';

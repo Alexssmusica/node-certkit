@@ -1,3 +1,23 @@
+import type { Asn1NamespaceObject } from '../asn1/Asn1Types.js';
+import type {
+  AesNamespaceObject,
+  CipherNamespaceObject,
+  DesNamespaceObject,
+  Rc2NamespaceObject
+} from '../cipher/CipherTypes.js';
+import type { MdRegistry } from '../digest/DigestTypes.js';
+import type { UtilNamespaceObject } from '../util/UtilTypes.js';
+import type { FortunaRandomNamespace } from '../../infrastructure/random/RandomTypes.js';
+import type { PemKeyCodec } from '../ports/index.js';
+import type { Pbkdf2Function } from './Pbkdf2Types.js';
+import type {
+  CertkitHmacNamespace,
+  CertkitMgfNamespace,
+  CertkitPkcs5Namespace,
+  CertkitPkcs7Namespace,
+  CertkitPssNamespace
+} from '../../presentation/CertkitTypes.js';
+import type { PemCodec } from './PemCodec.js';
 import type { Asn1Object, Asn1Validator } from '../asn1/Asn1Types.js';
 import type { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import type { BigInteger } from '../math/BigInteger.js';
@@ -14,6 +34,30 @@ import type {
   X509CertificationRequest,
   X509Extension
 } from './x509/X509Types.js';
+
+export type PkiFacadeDeps = {
+  asn1: Asn1NamespaceObject;
+  oids: Record<string, string>;
+  md: MdRegistry;
+  util: UtilNamespaceObject;
+  pem: ReturnType<typeof PemCodec.createCertkitNamespace>;
+  aes: AesNamespaceObject;
+  des: DesNamespaceObject;
+  rc2: Rc2NamespaceObject;
+  random: FortunaRandomNamespace;
+  pbkdf2: Pbkdf2Function;
+  pkcs5: CertkitPkcs5Namespace;
+  cipher: CipherNamespaceObject;
+  hmac: CertkitHmacNamespace;
+  pss: CertkitPssNamespace;
+  mgf: CertkitMgfNamespace;
+  pkcs7: CertkitPkcs7Namespace;
+  pki: Partial<CertkitPki>;
+};
+
+export type PkiFinalizeDeps = PkiFacadeDeps & {
+  rsaService: { setPemKeyCodec(codec: PemKeyCodec): void };
+};
 
 export type CertkitRsaNamespace = {
   encrypt: (data: string, key: RsaPublicKey, scheme?: unknown, schemeOptions?: unknown) => string;

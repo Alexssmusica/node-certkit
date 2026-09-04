@@ -1,6 +1,7 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { encodeUtf8 } from '../encoding/Utf8Codec.js';
 import { UtilNamespace } from '../util/UtilNamespace.js';
+import type { Sha256Digest } from './DigestTypes.js';
 
 interface Sha256State {
   h0: number;
@@ -11,19 +12,6 @@ interface Sha256State {
   h5: number;
   h6: number;
   h7: number;
-}
-
-export interface Sha256Digest {
-  algorithm: string;
-  blockLength: number;
-  digestLength: number;
-  messageLength: number;
-  fullMessageLength: number[] | null;
-  messageLength64: number[] | null;
-  messageLengthSize: number;
-  start: () => Sha256Digest;
-  update: (msg: string, encoding?: string) => Sha256Digest;
-  digest: () => ByteStringBuffer;
 }
 
 /**

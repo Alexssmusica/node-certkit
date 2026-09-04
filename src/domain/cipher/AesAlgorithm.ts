@@ -2,8 +2,8 @@
 import { UtilNamespace } from '../util/UtilNamespace.js';
 import { isArray } from '../util/typeChecks.js';
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
-import { BlockCipherApi } from './cipherModeUtils.js';
-import { CipherApi, CreateCipherOptions, ModeConstructor } from './CipherTypes.js';
+import { BlockCipherApi } from './CipherTypes.js';
+import { CipherApi, CreateCipherOptions, ModeConstructor, type AesNamespaceObject } from './CipherTypes.js';
 import { ensureAesTables } from './AesTables.js';
 
 type InitializeOptions = {
@@ -12,16 +12,6 @@ type InitializeOptions = {
 };
 
 let cipherApi: CipherApi<AesAlgorithm['mode']>;
-
-export type AesNamespaceObject = Record<string, unknown> & {
-  startEncrypting: (...args: unknown[]) => unknown;
-  createEncryptionCipher: (...args: unknown[]) => unknown;
-  startDecrypting: (...args: unknown[]) => unknown;
-  createDecryptionCipher: (...args: unknown[]) => unknown;
-  Algorithm: typeof AesAlgorithm;
-  _expandKey: (key: number[], decrypt: boolean) => number[];
-  _updateBlock: (w: number[], input: number[], output: number[], decrypt: boolean) => void;
-};
 
 const Nb = 4;
 

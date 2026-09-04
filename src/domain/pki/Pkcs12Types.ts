@@ -1,4 +1,4 @@
-import type { Asn1Object } from '../asn1/Asn1Types.js';
+import type { Asn1Object, Asn1Validator } from '../asn1/Asn1Types.js';
 import type { RsaPrivateKey } from './RsaTypes.js';
 import type { X509Certificate } from './x509/X509Types.js';
 
@@ -12,6 +12,14 @@ export type Pkcs12Deps = {
   random: any;
   pki: any;
   pkcs7: { asn1: any };
+};
+
+export type Pkcs12Validators = {
+  contentInfoValidator: Asn1Validator;
+  pfxValidator: Asn1Validator;
+  safeBagValidator: Asn1Validator;
+  attributeValidator: Asn1Validator;
+  certBagValidator: Asn1Validator;
 };
 
 export type Pkcs12Bag = {

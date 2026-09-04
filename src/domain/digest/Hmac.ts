@@ -1,21 +1,6 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { isArray } from '../util/typeChecks.js';
-
-interface BlockDigest {
-  blockLength: number;
-  start: () => unknown;
-  update: (msg: string, encoding?: string) => unknown;
-  digest: () => ByteStringBuffer;
-}
-
-export type DigestAlgorithmRegistry = Record<string, { create: () => BlockDigest }>;
-
-export interface HmacContext {
-  start: (md: string | BlockDigest | null, key: unknown) => void;
-  update: (bytes: string) => void;
-  getMac: () => ByteStringBuffer;
-  digest: () => ByteStringBuffer;
-}
+import type { BlockDigest, DigestAlgorithmRegistry, HmacContext } from './DigestTypes.js';
 
 /**
  * Hash-based Message Authentication Code implementation.

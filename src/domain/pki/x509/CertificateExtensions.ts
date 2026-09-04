@@ -1,8 +1,4 @@
-import type { X509AttachCtx, X509Extension } from './X509Types.js';
-
-export type CertificateExtensionFromAsn1Options = {
-  ctx: X509AttachCtx;
-};
+import type { CertificateExtensionFromAsn1Options, X509AttachCtx, X509Extension } from './X509Types.js';
 
 /**
  * Converts an ASN.1 extensions object (with extension sequences as its

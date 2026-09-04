@@ -8,6 +8,7 @@ import { Utf16Codec, Utf8TextCodec } from '../encoding/Utf16Codec.js';
 import { encodeUtf8, decodeUtf8 } from '../encoding/Utf8Codec.js';
 import { EnvInfo } from '../../infrastructure/env/EnvInfo.js';
 import { isArray, isArrayBuffer, isArrayBufferView } from './typeChecks.js';
+import type { UtilNamespaceObject } from './UtilTypes.js';
 
 type BaseNModule = {
   encode: (
@@ -16,38 +17,6 @@ type BaseNModule = {
     maxline?: number
   ) => string;
   decode: (input: string, alphabet: string) => Uint8Array | undefined;
-};
-
-/** Flat util namespace shape matching legacy certkit.util API. */
-export type UtilNamespaceObject = Record<string, unknown> & {
-  ByteBuffer: typeof ByteStringBuffer;
-  ByteStringBuffer: typeof ByteStringBuffer;
-  DataBuffer: typeof DataBuffer;
-  binary: {
-    raw: { encode: typeof RawCodec.encode; decode: typeof RawCodec.decode };
-    hex: { encode: (bytes: Uint8Array | string) => string; decode: typeof HexCodec.decode };
-    base64: { encode: typeof Base64Codec.encode; decode: typeof Base64Codec.decode };
-    base58: { encode: typeof Base58Codec.encode; decode: typeof Base58Codec.decode };
-    baseN: BaseNModule;
-  };
-  text: {
-    utf8: { encode: typeof Utf8TextCodec.encode; decode: typeof Utf8TextCodec.decode };
-    utf16: { encode: typeof Utf16Codec.encode; decode: typeof Utf16Codec.decode };
-  };
-  createBuffer: (input?: unknown, encoding?: string) => ByteStringBuffer;
-  bytesToHex: (bytes: string) => string;
-  hexToBytes: (hex: string) => string;
-  encode64: (input: string, maxline?: number) => string;
-  decode64: (input: string) => string;
-  nextTick: typeof EnvInfo.nextTick;
-  setImmediate: typeof EnvInfo.setImmediate;
-  isNodejs: boolean;
-  globalScope: typeof globalThis;
-  estimateCores: (
-    options: { update?: boolean } | ((err: null, cores: number) => void),
-    callback?: (err: null, cores: number) => void
-  ) => void;
-  cores?: number;
 };
 
 export class UtilNamespace {

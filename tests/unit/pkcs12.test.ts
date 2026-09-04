@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from
 import certkit from '../../src/presentation/index.js';
 import type { EncryptPrivateKeyInfoOptions } from '../../src/domain/pki/CertkitPkiTypes.js';
 import type { Pkcs12CreateOptions } from '../../src/domain/pki/Pkcs12Types.js';
-import type { PemMessage } from '../../src/domain/pki/PemCodec.js';
+import type { PemMessage } from '../../src/domain/pki/PemTypes.js';
 import type { RsaPrivateKey } from '../../src/domain/pki/RsaTypes.js';
 const PKCS12 = certkit.pkcs12;
 const ASN1 = certkit.asn1;

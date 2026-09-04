@@ -1,4 +1,4 @@
-import type { X509Validators } from './X509Asn1.js';
+import type { X509Validators } from './X509Types.js';
 import type { X509Runtime } from './X509Runtime.js';
 import { certificateExtensionFromAsn1, certificateExtensionsFromAsn1 } from './CertificateExtensions.js';
 import type { DerError, X509AttachCtx, X509Helpers } from './X509Types.js';

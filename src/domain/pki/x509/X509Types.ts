@@ -1,5 +1,61 @@
 import type { Asn1Object, Asn1Validator, DerError } from '../../asn1/Asn1Types.js';
-import type { X509Runtime } from './X509Runtime.js';
+
+export type X509Runtime = {
+  asn1: Record<string, unknown>;
+  oids: Record<string, string>;
+  md: Record<string, unknown>;
+  util: Record<string, unknown>;
+  pem: Record<string, unknown>;
+  rsa: Record<string, unknown>;
+  pss: Record<string, unknown>;
+  mgf: Record<string, unknown>;
+  random: Record<string, unknown>;
+  pki: Record<string, unknown>;
+};
+
+export type X509Deps = X509Runtime;
+
+export type X509Validators = {
+  shortNames: Record<string, string>;
+  x509CertificateValidator: Asn1Validator;
+  certificationRequestValidator: Asn1Validator;
+  certificationRequestInfoValidator: Asn1Validator;
+  rsassaPssParameterValidator: Asn1Validator;
+  rdnValidator: Asn1Validator;
+};
+
+export type SignatureDeps = {
+  asn1: Record<string, any>;
+  oids: Record<string, string>;
+  md: Record<string, { create: () => MessageDigest }>;
+  pss: { create: (...args: unknown[]) => unknown };
+  mgf: Record<string, any>;
+};
+
+export type X509SignatureHelpers = {
+  readSignatureParameters: (oid: string, obj: Asn1Object, fillDefaults: boolean) => any;
+  createSignatureDigest: (options: { signatureOid: string; type: string }) => MessageDigest;
+  verifySignature: (options: {
+    certificate: X509Certificate | X509CertificationRequest;
+    subject?: X509Certificate | X509CertificationRequest;
+    md: MessageDigest;
+    signature: string | null;
+  }) => boolean;
+  signatureParametersToAsn1: (oid: string, params: any) => Asn1Object;
+};
+
+export type ExtensionFillDeps = {
+  asn1: Record<string, any>;
+  oids: Record<string, string>;
+  util: Record<string, any>;
+  dnToAsn1: (obj: { attributes: DnAttribute[] }) => Asn1Object;
+};
+
+export type FillMissingExtensionFields = (e: X509Extension, options?: { cert?: X509Certificate }) => X509Extension;
+
+export type CertificateExtensionFromAsn1Options = {
+  ctx: X509AttachCtx;
+};
 
 export type DnAttribute = {
   type: string;

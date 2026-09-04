@@ -1,6 +1,7 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { encodeUtf8 } from '../encoding/Utf8Codec.js';
 import { UtilNamespace } from '../util/UtilNamespace.js';
+import type { Sha1Digest } from './DigestTypes.js';
 
 interface Sha1State {
   h0: number;
@@ -8,19 +9,6 @@ interface Sha1State {
   h2: number;
   h3: number;
   h4: number;
-}
-
-export interface Sha1Digest {
-  algorithm: string;
-  blockLength: number;
-  digestLength: number;
-  messageLength: number;
-  fullMessageLength: number[] | null;
-  messageLength64: number[] | null;
-  messageLengthSize: number;
-  start: () => Sha1Digest;
-  update: (msg: string, encoding?: string) => Sha1Digest;
-  digest: () => ByteStringBuffer;
 }
 
 /**

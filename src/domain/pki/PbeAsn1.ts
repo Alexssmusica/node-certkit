@@ -1,10 +1,5 @@
 import type { Asn1Validator } from '../asn1/Asn1Types.js';
-
-export type PbeValidators = {
-  encryptedPrivateKeyValidator: Asn1Validator;
-  PBES2AlgorithmsValidator: Asn1Validator;
-  pkcs12PbeParamsValidator: Asn1Validator;
-};
+import type { PbeValidators } from './PbeTypes.js';
 
 export function createPbeValidators(asn1: any): PbeValidators {
   const encryptedPrivateKeyValidator = {

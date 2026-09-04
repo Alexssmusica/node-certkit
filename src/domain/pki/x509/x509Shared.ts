@@ -1,4 +1,4 @@
-import type { X509Validators } from './X509Asn1.js';
+import type { X509Validators } from './X509Types.js';
 import type { X509Runtime } from './X509Runtime.js';
 import { createFillMissingExtensionFields } from './X509ExtensionFill.js';
 import { createX509SignatureHelpers } from './X509Signature.js';

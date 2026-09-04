@@ -1,11 +1,6 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
-import {
-  BlockCipherApi,
-  CipherModeOptions,
-  CipherModeStartOptions,
-  PadOptions,
-  validatePkcs7Padding
-} from './cipherModeUtils.js';
+import { validatePkcs7Padding } from './cipherModeUtils.js';
+import type { BlockCipherApi, CipherModeOptions, CipherModeStartOptions, PadOptions } from './CipherTypes.js';
 
 export class EcbMode {
   name = 'ECB';

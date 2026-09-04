@@ -1,19 +1,12 @@
-import { Fortuna, type PrngContext, type PrngPlugin } from '../prng/Fortuna.js';
+import { Fortuna } from '../prng/Fortuna.js';
+import type { PrngContext, PrngPlugin } from '../prng/PrngTypes.js';
 import { UtilNamespace } from '../../domain/util/UtilNamespace.js';
-
-export type AesPrngBackend = {
-  _expandKey: (key: unknown, decrypt: boolean) => unknown;
-  _updateBlock: (w: unknown, seed: unknown, output: number[], decrypt: boolean) => void;
-};
-
-export type Sha256DigestFactory = {
-  create: () => {
-    messageLength: number;
-    start: () => void;
-    update: (bytes: string) => void;
-    digest: () => { getBytes: () => string };
-  };
-};
+import type {
+  AesPrngBackend,
+  FortunaRandomDependencies,
+  FortunaRandomNamespace,
+  Sha256DigestFactory
+} from './RandomTypes.js';
 
 const RANDOM_CONTEXT_METHODS = [
   'collect',
@@ -37,17 +30,6 @@ const RANDOM_CONTEXT_PROPERTIES = [
   'pools',
   'pool'
 ] as const;
-
-export type FortunaRandomNamespace = PrngContext & {
-  getBytes: (count: number, callback?: (err: Error | null, bytes?: string) => void) => string | void;
-  getBytesSync: (count: number) => string;
-  createInstance: () => FortunaRandomNamespace;
-};
-
-export type FortunaRandomDependencies = {
-  aes: AesPrngBackend;
-  sha256: Sha256DigestFactory;
-};
 
 export class FortunaRandom {
   static createPlugin(deps: FortunaRandomDependencies): PrngPlugin {

@@ -1,12 +1,6 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
-import {
-  BlockCipherApi,
-  CipherModeOptions,
-  CipherModeStartOptions,
-  PadOptions,
-  transformIV,
-  validatePkcs7Padding
-} from './cipherModeUtils.js';
+import { transformIV, validatePkcs7Padding } from './cipherModeUtils.js';
+import type { BlockCipherApi, CipherModeOptions, CipherModeStartOptions, PadOptions } from './CipherTypes.js';
 
 export class CbcMode {
   name = 'CBC';

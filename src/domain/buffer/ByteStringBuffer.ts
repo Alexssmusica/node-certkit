@@ -1,11 +1,9 @@
 import { checkBitsParam } from './checkBitsParam.js';
 import { isArrayBuffer, isArrayBufferView } from '../util/typeChecks.js';
 import { decodeUtf8, encodeUtf8 } from '../encoding/Utf8Codec.js';
+import type { ByteStringBufferInput } from './BufferTypes.js';
 
 const MAX_CONSTRUCTED_STRING_LENGTH = 4096;
-
-export type ByteStringBufferInput =
-  string | ArrayBuffer | ArrayBufferView | Buffer | ByteStringBuffer | { data: string; read: number };
 
 /**
  * Constructor for a binary string backed byte buffer.

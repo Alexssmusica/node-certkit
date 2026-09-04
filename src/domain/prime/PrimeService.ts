@@ -1,16 +1,12 @@
 import { BigInteger } from '../math/BigInteger.js';
 import type { BigIntegerRandomSource } from '../math/BigInteger.js';
 import { EnvInfo } from '../../infrastructure/env/EnvInfo.js';
+import type { PrimeGenerateOptions } from './PrimeTypes.js';
 
 const GCD_30_DELTA = [6, 4, 2, 4, 2, 4, 6, 2];
 const THIRTY = new BigInteger(null);
 THIRTY.fromInt(30);
 const op_or = (x: number, y: number) => x | y;
-
-export type PrimeGenerateOptions = Record<string, unknown> & {
-  algorithm?: string | { name: string; options?: Record<string, unknown> };
-  prng?: { getBytesSync(count: number): string };
-};
 
 function getMillerRabinTests(bits: number): number {
   if (bits <= 100) return 27;

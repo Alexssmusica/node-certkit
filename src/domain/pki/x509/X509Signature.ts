@@ -1,26 +1,13 @@
 import type { Asn1Object } from '../../asn1/Asn1Codec.js';
-import type { X509Validators } from './X509Asn1.js';
-import type { DerError, MessageDigest, X509Certificate, X509CertificationRequest } from './X509Types.js';
-
-export type SignatureDeps = {
-  asn1: Record<string, any>;
-  oids: Record<string, string>;
-  md: Record<string, { create: () => MessageDigest }>;
-  pss: { create: (...args: unknown[]) => unknown };
-  mgf: Record<string, any>;
-};
-
-export type X509SignatureHelpers = {
-  readSignatureParameters: (oid: string, obj: Asn1Object, fillDefaults: boolean) => any;
-  createSignatureDigest: (options: { signatureOid: string; type: string }) => MessageDigest;
-  verifySignature: (options: {
-    certificate: X509Certificate | X509CertificationRequest;
-    subject?: X509Certificate | X509CertificationRequest;
-    md: MessageDigest;
-    signature: string | null;
-  }) => boolean;
-  signatureParametersToAsn1: (oid: string, params: any) => Asn1Object;
-};
+import type {
+  DerError,
+  MessageDigest,
+  SignatureDeps,
+  X509Certificate,
+  X509CertificationRequest,
+  X509SignatureHelpers,
+  X509Validators
+} from './X509Types.js';
 
 export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509Validators): X509SignatureHelpers {
   const { asn1, oids, md, pss, mgf } = deps;

@@ -1,13 +1,7 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { constantTimeEquals } from '../util/constantTimeEquals.js';
-import {
-  BlockCipherApi,
-  CipherModeOptions,
-  CipherModeStartOptions,
-  PadOptions,
-  from64To32,
-  inc32
-} from './cipherModeUtils.js';
+import { from64To32, inc32 } from './cipherModeUtils.js';
+import type { BlockCipherApi, CipherModeOptions, CipherModeStartOptions, PadOptions } from './CipherTypes.js';
 
 export class GcmMode {
   name = 'GCM';

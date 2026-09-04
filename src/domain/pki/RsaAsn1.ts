@@ -1,12 +1,5 @@
 import type { Asn1NamespaceObject, Asn1Validator } from '../asn1/Asn1Types.js';
-
-export type RsaValidators = {
-  privateKeyValidator: Asn1Validator;
-  rsaPrivateKeyValidator: Asn1Validator;
-  rsaPublicKeyValidator: Asn1Validator;
-  publicKeyValidator: Asn1Validator;
-  digestInfoValidator: Asn1Validator;
-};
+import type { RsaValidators } from './RsaTypes.js';
 
 export function createRsaValidators(asn1: Asn1NamespaceObject): RsaValidators {
   const privateKeyValidator: Asn1Validator = {

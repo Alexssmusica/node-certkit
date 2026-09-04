@@ -1,15 +1,5 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
-
-export type MessageDigest = {
-  digestLength: number;
-  start: () => void;
-  update: (bytes: string) => void;
-  digest: () => ByteStringBuffer;
-};
-
-export type Mgf1Object = {
-  generate: (seed: string, maskLen: number) => string;
-};
+import type { MessageDigest, Mgf1Object } from './MgfTypes.js';
 
 export class Mgf1 {
   static create(md: MessageDigest): Mgf1Object {

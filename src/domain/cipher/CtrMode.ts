@@ -1,5 +1,6 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
-import { BlockCipherApi, CipherModeOptions, CipherModeStartOptions, inc32, transformIV } from './cipherModeUtils.js';
+import { inc32, transformIV } from './cipherModeUtils.js';
+import type { BlockCipherApi, CipherModeOptions, CipherModeStartOptions } from './CipherTypes.js';
 
 export class CtrMode {
   name = 'CTR';

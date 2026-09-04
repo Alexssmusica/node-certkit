@@ -1,17 +1,7 @@
 import { Sha1 } from '../digest/Sha1.js';
 import { UtilNamespace } from '../util/UtilNamespace.js';
-import type { MessageDigest } from './Mgf1.js';
-
-export type RsaOaepKey = {
-  n: { bitLength(): number };
-};
-
-export type RsaOaepOptions = {
-  label?: string;
-  seed?: string;
-  md?: MessageDigest;
-  mgf1?: { md?: MessageDigest };
-};
+import type { MessageDigest } from './MgfTypes.js';
+import type { RsaOaepKey, RsaOaepOptions } from './Pkcs1Types.js';
 
 function rsaMgf1(seed: string, maskLength: number, hash?: MessageDigest): string {
   if (!hash) {

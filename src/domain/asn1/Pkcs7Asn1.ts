@@ -1,5 +1,6 @@
 /* Migrated from lib/pkcs7asn1.js */
 import { Asn1Codec, type Asn1Validator } from './Asn1Codec.js';
+import type { Pkcs7Asn1NamespaceObject } from './Asn1Types.js';
 
 /**
  * Javascript implementation of ASN.1 validators for PKCS#7 v1.5.
@@ -445,14 +446,6 @@ const recipientInfoValidator: Asn1Validator = {
       capture: 'encKey'
     }
   ]
-};
-
-export type Pkcs7Asn1NamespaceObject = {
-  contentInfoValidator: Asn1Validator;
-  envelopedDataValidator: Asn1Validator;
-  encryptedDataValidator: Asn1Validator;
-  signedDataValidator: Asn1Validator;
-  recipientInfoValidator: Asn1Validator;
 };
 
 export class Pkcs7Asn1 {

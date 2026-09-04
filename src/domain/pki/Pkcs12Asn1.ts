@@ -1,12 +1,5 @@
 import type { Asn1Validator } from '../asn1/Asn1Types.js';
-
-export type Pkcs12Validators = {
-  contentInfoValidator: Asn1Validator;
-  pfxValidator: Asn1Validator;
-  safeBagValidator: Asn1Validator;
-  attributeValidator: Asn1Validator;
-  certBagValidator: Asn1Validator;
-};
+import type { Pkcs12Validators } from './Pkcs12Types.js';
 
 export function createPkcs12Validators(asn1: any): Pkcs12Validators {
   const contentInfoValidator = {

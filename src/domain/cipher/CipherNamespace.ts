@@ -1,17 +1,6 @@
 import { BlockCipher } from './BlockCipher.js';
-import { CipherModes, CipherModesObject } from './CipherModes.js';
-
-export type CipherAlgorithmFactory = () => unknown;
-
-export type CipherNamespaceObject = {
-  algorithms: Record<string, CipherAlgorithmFactory>;
-  modes: CipherModesObject;
-  createCipher: (algorithm: string | unknown, key: unknown) => BlockCipher;
-  createDecipher: (algorithm: string | unknown, key: unknown) => BlockCipher;
-  registerAlgorithm: (name: string, algorithm: CipherAlgorithmFactory) => void;
-  getAlgorithm: (name: string) => CipherAlgorithmFactory | null;
-  BlockCipher: typeof BlockCipher;
-};
+import { CipherModes } from './CipherModes.js';
+import type { CipherAlgorithmFactory, CipherModesObject, CipherNamespaceObject } from './CipherTypes.js';
 
 export class CipherNamespace {
   static createCertkitNamespace(): CipherNamespaceObject {

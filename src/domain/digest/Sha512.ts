@@ -1,23 +1,11 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { encodeUtf8 } from '../encoding/Utf8Codec.js';
 import { UtilNamespace } from '../util/UtilNamespace.js';
+import type { Sha512Digest } from './DigestTypes.js';
 
 type Sha512Algorithm = 'SHA-512' | 'SHA-384' | 'SHA-512/256' | 'SHA-512/224';
 type Sha512StateWord = [number, number];
 type Sha512State = Sha512StateWord[];
-
-export interface Sha512Digest {
-  algorithm: string;
-  blockLength: number;
-  digestLength: number;
-  messageLength: number;
-  fullMessageLength: number[] | null;
-  messageLength128: number[] | null;
-  messageLengthSize: number;
-  start: () => Sha512Digest;
-  update: (msg: string, encoding?: string) => Sha512Digest;
-  digest: () => ByteStringBuffer;
-}
 
 /**
  * Secure Hash Algorithm with a 1024-bit block size implementation.

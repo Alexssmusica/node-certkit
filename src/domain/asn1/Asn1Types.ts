@@ -53,3 +53,11 @@ export type Asn1NamespaceObject = Record<string, unknown> & {
 };
 
 export type DerError = Error & Record<string, unknown>;
+
+export type Pkcs7Asn1NamespaceObject = {
+  contentInfoValidator: Asn1Validator;
+  envelopedDataValidator: Asn1Validator;
+  encryptedDataValidator: Asn1Validator;
+  signedDataValidator: Asn1Validator;
+  recipientInfoValidator: Asn1Validator;
+};

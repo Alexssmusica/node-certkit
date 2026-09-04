@@ -1,5 +1,5 @@
 import type { Asn1Object } from '../../asn1/Asn1Types.js';
-import type { X509Validators } from './X509Asn1.js';
+import type { X509Validators } from './X509Types.js';
 import type { X509Runtime } from './X509Runtime.js';
 import type {
   DerError,

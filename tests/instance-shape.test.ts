@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import certkit from '../src/presentation/index.js';
-import type { PrngPlugin } from '../src/infrastructure/prng/Fortuna.js';
+import type { PrngPlugin } from '../src/infrastructure/prng/PrngTypes.js';
 
 type ValueDescription = {
   type: string;

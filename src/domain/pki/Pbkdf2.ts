@@ -1,35 +1,14 @@
 import type { NativeCryptoProvider } from '../ports/index.js';
-import type { DigestAlgorithmRegistry, HmacContext } from '../digest/Hmac.js';
+import type { DigestAlgorithmRegistry, HmacContext } from '../digest/DigestTypes.js';
+import type { Pbkdf2Callback, Pbkdf2Dependencies, Pbkdf2Function } from './Pbkdf2Types.js';
 import { UtilNamespace } from '../util/UtilNamespace.js';
 import { EnvInfo } from '../../infrastructure/env/EnvInfo.js';
-
-export type Pbkdf2Dependencies = {
-  usePureJavaScript: boolean;
-  nativeCrypto: NativeCryptoProvider;
-  mdAlgorithms: DigestAlgorithmRegistry;
-  hmacCreate: () => HmacContext;
-};
 
 type MessageDigest = {
   digestLength: number;
   start: () => void;
   update: (bytes: string) => void;
   digest: () => { getBytes: () => string };
-};
-
-export type Pbkdf2Callback = (err: Error | null, key?: string) => void;
-
-export type Pbkdf2Function = {
-  (p: string, s: string, c: number, dkLen: number, md?: string | MessageDigest | null): string;
-  (
-    p: string,
-    s: string,
-    c: number,
-    dkLen: number,
-    md: string | MessageDigest | null | undefined,
-    callback: Pbkdf2Callback
-  ): void;
-  (p: string, s: string, c: number, dkLen: number, callback: Pbkdf2Callback): void;
 };
 
 export class Pbkdf2 {

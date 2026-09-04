@@ -6,13 +6,7 @@ import { HexCodec } from '../encoding/HexCodec.js';
 import { RawCodec } from '../encoding/RawCodec.js';
 import { Utf16Codec, Utf8TextCodec } from '../encoding/Utf16Codec.js';
 import { encodeUtf8 } from '../encoding/Utf8Codec.js';
-
-export interface DataBufferOptions {
-  readOffset?: number;
-  writeOffset?: number;
-  growSize?: number;
-  encoding?: string;
-}
+import type { DataBufferOptions } from './BufferTypes.js';
 
 type DataBufferInput =
   | string

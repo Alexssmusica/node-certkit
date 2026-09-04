@@ -1,35 +1,5 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
-
-export type CipherAlgorithm = {
-  mode: {
-    blockSize: number;
-    name?: string;
-    tag?: ByteStringBuffer;
-    start: (options: Record<string, unknown>) => void;
-    encrypt: (input: ByteStringBuffer, output: ByteStringBuffer, finish: boolean) => boolean | void;
-    decrypt: (input: ByteStringBuffer, output: ByteStringBuffer, finish: boolean) => boolean | void;
-    pad?: (input: ByteStringBuffer, options: Record<string, unknown>) => boolean;
-    unpad?: (output: ByteStringBuffer, options: Record<string, unknown>) => boolean;
-    afterFinish?: (output: ByteStringBuffer, options: Record<string, unknown>) => boolean;
-  };
-  initialize: (options: BlockCipherOptions) => void;
-};
-
-export type BlockCipherOptions = {
-  algorithm: CipherAlgorithm;
-  key: string | ByteStringBuffer;
-  decrypt: boolean;
-};
-
-export type BlockCipherStartOptions = {
-  iv?: string | ByteStringBuffer | number[] | null;
-  additionalData?: string | ByteStringBuffer;
-  tagLength?: number;
-  tag?: string | ByteStringBuffer;
-  output?: ByteStringBuffer;
-};
-
-export type PaddingFunction = (blockSize: number, buffer: ByteStringBuffer, decrypt: boolean) => boolean;
+import type { BlockCipherOptions, BlockCipherStartOptions, CipherAlgorithm, PaddingFunction } from './CipherTypes.js';
 
 export class BlockCipher {
   algorithm: CipherAlgorithm;
