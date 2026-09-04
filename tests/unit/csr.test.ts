@@ -3,7 +3,7 @@ import certkit from '../../src/presentation/index.js';
 import type { BigInteger } from '../../src/domain/math/BigInteger.js';
 import type { PublicKey } from '../../src/domain/pki/x509/X509Types.js';
 const PKI = certkit.pki;
-var _pem = {
+const _pem = {
   privateKey:
     '-----BEGIN RSA PRIVATE KEY-----\r\n' +
     'MIICXQIBAAKBgQDL0EugUiNGMWscLAVM0VoMdhDZEJOqdsUMpx9U0YZI7szokJqQ\r\n' +
@@ -29,13 +29,13 @@ var _pem = {
     '-----END PUBLIC KEY-----\r\n'
 };
 
-describe('csr', function () {
+describe('csr', () => {
   it('should generate a certification request', (ctx) => {
-    var keys = {
+    const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
     };
-    var csr = PKI.createCertificationRequest();
+    let csr = PKI.createCertificationRequest();
     csr.publicKey = keys.publicKey as unknown as PublicKey;
     csr.setSubject([
       {
@@ -101,9 +101,9 @@ describe('csr', function () {
     // sign certification request
     csr.sign(keys.privateKey);
 
-    var pem = PKI.certificationRequestToPem(csr);
+    const pem = PKI.certificationRequestToPem(csr);
     csr = PKI.certificationRequestFromPem(pem);
-    var extReq = csr.getAttribute({ name: 'extensionRequest' });
+    const extReq = csr.getAttribute({ name: 'extensionRequest' });
     expect(extReq).toBeTruthy();
     expect(extReq!.extensions![0].name).toBe('subjectAltName');
     expect(extReq!.extensions![0].altNames).toEqual([
@@ -125,7 +125,7 @@ describe('csr', function () {
   });
 
   it('should load an OpenSSL-generated certification request', (ctx) => {
-    var pem =
+    const pem =
       '-----BEGIN CERTIFICATE REQUEST-----\r\n' +
       'MIICdTCCAV0CAQAwMDEVMBMGA1UEAwwMTXlDb21tb25OYW1lMRcwFQYDVQQKDA5N\r\n' +
       'eU9yZ2FuaXphdGlvbjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKRU\r\n' +
@@ -143,7 +143,7 @@ describe('csr', function () {
       'a535a7e9RkbJ\r\n' +
       '-----END CERTIFICATE REQUEST-----\r\n';
 
-    var csr = PKI.certificationRequestFromPem(pem);
+    const csr = PKI.certificationRequestFromPem(pem);
     expect(csr.subject.getField('CN')!.value).toBe('MyCommonName');
     expect(csr.subject.getField('O')!.value).toBe('MyOrganization');
     expect(csr.signatureOid).toBe(PKI.oids.sha1WithRSAEncryption);

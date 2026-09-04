@@ -2,37 +2,37 @@ import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from
 import certkit from '../../src/presentation/index.js';
 const MD5 = certkit.md5;
 const UTIL = certkit.util;
-describe('md5', function () {
+describe('md5', () => {
   it('should have correct digest length', (ctx) => {
-    var md = MD5.create();
+    const md = MD5.create();
     expect(md.digestLength).toBe(16);
   });
 
   it('should digest the empty string', (ctx) => {
-    var md = MD5.create();
+    const md = MD5.create();
     expect(md.digest().toHex()).toBe('d41d8cd98f00b204e9800998ecf8427e');
   });
 
   it('should digest "abc"', (ctx) => {
-    var md = MD5.create();
+    const md = MD5.create();
     md.update('abc');
     expect(md.digest().toHex()).toBe('900150983cd24fb0d6963f7d28e17f72');
   });
 
   it('should digest "The quick brown fox jumps over the lazy dog"', (ctx) => {
-    var md = MD5.create();
+    const md = MD5.create();
     md.update('The quick brown fox jumps over the lazy dog');
     expect(md.digest().toHex()).toBe('9e107d9d372bb6826bd81d3542a419d6');
   });
 
   it('should digest "c\'\u00e8"', (ctx) => {
-    var md = MD5.create();
+    const md = MD5.create();
     md.update("c'\u00e8", 'utf8');
     expect(md.digest().toHex()).toBe('8ef7c2941d78fe89f31e614437c9db59');
   });
 
   it('should digest "THIS IS A MESSAGE"', (ctx) => {
-    var md = MD5.create();
+    const md = MD5.create();
     md.start();
     md.update('THIS IS ');
     md.update('A MESSAGE');
@@ -42,7 +42,7 @@ describe('md5', function () {
   });
 
   it('should digest a long message', (ctx) => {
-    var input = UTIL.hexToBytes(
+    const input = UTIL.hexToBytes(
       '0100002903018d32e9c6dc423774c4c39a5a1b78f44cc2cab5f676d39' +
         'f703d29bfa27dfeb870000002002f01000200004603014c2c1e835d39' +
         'da71bc0857eb04c2b50fe90dbb2a8477fe7364598d6f0575999c20a6c' +
@@ -93,7 +93,7 @@ describe('md5', function () {
         '0826860a0c2ef94c7935e6215c3c4cd6b0e43e80cca396d913d36be'
     );
 
-    var md = MD5.create();
+    const md = MD5.create();
     md.update(input);
     expect(md.digest().toHex()).toBe('d15a2da0e92c3da55dc573f885b6e653');
   });
@@ -101,9 +101,9 @@ describe('md5', function () {
   it('should digest multiple long messages', (ctx) => {
     // Note: might be too slow on old browsers
     // done multiple times to check hot loop optimizations
-    for (var loop = 0; loop < 3; ++loop) {
-      var md = MD5.create();
-      for (var i = 0; i < 10000; ++i) {
+    for (let loop = 0; loop < 3; ++loop) {
+      const md = MD5.create();
+      for (let i = 0; i < 10000; ++i) {
         md.update('abc');
       }
       expect(md.digest().toHex()).toBe('b3e98306e7367f93cd7cb870af64f7b7');

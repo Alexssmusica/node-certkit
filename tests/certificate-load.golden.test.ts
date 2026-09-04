@@ -74,8 +74,8 @@ function loadCertificate(input: CertificateLoadInput) {
   };
 }
 
-describe('Certificate load golden test', function () {
-  it('loads PKCS#12 and extracts PEM, key and certificate data', function () {
+describe('Certificate load golden test', () => {
+  it('loads PKCS#12 and extracts PEM, key and certificate data', () => {
     const result = loadCertificate({ buffer: bufferB64, password });
     expect(result.pem.includes('BEGIN CERTIFICATE')).toBeTruthy();
     expect(result.key.includes('BEGIN RSA PRIVATE KEY') || result.key.includes('BEGIN PRIVATE KEY')).toBeTruthy();
@@ -86,7 +86,7 @@ describe('Certificate load golden test', function () {
   });
 
   it('throws on wrong password', () => {
-    expect(function () {
+    expect(() => {
       loadCertificate({ buffer: bufferB64, password: 'wrong' });
     }).toThrow();
   });

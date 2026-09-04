@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import certkit from '../../src/presentation/index.js';
 const PEM = certkit.pem;
-var _input =
+const _input =
   '-----BEGIN PRIVACY-ENHANCED MESSAGE-----\r\n' +
   'Proc-Type: 4,ENCRYPTED\r\n' +
   'Content-Domain: RFC822\r\n' +
@@ -70,7 +70,7 @@ var _input =
   '0vhM5TEmmNWz0anPVabqDj9TA0z5MsDJQcn5NmO9xnw=\r\n' +
   '-----END RSA PRIVATE KEY-----\r\n';
 
-var _csrWithNew =
+const _csrWithNew =
   '-----BEGIN NEW CERTIFICATE REQUEST-----\r\n' +
   'MIIE9jCCAt4CAQAwfjELMAkGA1UEBhMCVVMxETAPBgNVBAgMCFZpcmdpbmlhMRMw\r\n' +
   'EQYDVQQHDApCbGFja3NidXJnMR0wGwYDVQQKDBREaWdpdGFsIEJhemFhciwgSW5j\r\n' +
@@ -101,7 +101,7 @@ var _csrWithNew =
   'x6n+naGYblpSHXiboXRsuGWUtTjvqNVdOxA=\r\n' +
   '-----END NEW CERTIFICATE REQUEST-----\r\n';
 
-var _csrWithoutNew =
+const _csrWithoutNew =
   '-----BEGIN CERTIFICATE REQUEST-----\r\n' +
   'MIIE9jCCAt4CAQAwfjELMAkGA1UEBhMCVVMxETAPBgNVBAgMCFZpcmdpbmlhMRMw\r\n' +
   'EQYDVQQHDApCbGFja3NidXJnMR0wGwYDVQQKDBREaWdpdGFsIEJhemFhciwgSW5j\r\n' +
@@ -132,12 +132,12 @@ var _csrWithoutNew =
   'x6n+naGYblpSHXiboXRsuGWUtTjvqNVdOxA=\r\n' +
   '-----END CERTIFICATE REQUEST-----\r\n';
 
-describe('pem', function () {
+describe('pem', () => {
   it('should decode and re-encode PEM messages', (ctx) => {
-    var msgs = PEM.decode(_input);
+    const msgs = PEM.decode(_input);
 
-    var output = '';
-    for (var i = 0; i < msgs.length; ++i) {
+    let output = '';
+    for (let i = 0; i < msgs.length; ++i) {
       output += PEM.encode(msgs[i]);
     }
 
@@ -145,15 +145,15 @@ describe('pem', function () {
   });
 
   it('should decode a CSR from PEM with NEW in the labels', (ctx) => {
-    var csrs = PEM.decode(_csrWithNew);
-    for (var i = 0; i < csrs.length; ++i) {
+    const csrs = PEM.decode(_csrWithNew);
+    for (let i = 0; i < csrs.length; ++i) {
       expect(csrs[i].type).toBe('CERTIFICATE REQUEST');
     }
   });
 
   it('should decode a CSR from PEM without NEW in the labels', (ctx) => {
-    var csrs = PEM.decode(_csrWithoutNew);
-    for (var i = 0; i < csrs.length; ++i) {
+    const csrs = PEM.decode(_csrWithoutNew);
+    for (let i = 0; i < csrs.length; ++i) {
       expect(csrs[i].type).toBe('CERTIFICATE REQUEST');
     }
   });

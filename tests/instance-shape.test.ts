@@ -163,7 +163,7 @@ function diffSnapshots(a: Record<string, unknown>, b: Record<string, unknown>): 
   const removed: string[] = [];
   const changed: SnapshotDiff['changed'] = [];
   const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
-  allKeys.forEach(function (key) {
+  allKeys.forEach((key) => {
     if (!(key in a)) {
       added.push(key);
     } else if (!(key in b)) {
@@ -175,27 +175,26 @@ function diffSnapshots(a: Record<string, unknown>, b: Record<string, unknown>): 
   return { added, removed, changed };
 }
 
-describe('Instance shape snapshot', function () {
+describe('Instance shape snapshot', () => {
   it('matches the committed snapshot', (ctx) => {
     const actual = buildActual();
     const diff = diffSnapshots(expected, actual);
     if (diff.added.length || diff.removed.length || diff.changed.length) {
       const msg = [];
       if (diff.added.length) {
-        msg.push('Added instances: ' + diff.added.join(', '));
+        msg.push(`Added instances: ${diff.added.join(', ')}`);
       }
       if (diff.removed.length) {
-        msg.push('Removed instances: ' + diff.removed.join(', '));
+        msg.push(`Removed instances: ${diff.removed.join(', ')}`);
       }
       if (diff.changed.length) {
         msg.push(
-          'Changed instances: ' +
-            diff.changed
-              .slice(0, 5)
-              .map(function (c) {
-                return c.key;
-              })
-              .join(', ')
+          `Changed instances: ${diff.changed
+            .slice(0, 5)
+            .map((c) => {
+              return c.key;
+            })
+            .join(', ')}`
         );
       }
       expect.fail(msg.join('\n'));

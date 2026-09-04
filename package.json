@@ -38,7 +38,7 @@
     "test:types:public": "tsc -p tsconfig.types.json --noEmit",
     "test:dts": "tsc -p tsconfig.dts.json --noEmit",
     "test:security": "vitest run tests/security",
-    "lint": "eslint src/"
+    "lint": "eslint src/ tests/"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

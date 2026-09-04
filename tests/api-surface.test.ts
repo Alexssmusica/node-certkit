@@ -49,10 +49,10 @@ function walk(value: unknown, prefix: string, depth: number, out: Snapshot): voi
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     try {
-      walk(record[key], prefix ? prefix + '.' + key : key, depth + 1, out);
+      walk(record[key], prefix ? `${prefix}.${key}` : key, depth + 1, out);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      out[prefix + '.' + key] = { type: 'error', message };
+      out[`${prefix}.${key}`] = { type: 'error', message };
     }
   }
 }
@@ -62,7 +62,7 @@ function diffSnapshots(a: Snapshot, b: Snapshot) {
   const removed: string[] = [];
   const changed: { key: string; expected: SnapshotEntry; actual: SnapshotEntry }[] = [];
   const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
-  allKeys.forEach(function (key) {
+  allKeys.forEach((key) => {
     if (!(key in a)) {
       added.push(key);
     } else if (!(key in b)) {
@@ -74,7 +74,7 @@ function diffSnapshots(a: Snapshot, b: Snapshot) {
   return { added, removed, changed };
 }
 
-describe('API surface snapshot', function () {
+describe('API surface snapshot', () => {
   it('matches the committed snapshot', (ctx) => {
     const actual: Snapshot = {};
     walk(certkit, 'certkit', 0, actual);
@@ -82,20 +82,19 @@ describe('API surface snapshot', function () {
     if (diff.added.length || diff.removed.length || diff.changed.length) {
       const msg = [];
       if (diff.added.length) {
-        msg.push('Added paths: ' + diff.added.slice(0, 20).join(', '));
+        msg.push(`Added paths: ${diff.added.slice(0, 20).join(', ')}`);
       }
       if (diff.removed.length) {
-        msg.push('Removed paths: ' + diff.removed.slice(0, 20).join(', '));
+        msg.push(`Removed paths: ${diff.removed.slice(0, 20).join(', ')}`);
       }
       if (diff.changed.length) {
         msg.push(
-          'Changed paths: ' +
-            diff.changed
-              .slice(0, 10)
-              .map(function (c) {
-                return c.key;
-              })
-              .join(', ')
+          `Changed paths: ${diff.changed
+            .slice(0, 10)
+            .map((c) => {
+              return c.key;
+            })
+            .join(', ')}`
         );
       }
       expect.fail(msg.join('\n'));

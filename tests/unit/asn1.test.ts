@@ -22,188 +22,188 @@ type Asn1TestResult = {
   asn1?: Asn1Object;
   der?: CertkitBuffer;
 };
-describe('asn1', function () {
+describe('asn1', () => {
   // TODO: add more ASN.1 coverage
 
-  it('should convert an OID to DER', function () {
+  it('should convert an OID to DER', () => {
     expect(ASN1.oidToDer('1.2.840.113549').toHex()).toBe('2a864886f70d');
   });
 
-  it('should convert a 32b OID to DER', function () {
+  it('should convert a 32b OID to DER', () => {
     expect(ASN1.oidToDer('1.2.4294967295').toHex()).toBe('2a8fffffff7f');
   });
 
-  it('should not convert a >32b OID to DER', function () {
-    expect(function () {
+  it('should not convert a >32b OID to DER', () => {
+    expect(() => {
       ASN1.oidToDer('1.2.4294967296');
     }).toThrow(/OID value too large; max is 32-bits./);
   });
 
-  it('should convert an OID from DER', function () {
-    var der = UTIL.hexToBytes('2a864886f70d');
+  it('should convert an OID from DER', () => {
+    const der = UTIL.hexToBytes('2a864886f70d');
     expect(ASN1.derToOid(der)).toBe('1.2.840.113549');
   });
 
-  it('should convert a 32b OID from DER', function () {
-    var der = UTIL.hexToBytes('2a8fffffff7f');
+  it('should convert a 32b OID from DER', () => {
+    const der = UTIL.hexToBytes('2a8fffffff7f');
     expect(ASN1.derToOid(der)).toBe('1.2.4294967295');
   });
 
-  it('should convert a >32b OID from DER', function () {
-    var der = UTIL.hexToBytes('2a9080808001');
+  it('should convert a >32b OID from DER', () => {
+    const der = UTIL.hexToBytes('2a9080808001');
     expect(ASN1.derToOid(der)).toBe('1.2.4294967297');
   });
 
-  it('should convert a max safe int OID from DER', function () {
-    var der = UTIL.hexToBytes('2a8fffffffffffff7f');
+  it('should convert a max safe int OID from DER', () => {
+    const der = UTIL.hexToBytes('2a8fffffffffffff7f');
     expect(ASN1.derToOid(der)).toBe('1.2.9007199254740991');
   });
 
-  it('should not convert a >max safe int OID from DER', function () {
-    expect(function () {
+  it('should not convert a >max safe int OID from DER', () => {
+    expect(() => {
       // '1.2.9007199254740992'
-      var der = UTIL.hexToBytes('2a9080808080808000');
+      const der = UTIL.hexToBytes('2a9080808080808000');
       console.log(ASN1.derToOid(der));
     }).toThrow(/OID value too large; max is 53-bits./);
   });
 
-  it('should convert INTEGER 0 to DER', function () {
+  it('should convert INTEGER 0 to DER', () => {
     expect(ASN1.integerToDer(0).toHex()).toBe('00');
   });
 
-  it('should convert INTEGER 1 to DER', function () {
+  it('should convert INTEGER 1 to DER', () => {
     expect(ASN1.integerToDer(1).toHex()).toBe('01');
   });
 
-  it('should convert INTEGER 127 to DER', function () {
+  it('should convert INTEGER 127 to DER', () => {
     expect(ASN1.integerToDer(127).toHex()).toBe('7f');
   });
 
-  it('should convert INTEGER 128 to DER', function () {
+  it('should convert INTEGER 128 to DER', () => {
     expect(ASN1.integerToDer(128).toHex()).toBe('0080');
   });
 
-  it('should convert INTEGER 256 to DER', function () {
+  it('should convert INTEGER 256 to DER', () => {
     expect(ASN1.integerToDer(256).toHex()).toBe('0100');
   });
 
-  it('should convert INTEGER -128 to DER', function () {
+  it('should convert INTEGER -128 to DER', () => {
     expect(ASN1.integerToDer(-128).toHex()).toBe('80');
   });
 
-  it('should convert INTEGER -129 to DER', function () {
+  it('should convert INTEGER -129 to DER', () => {
     expect(ASN1.integerToDer(-129).toHex()).toBe('ff7f');
   });
 
-  it('should convert INTEGER 32768 to DER', function () {
+  it('should convert INTEGER 32768 to DER', () => {
     expect(ASN1.integerToDer(32768).toHex()).toBe('008000');
   });
 
-  it('should convert INTEGER -32768 to DER', function () {
+  it('should convert INTEGER -32768 to DER', () => {
     expect(ASN1.integerToDer(-32768).toHex()).toBe('8000');
   });
 
-  it('should convert INTEGER -32769 to DER', function () {
+  it('should convert INTEGER -32769 to DER', () => {
     expect(ASN1.integerToDer(-32769).toHex()).toBe('ff7fff');
   });
 
-  it('should convert INTEGER 8388608 to DER', function () {
+  it('should convert INTEGER 8388608 to DER', () => {
     expect(ASN1.integerToDer(8388608).toHex()).toBe('00800000');
   });
 
-  it('should convert INTEGER -8388608 to DER', function () {
+  it('should convert INTEGER -8388608 to DER', () => {
     expect(ASN1.integerToDer(-8388608).toHex()).toBe('800000');
   });
 
-  it('should convert INTEGER -8388609 to DER', function () {
+  it('should convert INTEGER -8388609 to DER', () => {
     expect(ASN1.integerToDer(-8388609).toHex()).toBe('ff7fffff');
   });
 
-  it('should convert INTEGER 2147483647 to DER', function () {
+  it('should convert INTEGER 2147483647 to DER', () => {
     expect(ASN1.integerToDer(2147483647).toHex()).toBe('7fffffff');
   });
 
-  it('should convert INTEGER -2147483648 to DER', function () {
+  it('should convert INTEGER -2147483648 to DER', () => {
     expect(ASN1.integerToDer(-2147483648).toHex()).toBe('80000000');
   });
 
-  it('should convert INTEGER 0 from DER', function () {
-    var der = UTIL.hexToBytes('00');
+  it('should convert INTEGER 0 from DER', () => {
+    const der = UTIL.hexToBytes('00');
     expect(ASN1.derToInteger(der)).toBe(0);
   });
 
-  it('should convert INTEGER 1 from DER', function () {
-    var der = UTIL.hexToBytes('01');
+  it('should convert INTEGER 1 from DER', () => {
+    const der = UTIL.hexToBytes('01');
     expect(ASN1.derToInteger(der)).toBe(1);
   });
 
-  it('should convert INTEGER 127 from DER', function () {
-    var der = UTIL.hexToBytes('7f');
+  it('should convert INTEGER 127 from DER', () => {
+    const der = UTIL.hexToBytes('7f');
     expect(ASN1.derToInteger(der)).toBe(127);
   });
 
-  it('should convert INTEGER 128 from DER', function () {
-    var der = UTIL.hexToBytes('0080');
+  it('should convert INTEGER 128 from DER', () => {
+    const der = UTIL.hexToBytes('0080');
     expect(ASN1.derToInteger(der)).toBe(128);
   });
 
-  it('should convert INTEGER 256 from DER', function () {
-    var der = UTIL.hexToBytes('0100');
+  it('should convert INTEGER 256 from DER', () => {
+    const der = UTIL.hexToBytes('0100');
     expect(ASN1.derToInteger(der)).toBe(256);
   });
 
-  it('should convert INTEGER -128 from DER', function () {
-    var der = UTIL.hexToBytes('80');
+  it('should convert INTEGER -128 from DER', () => {
+    const der = UTIL.hexToBytes('80');
     expect(ASN1.derToInteger(der)).toBe(-128);
   });
 
-  it('should convert INTEGER -129 from DER', function () {
-    var der = UTIL.hexToBytes('ff7f');
+  it('should convert INTEGER -129 from DER', () => {
+    const der = UTIL.hexToBytes('ff7f');
     expect(ASN1.derToInteger(der)).toBe(-129);
   });
 
-  it('should convert INTEGER 32768 from DER', function () {
-    var der = UTIL.hexToBytes('008000');
+  it('should convert INTEGER 32768 from DER', () => {
+    const der = UTIL.hexToBytes('008000');
     expect(ASN1.derToInteger(der)).toBe(32768);
   });
 
-  it('should convert INTEGER -32768 from DER', function () {
-    var der = UTIL.hexToBytes('8000');
+  it('should convert INTEGER -32768 from DER', () => {
+    const der = UTIL.hexToBytes('8000');
     expect(ASN1.derToInteger(der)).toBe(-32768);
   });
 
-  it('should convert INTEGER -32769 from DER', function () {
-    var der = UTIL.hexToBytes('ff7fff');
+  it('should convert INTEGER -32769 from DER', () => {
+    const der = UTIL.hexToBytes('ff7fff');
     expect(ASN1.derToInteger(der)).toBe(-32769);
   });
 
-  it('should convert INTEGER 8388608 from DER', function () {
-    var der = UTIL.hexToBytes('00800000');
+  it('should convert INTEGER 8388608 from DER', () => {
+    const der = UTIL.hexToBytes('00800000');
     expect(ASN1.derToInteger(der)).toBe(8388608);
   });
 
-  it('should convert INTEGER -8388608 from DER', function () {
-    var der = UTIL.hexToBytes('800000');
+  it('should convert INTEGER -8388608 from DER', () => {
+    const der = UTIL.hexToBytes('800000');
     expect(ASN1.derToInteger(der)).toBe(-8388608);
   });
 
-  it('should convert INTEGER -8388609 from DER', function () {
-    var der = UTIL.hexToBytes('ff7fffff');
+  it('should convert INTEGER -8388609 from DER', () => {
+    const der = UTIL.hexToBytes('ff7fffff');
     expect(ASN1.derToInteger(der)).toBe(-8388609);
   });
 
-  it('should convert INTEGER 2147483647 from DER', function () {
-    var der = UTIL.hexToBytes('7fffffff');
+  it('should convert INTEGER 2147483647 from DER', () => {
+    const der = UTIL.hexToBytes('7fffffff');
     expect(ASN1.derToInteger(der)).toBe(2147483647);
   });
 
-  it('should convert INTEGER -2147483648 from DER', function () {
-    var der = UTIL.hexToBytes('80000000');
+  it('should convert INTEGER -2147483648 from DER', () => {
+    const der = UTIL.hexToBytes('80000000');
     expect(ASN1.derToInteger(der)).toBe(-2147483648);
   });
 
   (function () {
-    var tests = [
+    const tests = [
       {
         in: '20110223123400',
         out: 1298464440000
@@ -217,17 +217,17 @@ describe('asn1', function () {
         out: 1298464440123
       }
     ];
-    tests.forEach(function (test) {
-      it('should convert local generalized time "' + test.in + '" to a Date', function () {
-        var d = ASN1.generalizedTimeToDate(test.in);
-        var localOffset = d.getTimezoneOffset() * 60000;
+    tests.forEach((test) => {
+      it(`should convert local generalized time "${test.in}" to a Date`, () => {
+        const d = ASN1.generalizedTimeToDate(test.in);
+        const localOffset = d.getTimezoneOffset() * 60000;
         expect(d.getTime()).toBe(test.out + localOffset);
       });
     });
   })();
 
   (function () {
-    var tests = [
+    const tests = [
       {
         in: '20110223123400Z', // Wed Feb 23 12:34:00.000 UTC 2011
         out: 1298464440000
@@ -265,16 +265,16 @@ describe('asn1', function () {
         out: 1298471640123
       }
     ];
-    tests.forEach(function (test) {
-      it('should convert utc generalized time "' + test.in + '" to a Date', function () {
-        var d = ASN1.generalizedTimeToDate(test.in);
+    tests.forEach((test) => {
+      it(`should convert utc generalized time "${test.in}" to a Date`, () => {
+        const d = ASN1.generalizedTimeToDate(test.in);
         expect(d.getTime()).toBe(test.out);
       });
     });
   })();
 
   (function () {
-    var tests = [
+    const tests = [
       {
         in: 'Jan 1 1949 00:00:00 GMT',
         out: '19490101000000Z'
@@ -292,16 +292,16 @@ describe('asn1', function () {
         out: '21000301000000Z'
       }
     ];
-    tests.forEach(function (test) {
-      it('should convert date "' + test.in + '" to generalized time', function () {
-        var d = ASN1.dateToGeneralizedTime(new Date(test.in));
+    tests.forEach((test) => {
+      it(`should convert date "${test.in}" to generalized time`, () => {
+        const d = ASN1.dateToGeneralizedTime(new Date(test.in));
         expect(d).toBe(test.out);
       });
     });
   })();
 
   (function () {
-    var tests = [
+    const tests = [
       {
         in: '1102231234Z', // Wed Feb 23 12:34:00 UTC 2011
         out: 1298464440000
@@ -331,24 +331,24 @@ describe('asn1', function () {
         out: -631152000000
       }
     ];
-    tests.forEach(function (test) {
-      it('should convert utc time "' + test.in + '" to a Date', function () {
-        var d = ASN1.utcTimeToDate(test.in);
+    tests.forEach((test) => {
+      it(`should convert utc time "${test.in}" to a Date`, () => {
+        const d = ASN1.utcTimeToDate(test.in);
         expect(d.getTime()).toBe(test.out);
       });
     });
   })();
 
   (function () {
-    var tests = [
+    const tests = [
       {
         in: 'Sat Dec 31 1949 19:00:00 GMT-0500',
         out: '500101000000Z'
       }
     ];
-    tests.forEach(function (test) {
-      it('should convert date "' + test.in + '" to utc time', function () {
-        var d = ASN1.dateToUtcTime(new Date(test.in));
+    tests.forEach((test) => {
+      it(`should convert date "${test.in}" to utc time`, () => {
+        const d = ASN1.dateToUtcTime(new Date(test.in));
         expect(d).toBe(test.out);
       });
     });
@@ -361,7 +361,7 @@ describe('asn1', function () {
         return ASN1.fromDer(UTIL.hexToBytes(str.replace(/ /g, '')));
       };
     }
-    var tests = [
+    const tests = [
       {
         name: 'empty strings',
         obj1: '',
@@ -432,11 +432,11 @@ describe('asn1', function () {
         equal: false
       }
     ];
-    tests.forEach(function (test, index) {
-      var name = 'should check ASN.1 ' + (test.equal ? '' : 'not ') + 'equal: ' + (test.name || '#' + index);
-      it(name, function () {
-        var obj1 = typeof test.obj1 === 'function' ? test.obj1() : test.obj1;
-        var obj2 = typeof test.obj2 === 'function' ? test.obj2() : test.obj2;
+    tests.forEach((test, index) => {
+      const name = `should check ASN.1 ${test.equal ? '' : 'not '}equal: ${test.name || `#${index}`}`;
+      it(name, () => {
+        const obj1 = typeof test.obj1 === 'function' ? test.obj1() : test.obj1;
+        const obj2 = typeof test.obj2 === 'function' ? test.obj2() : test.obj2;
         if (test.mutate) {
           test.mutate(obj1 as Asn1Object, obj2 as Asn1Object);
         }
@@ -452,7 +452,7 @@ describe('asn1', function () {
         return ASN1.fromDer(UTIL.hexToBytes(str.replace(/ /g, '')));
       };
     }
-    var tests = [
+    const tests = [
       {
         name: 'empty string',
         obj: ''
@@ -482,10 +482,10 @@ describe('asn1', function () {
         obj: _asn1('03 04 00 02 01 01')
       }
     ];
-    tests.forEach(function (test, index) {
-      var name = 'should check ASN.1 copy: ' + (test.name || '#' + index);
-      it(name, function () {
-        var obj = typeof test.obj === 'function' ? test.obj() : test.obj;
+    tests.forEach((test, index) => {
+      const name = `should check ASN.1 copy: ${test.name || `#${index}`}`;
+      it(name, () => {
+        const obj = typeof test.obj === 'function' ? test.obj() : test.obj;
         expect(ASN1.equals(ASN1.copy(obj), obj)).toBe(true);
       });
     });
@@ -508,24 +508,24 @@ describe('asn1', function () {
         options.decodeBitStrings = true;
       }
       // buffer strict test
-      var b = UTIL.createBuffer();
+      const b = UTIL.createBuffer();
       // init
       options.init(b);
       // bytes for round-trip comparison
-      var bytes = b.copy().bytes();
+      const bytes = b.copy().bytes();
       // copy for non-strict test
-      var bns = b.copy();
+      const bns = b.copy();
       // create strict and non-strict asn1
-      var asn1assert = throws
+      const asn1assert = throws
         ? (f: () => void) => {
             expect(f).toThrow();
           }
         : function (f: () => void) {
             f();
           };
-      var asn1;
-      var der;
-      asn1assert(function () {
+      let asn1;
+      let der;
+      asn1assert(() => {
         asn1 = ASN1.fromDer(b, {
           strict: strict,
           decodeBitStrings: options.decodeBitStrings
@@ -533,7 +533,7 @@ describe('asn1', function () {
       });
       // debug
       if (options.dump && asn1) {
-        console.log('=== ' + (strict ? 'Strict' : 'Non Strict') + ' ===');
+        console.log(`=== ${strict ? 'Strict' : 'Non Strict'} ===`);
         _asn1dump(asn1);
       }
       // basic check
@@ -554,9 +554,9 @@ describe('asn1', function () {
 
       // validator check
       if (!throws && options.v) {
-        var capture = {};
-        var errors: unknown[] = [];
-        var asn1ok = ASN1.validate(asn1, options.v, capture, errors);
+        const capture = {};
+        const errors: unknown[] = [];
+        const asn1ok = ASN1.validate(asn1, options.v, capture, errors);
         expect(errors).toEqual([]);
         if (options.captured) {
           expect(capture).toEqual(options.captured);
@@ -572,8 +572,8 @@ describe('asn1', function () {
       };
     }
     function _asn1Test(options: Asn1TestOptions): void {
-      var s = _asn1TestOne(true, options.strictThrows ?? false, options);
-      var ns = _asn1TestOne(false, options.nonStrictThrows ?? false, options);
+      const s = _asn1TestOne(true, options.strictThrows ?? false, options);
+      const ns = _asn1TestOne(false, options.nonStrictThrows ?? false, options);
 
       // check asn1 equality
       if (s.asn1 && ns.asn1) {
@@ -593,7 +593,7 @@ describe('asn1', function () {
       }
     }
 
-    it('should convert BIT STRING from DER (short,empty)', function () {
+    it('should convert BIT STRING from DER (short,empty)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // BIT STRING value=none
@@ -613,7 +613,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from DER (short,empty2)', function () {
+    it('should convert BIT STRING from DER (short,empty2)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // BIT STRING value=none
@@ -635,7 +635,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from BER (short,invalid)', function () {
+    it('should convert BIT STRING from BER (short,invalid)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // BIT STRING value=partial
@@ -659,7 +659,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from DER (short)', function () {
+    it('should convert BIT STRING from DER (short)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // BIT STRING value=0110111001011101
@@ -679,7 +679,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from DER (short2)', function () {
+    it('should convert BIT STRING from DER (short2)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // BIT STRING value=0110111001011101
@@ -712,7 +712,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from DER (short,unused1z)', function () {
+    it('should convert BIT STRING from DER (short,unused1z)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // BIT STRING value=01101110010111011010111, unused=0
@@ -732,7 +732,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from DER (short,unused6z)', function () {
+    it('should convert BIT STRING from DER (short,unused6z)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // BIT STRING short len, value=011011100101110111, unused=000000
@@ -752,7 +752,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from BER (short,unused6d)', function () {
+    it('should convert BIT STRING from BER (short,unused6d)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // BIT STRING short len, value=011011100101110111, unused=100000
@@ -772,7 +772,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from BER (long,unused6z)', function () {
+    it('should convert BIT STRING from BER (long,unused6z)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // BIT STRING long len, value=011011100101110111, unused=000000
@@ -793,7 +793,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from BER (unused6z)', function () {
+    it('should convert BIT STRING from BER (unused6z)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // BIT STRING constructed, value=0110111001011101+11, unused=000000
@@ -829,7 +829,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from BER (decode)', function () {
+    it('should convert BIT STRING from BER (decode)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data that includes encapsulated
@@ -884,7 +884,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from BER (no decode)', function () {
+    it('should convert BIT STRING from BER (no decode)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data that includes encapsulated
@@ -916,7 +916,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from DER (decode2)', function () {
+    it('should convert BIT STRING from DER (decode2)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data that includes encapsulated
@@ -987,7 +987,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from DER (sig)', function () {
+    it('should convert BIT STRING from DER (sig)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data similar to a signature that
@@ -1047,7 +1047,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from DER (sig2)', function () {
+    it('should convert BIT STRING from DER (sig2)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data similar to a signature that
@@ -1106,7 +1106,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from DER (sig3)', function () {
+    it('should convert BIT STRING from DER (sig3)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data similar to a signature that
@@ -1132,7 +1132,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from BER (decodable sig)', function () {
+    it('should convert BIT STRING from BER (decodable sig)', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data similar to a signature that
@@ -1194,7 +1194,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert BIT STRING from strict DER', function () {
+    it('should convert BIT STRING from strict DER', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data that includes encapsulated
@@ -1224,7 +1224,7 @@ describe('asn1', function () {
         }
       });
     });
-    it('should convert BIT STRING from non-strict DER', function () {
+    it('should convert BIT STRING from non-strict DER', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data that includes encapsulated
@@ -1257,7 +1257,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should convert indefinite length seq from BER', function () {
+    it('should convert indefinite length seq from BER', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // SEQUENCE
@@ -1305,7 +1305,7 @@ describe('asn1', function () {
       });
     });
 
-    it('should handle ASN.1 mutations', function () {
+    it('should handle ASN.1 mutations', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // BIT STRING
@@ -1352,23 +1352,23 @@ describe('asn1', function () {
           int1: _h2b('01')
         },
         done: function (data: { strict: Asn1TestResult; nonStrict: Asn1TestResult }) {
-          var asn1 = data.strict.asn1!;
-          var bitString = (asn1.value as Asn1Object[])[0];
-          var innerValues = bitString.value as Asn1Object[];
+          const asn1 = data.strict.asn1!;
+          const bitString = (asn1.value as Asn1Object[])[0];
+          const innerValues = bitString.value as Asn1Object[];
           // mutate
           innerValues[0].value = _h2b('02');
           innerValues[1].value = _h2b('03');
           // convert
           // must use new data vs saved BIT STRING data
-          var der = ASN1.toDer(asn1);
-          var expectedValue = _h2b('03 09 00 30 06 02 01 02 02 01 03');
+          const der = ASN1.toDer(asn1);
+          const expectedValue = _h2b('03 09 00 30 06 02 01 02 02 01 03');
           // compare
           expect(UTIL.bytesToHex(der.bytes())).toBe(UTIL.bytesToHex(expectedValue));
         }
       });
     });
 
-    it('should convert BMP STRING from DER', function () {
+    it('should convert BMP STRING from DER', () => {
       _asn1Test({
         init: function (b: CertkitBuffer) {
           // BMPSTRING
@@ -1392,10 +1392,10 @@ describe('asn1', function () {
     // TODO: how minimal should INTEGERs be encoded?
     // .. fromDer will create the full integer
     // .. toDer will remove only first byte if possible
-    it('should minimally encode INTEGERs', function () {
+    it('should minimally encode INTEGERs', () => {
       function _test(hin: string, hout: string): void {
-        var derIn = _h2b(hin);
-        var derOut = ASN1.toDer(ASN1.fromDer(derIn));
+        const derIn = _h2b(hin);
+        const derOut = ASN1.toDer(ASN1.fromDer(derIn));
         expect(UTIL.bytesToHex(derOut.bytes())).toBe(UTIL.bytesToHex(_h2b(hout)));
       }
       // optimal

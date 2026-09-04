@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs', 'node_modules', 'lib', 'dist', 'tests', '*.js', 'vitest.config.mts', 'examples']
+    ignores: ['eslint.config.mjs', 'node_modules', 'lib', 'dist', '*.js', 'vitest.config.mts', 'examples']
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -69,6 +69,21 @@ export default tseslint.config(
     files: ['src/domain/math/BigInteger.ts'],
     rules: {
       'prefer-const': 'off'
+    }
+  },
+  {
+    files: ['tests/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        projectService: false,
+        project: ['./tsconfig.test.json'],
+        tsconfigRootDir: import.meta.dirname
+      }
+    },
+    rules: {
+      eqeqeq: 'error',
+      'prefer-template': 'error',
+      'prefer-arrow-callback': 'error'
     }
   }
 );

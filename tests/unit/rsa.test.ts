@@ -10,9 +10,9 @@ const PKI = certkit.pki;
 const PSS = certkit.pss;
 const RANDOM = certkit.random;
 const UTIL = certkit.util;
-var CERTKIT = certkit;
-var RSA = certkit.pki.rsa;
-var _pem = {
+const CERTKIT = certkit;
+const RSA = certkit.pki.rsa;
+const _pem = {
   privateKey:
     '-----BEGIN RSA PRIVATE KEY-----\r\n' +
     'MIICXQIBAAKBgQDL0EugUiNGMWscLAVM0VoMdhDZEJOqdsUMpx9U0YZI7szokJqQ\r\n' +
@@ -54,13 +54,13 @@ var _pem = {
     'vnM+z0MYDdKo80efzwIDAQAB\r\n' +
     '-----END PUBLIC KEY-----\r\n'
 };
-var _signature =
+const _signature =
   '9200ece65cdaed36bcc20b94c65af852e4f88f0b4fe5b249d54665f815992ac4' +
   '3a1399e65d938c6a7f16dd39d971a53ca66523209dbbfbcb67afa579dbb0c220' +
   '672813d9e6f4818f29b9becbb29da2032c5e422da97e0c39bfb7a2e7d568615a' +
   '5073af0337ff215a8e1b2332d668691f4fb731440055420c24ac451dd3c913f4';
 
-describe('rsa', function () {
+describe('rsa', () => {
   // check a pair
   function _pairCheck(pair: RsaKeyPair): void {
     // PEM check
@@ -68,19 +68,19 @@ describe('rsa', function () {
     expect(PKI.publicKeyToPem(pair.publicKey).indexOf('-----BEGIN PUBLIC KEY-----')).toBe(0);
 
     // sign and verify
-    var md = MD.sha1.create();
+    const md = MD.sha1.create();
     md.update('0123456789abcdef');
-    var signature = pair.privateKey.sign(md);
+    const signature = pair.privateKey.sign(md);
     expect(pair.publicKey.verify(md.digest().getBytes(), signature)).toBeTruthy();
   }
 
   // compare pairs
   function _pairCmp(pair1: RsaKeyPair, pair2: RsaKeyPair): void {
-    var pem1 = {
+    const pem1 = {
       privateKey: PKI.privateKeyToPem(pair1.privateKey),
       publicKey: PKI.publicKeyToPem(pair1.publicKey)
     };
-    var pem2 = {
+    const pem2 = {
       privateKey: PKI.privateKeyToPem(pair2.privateKey),
       publicKey: PKI.publicKeyToPem(pair2.publicKey)
     };
@@ -90,7 +90,7 @@ describe('rsa', function () {
 
   // create same prng
   function _samePrng() {
-    var prng = RANDOM.createInstance();
+    const prng = RANDOM.createInstance();
     prng.seedFileSync = function (needed: number): string {
       return UtilNamespace.fillString('a', needed);
     };
@@ -100,7 +100,7 @@ describe('rsa', function () {
   // generate pair in sync mode
   function _genSync(options?: { samePrng?: boolean }): RsaKeyPair {
     options = options || { samePrng: false };
-    var pair: RsaKeyPair;
+    let pair: RsaKeyPair;
     if (options.samePrng) {
       pair = RSA.generateKeyPair(512, 0x10001, { prng: _samePrng() });
     } else {
@@ -121,31 +121,31 @@ describe('rsa', function () {
       callback = options as (pair: RsaKeyPair) => void;
       options = { samePrng: false };
     }
-    var genOptions: Record<string, unknown> = {
+    const genOptions: Record<string, unknown> = {
       bits: 512,
       workerScript: '/certkit/prime.worker.js'
     };
-    var opts = options as { samePrng?: boolean; workers?: number };
+    const opts = options as { samePrng?: boolean; workers?: number };
     if (opts.samePrng) {
       genOptions.prng = _samePrng();
     }
     if ('workers' in opts) {
       genOptions.workers = opts.workers;
     }
-    RSA.generateKeyPair(genOptions, function (err, pair) {
+    RSA.generateKeyPair(genOptions, (err, pair) => {
       expect(err).toBeFalsy();
       _pairCheck(pair!);
       callback!(pair!);
     });
   }
 
-  it('should generate 512 bit key pair (sync)', function () {
+  it('should generate 512 bit key pair (sync)', () => {
     _genSync();
   });
 
-  it('should generate 512 bit key pair (sync+purejs)', function () {
+  it('should generate 512 bit key pair (sync+purejs)', () => {
     // save
-    var purejs = CERTKIT.options.usePureJavaScript;
+    const purejs = CERTKIT.options.usePureJavaScript;
     // test pure mode
     CERTKIT.options.usePureJavaScript = true;
     _genSync();
@@ -155,7 +155,7 @@ describe('rsa', function () {
 
   it('should generate 512 bit key pair (async)', async () => {
     await new Promise<void>((resolve) => {
-      _genAsync(function () {
+      _genAsync(() => {
         resolve();
       });
     });
@@ -163,11 +163,11 @@ describe('rsa', function () {
 
   it('should generate 512 bit key pair (async+purejs)', async () => {
     // save
-    var purejs = CERTKIT.options.usePureJavaScript;
+    const purejs = CERTKIT.options.usePureJavaScript;
     // test pure mode
     CERTKIT.options.usePureJavaScript = true;
     await new Promise<void>((resolve) => {
-      _genAsync(function () {
+      _genAsync(() => {
         // restore
         CERTKIT.options.usePureJavaScript = purejs;
         resolve();
@@ -181,26 +181,26 @@ describe('rsa', function () {
         {
           workers: -1
         },
-        function () {
+        () => {
           resolve();
         }
       );
     });
   });
 
-  it('should generate same 512 bit key pair (prng+sync,prng+sync)', function () {
-    var pair1 = _genSync({ samePrng: true });
-    var pair2 = _genSync({ samePrng: true });
+  it('should generate same 512 bit key pair (prng+sync,prng+sync)', () => {
+    const pair1 = _genSync({ samePrng: true });
+    const pair2 = _genSync({ samePrng: true });
     _pairCmp(pair1, pair2);
   });
 
   it('should generate same 512 bit key pair (prng+sync,prng+sync+purejs)', () => {
-    var pair1 = _genSync({ samePrng: true });
+    const pair1 = _genSync({ samePrng: true });
     // save
-    var purejs = CERTKIT.options.usePureJavaScript;
+    const purejs = CERTKIT.options.usePureJavaScript;
     // test pure mode
     CERTKIT.options.usePureJavaScript = true;
-    var pair2 = _genSync({ samePrng: true });
+    const pair2 = _genSync({ samePrng: true });
     // restore
     CERTKIT.options.usePureJavaScript = purejs;
     _pairCmp(pair1, pair2);
@@ -208,20 +208,20 @@ describe('rsa', function () {
 
   it('should generate same 512 bit key pair ' + '(prng+sync+purejs,prng+sync+purejs)', () => {
     // save
-    var purejs = CERTKIT.options.usePureJavaScript;
+    const purejs = CERTKIT.options.usePureJavaScript;
     // test pure mode
     CERTKIT.options.usePureJavaScript = true;
-    var pair1 = _genSync({ samePrng: true });
-    var pair2 = _genSync({ samePrng: true });
+    const pair1 = _genSync({ samePrng: true });
+    const pair2 = _genSync({ samePrng: true });
     // restore
     CERTKIT.options.usePureJavaScript = purejs;
     _pairCmp(pair1, pair2);
   });
 
   it('should generate same 512 bit key pair (prng+sync,prng+async)', async () => {
-    var pair1 = _genSync({ samePrng: true });
+    const pair1 = _genSync({ samePrng: true });
     await new Promise<void>((resolve, reject) => {
-      _genAsync({ samePrng: true }, function (pair2) {
+      _genAsync({ samePrng: true }, (pair2) => {
         try {
           _pairCmp(pair1, pair2);
           resolve();
@@ -234,9 +234,9 @@ describe('rsa', function () {
 
   it('should generate same 512 bit key pair (prng+async,prng+sync)', async () => {
     await new Promise<void>((resolve, reject) => {
-      _genAsync({ samePrng: true }, function (pair1) {
+      _genAsync({ samePrng: true }, (pair1) => {
         try {
-          var pair2 = _genSync({ samePrng: true });
+          const pair2 = _genSync({ samePrng: true });
           _pairCmp(pair1, pair2);
           resolve();
         } catch (e) {
@@ -247,8 +247,8 @@ describe('rsa', function () {
   });
 
   it('should generate same 512 bit key pair (prng+async,prng+async)', async () => {
-    var pair1: RsaKeyPair | undefined;
-    var pair2: RsaKeyPair | undefined;
+    let pair1: RsaKeyPair | undefined;
+    let pair2: RsaKeyPair | undefined;
     await new Promise<void>((resolve, reject) => {
       function _done() {
         if (pair1 && pair2) {
@@ -260,40 +260,40 @@ describe('rsa', function () {
           }
         }
       }
-      _genAsync({ samePrng: true }, function (pair) {
+      _genAsync({ samePrng: true }, (pair) => {
         pair1 = pair;
         _done();
       });
-      _genAsync({ samePrng: true }, function (pair) {
+      _genAsync({ samePrng: true }, (pair) => {
         pair2 = pair;
         _done();
       });
     });
   });
 
-  it('should convert private key to/from PEM', function () {
-    var privateKey = PKI.privateKeyFromPem(_pem.privateKey);
+  it('should convert private key to/from PEM', () => {
+    const privateKey = PKI.privateKeyFromPem(_pem.privateKey);
     expect(PKI.privateKeyToPem(privateKey)).toBe(_pem.privateKey);
   });
 
-  it('should convert public key to/from PEM', function () {
-    var publicKey = PKI.publicKeyFromPem(_pem.publicKey);
+  it('should convert public key to/from PEM', () => {
+    const publicKey = PKI.publicKeyFromPem(_pem.publicKey);
     expect(PKI.publicKeyToPem(publicKey)).toBe(_pem.publicKey);
   });
 
-  it('should convert a PKCS#8 PrivateKeyInfo to/from PEM', function () {
-    var privateKey = PKI.privateKeyFromPem(_pem.privateKeyInfo);
-    var rsaPrivateKey = PKI.privateKeyToAsn1(privateKey);
-    var pki = PKI.wrapRsaPrivateKey(rsaPrivateKey);
+  it('should convert a PKCS#8 PrivateKeyInfo to/from PEM', () => {
+    const privateKey = PKI.privateKeyFromPem(_pem.privateKeyInfo);
+    const rsaPrivateKey = PKI.privateKeyToAsn1(privateKey);
+    const pki = PKI.wrapRsaPrivateKey(rsaPrivateKey);
     expect(PKI.privateKeyInfoToPem(pki)).toBe(_pem.privateKeyInfo);
   });
 
   (function () {
-    var algorithms = ['aes128', 'aes192', 'aes256', '3des', 'des'];
-    algorithms.forEach(function (algorithm) {
-      it('should PKCS#8 encrypt and decrypt private key with ' + algorithm, function () {
-        var privateKey = PKI.privateKeyFromPem(_pem.privateKey);
-        var encryptedPem = PKI.encryptRsaPrivateKey(privateKey, 'password', { algorithm: algorithm });
+    const algorithms = ['aes128', 'aes192', 'aes256', '3des', 'des'];
+    algorithms.forEach((algorithm) => {
+      it(`should PKCS#8 encrypt and decrypt private key with ${algorithm}`, () => {
+        let privateKey = PKI.privateKeyFromPem(_pem.privateKey);
+        const encryptedPem = PKI.encryptRsaPrivateKey(privateKey, 'password', { algorithm: algorithm });
         privateKey = PKI.decryptRsaPrivateKey(encryptedPem, 'password');
         expect(PKI.privateKeyToPem(privateKey)).toBe(_pem.privateKey);
       });
@@ -301,36 +301,29 @@ describe('rsa', function () {
   })();
 
   (function () {
-    var algorithms = ['aes128', 'aes192', 'aes256'];
-    var prfAlgorithms = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512'];
-    algorithms.forEach(function (algorithm) {
-      prfAlgorithms.forEach(function (prfAlgorithm) {
-        it(
-          'should PKCS#8 encrypt and decrypt private key with ' +
-            algorithm +
-            ' encryption and ' +
-            prfAlgorithm +
-            ' PRF',
-          function () {
-            var privateKey = PKI.privateKeyFromPem(_pem.privateKey);
-            var encryptedPem = PKI.encryptRsaPrivateKey(privateKey, 'password', {
-              algorithm: algorithm,
-              prfAlgorithm: prfAlgorithm
-            });
-            privateKey = PKI.decryptRsaPrivateKey(encryptedPem, 'password');
-            expect(PKI.privateKeyToPem(privateKey)).toBe(_pem.privateKey);
-          }
-        );
+    const algorithms = ['aes128', 'aes192', 'aes256'];
+    const prfAlgorithms = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512'];
+    algorithms.forEach((algorithm) => {
+      prfAlgorithms.forEach((prfAlgorithm) => {
+        it(`should PKCS#8 encrypt and decrypt private key with ${algorithm} encryption and ${prfAlgorithm} PRF`, () => {
+          let privateKey = PKI.privateKeyFromPem(_pem.privateKey);
+          const encryptedPem = PKI.encryptRsaPrivateKey(privateKey, 'password', {
+            algorithm: algorithm,
+            prfAlgorithm: prfAlgorithm
+          });
+          privateKey = PKI.decryptRsaPrivateKey(encryptedPem, 'password');
+          expect(PKI.privateKeyToPem(privateKey)).toBe(_pem.privateKey);
+        });
       });
     });
   })();
 
   (function () {
-    var algorithms = ['aes128', 'aes192', 'aes256', '3des', 'des'];
-    algorithms.forEach(function (algorithm) {
-      it('should legacy (OpenSSL style) encrypt and decrypt private key with ' + algorithm, function () {
-        var privateKey = PKI.privateKeyFromPem(_pem.privateKey);
-        var encryptedPem = PKI.encryptRsaPrivateKey(privateKey, 'password', {
+    const algorithms = ['aes128', 'aes192', 'aes256', '3des', 'des'];
+    algorithms.forEach((algorithm) => {
+      it(`should legacy (OpenSSL style) encrypt and decrypt private key with ${algorithm}`, () => {
+        let privateKey = PKI.privateKeyFromPem(_pem.privateKey);
+        const encryptedPem = PKI.encryptRsaPrivateKey(privateKey, 'password', {
           algorithm: algorithm,
           legacy: true
         } as EncryptPrivateKeyInfoOptions & { legacy: boolean });
@@ -340,53 +333,53 @@ describe('rsa', function () {
     });
   })();
 
-  it('should verify signature', function () {
-    var publicKey = PKI.publicKeyFromPem(_pem.publicKey);
-    var md = MD.sha1.create();
+  it('should verify signature', () => {
+    const publicKey = PKI.publicKeyFromPem(_pem.publicKey);
+    const md = MD.sha1.create();
     md.update('0123456789abcdef');
-    var signature = UTIL.hexToBytes(_signature);
+    const signature = UTIL.hexToBytes(_signature);
     expect(publicKey.verify(md.digest().getBytes(), signature)).toBeTruthy();
   });
 
-  it('should sign and verify', function () {
-    var privateKey = PKI.privateKeyFromPem(_pem.privateKey);
-    var publicKey = PKI.publicKeyFromPem(_pem.publicKey);
-    var md = MD.sha1.create();
+  it('should sign and verify', () => {
+    const privateKey = PKI.privateKeyFromPem(_pem.privateKey);
+    const publicKey = PKI.publicKeyFromPem(_pem.publicKey);
+    const md = MD.sha1.create();
     md.update('0123456789abcdef');
-    var signature = privateKey.sign(md);
+    const signature = privateKey.sign(md);
     expect(publicKey.verify(md.digest().getBytes(), signature)).toBeTruthy();
   });
 
-  it('should generate missing CRT parameters, sign, and verify', function () {
-    var privateKey = PKI.privateKeyFromPem(_pem.privateKey);
+  it('should generate missing CRT parameters, sign, and verify', () => {
+    let privateKey = PKI.privateKeyFromPem(_pem.privateKey);
 
     // remove dQ, dP, and qInv
     privateKey = RSA.setPrivateKey(privateKey.n, privateKey.e, privateKey.d, privateKey.p, privateKey.q);
 
-    var publicKey = PKI.publicKeyFromPem(_pem.publicKey);
-    var md = MD.sha1.create();
+    const publicKey = PKI.publicKeyFromPem(_pem.publicKey);
+    const md = MD.sha1.create();
     md.update('0123456789abcdef');
-    var signature = privateKey.sign(md);
+    const signature = privateKey.sign(md);
     expect(publicKey.verify(md.digest().getBytes(), signature)).toBeTruthy();
   });
 
-  it('should sign and verify with a private key containing only e, n, and d parameters', function () {
-    var privateKey = PKI.privateKeyFromPem(_pem.privateKey);
+  it('should sign and verify with a private key containing only e, n, and d parameters', () => {
+    let privateKey = PKI.privateKeyFromPem(_pem.privateKey);
 
     // remove all CRT parameters from private key, so that it consists
     // only of e, n and d (which make a perfectly valid private key, but its
     // operations are slower)
     privateKey = RSA.setPrivateKey(privateKey.n, privateKey.e, privateKey.d);
 
-    var publicKey = PKI.publicKeyFromPem(_pem.publicKey);
-    var md = MD.sha1.create();
+    const publicKey = PKI.publicKeyFromPem(_pem.publicKey);
+    const md = MD.sha1.create();
     md.update('0123456789abcdef');
-    var signature = privateKey.sign(md);
+    const signature = privateKey.sign(md);
     expect(publicKey.verify(md.digest().getBytes(), signature)).toBeTruthy();
   });
 
   (function () {
-    var tests = [
+    const tests = [
       {
         keySize: 1024,
         privateKeyPem:
@@ -532,27 +525,27 @@ describe('rsa', function () {
           'AGyN8xu+0yfCR1tyB9mCXcTGb2vdLnsX9ro2Qy5KV6Hw5YMVNltAt65dKR4Y8pfu6D4WUyyJRUtJ8td2ZHYzIVtWY6bG1xFt5rkjTVg4v1tzQgUQq8AHvRE2qLzwDXhazJ1e6Id2Nuxb1uInFyRC6/gLmiPga1WRDEVvFenuIA48'
       }
     ];
-    for (var i = 0; i < tests.length; ++i) {
+    for (let i = 0; i < tests.length; ++i) {
       createTests(tests[i]);
     }
 
-    it('should ensure maximum message length for a 1024-bit key is exceeded', function () {
+    it('should ensure maximum message length for a 1024-bit key is exceeded', () => {
       /* For PKCS#1 v1.5, the message must be padded with at least eight bytes,
           two zero bytes and one byte telling what the block type is. This is 11
           extra bytes are added to the message. The test uses a message of 118
           bytes.Together with the 11 extra bytes the encryption block needs to be
           at least 129 bytes long. This requires a key of 1025-bits. */
-      var key = PKI.publicKeyFromPem(tests[0].publicKeyPem);
-      var message = UTIL.createBuffer().fillWithByte(0, 118);
-      expect(function () {
+      const key = PKI.publicKeyFromPem(tests[0].publicKeyPem);
+      const message = UTIL.createBuffer().fillWithByte(0, 118);
+      expect(() => {
         key.encrypt(message.getBytes());
       }).toThrow();
     });
 
-    it('should ensure maximum message length for a 1025-bit key is not exceeded', function () {
-      var key = PKI.publicKeyFromPem(tests[1].publicKeyPem);
-      var message = UTIL.createBuffer().fillWithByte(0, 118);
-      expect(function () {
+    it('should ensure maximum message length for a 1025-bit key is not exceeded', () => {
+      const key = PKI.publicKeyFromPem(tests[1].publicKeyPem);
+      const message = UTIL.createBuffer().fillWithByte(0, 118);
+      expect(() => {
         key.encrypt(message.getBytes());
       }).not.toThrow();
     });
@@ -599,46 +592,46 @@ describe('rsa', function () {
     };
 
     function createTests(params: OpenSslTestParams): void {
-      var keySize = params.keySize;
+      const keySize = params.keySize;
 
-      it('should rsa encrypt using a ' + keySize + '-bit key', function () {
-        var message = "it need's to be about 20% cooler"; // it need's better grammar too
+      it(`should rsa encrypt using a ${keySize}-bit key`, () => {
+        const message = "it need's to be about 20% cooler"; // it need's better grammar too
 
         /* First step, do public key encryption */
-        var publicKey = PKI.publicKeyFromPem(params.publicKeyPem);
-        var data = publicKey.encrypt(message);
+        const publicKey = PKI.publicKeyFromPem(params.publicKeyPem);
+        const data = publicKey.encrypt(message);
 
         /* Second step, use private key decryption to verify successful
             encryption. The encrypted message differs every time, since it is
             padded with random data. Therefore just rely on the decryption
             routine to work, which is tested separately against an externally
             provided encrypted message. */
-        var privateKey = PKI.privateKeyFromPem(params.privateKeyPem);
+        const privateKey = PKI.privateKeyFromPem(params.privateKeyPem);
         expect(privateKey.decrypt(data)).toBe(message);
       });
 
-      it('should rsa decrypt using a ' + keySize + '-bit key', function () {
-        var data = UTIL.decode64(params.encrypted);
-        var key = PKI.privateKeyFromPem(params.privateKeyPem);
+      it(`should rsa decrypt using a ${keySize}-bit key`, () => {
+        const data = UTIL.decode64(params.encrypted);
+        const key = PKI.privateKeyFromPem(params.privateKeyPem);
         expect(key.decrypt(data)).toBe('too many secrets\n');
       });
 
-      it('should rsa sign using a ' + keySize + '-bit key and PKCS#1 v1.5 padding', function () {
-        var key = PKI.privateKeyFromPem(params.privateKeyPem);
+      it(`should rsa sign using a ${keySize}-bit key and PKCS#1 v1.5 padding`, () => {
+        const key = PKI.privateKeyFromPem(params.privateKeyPem);
 
-        var md = MD.sha1.create();
+        const md = MD.sha1.create();
         md.start();
         md.update('just testing');
 
-        var signature = UTIL.decode64(params.signature);
+        const signature = UTIL.decode64(params.signature);
         expect(key.sign(md)).toBe(signature);
       });
 
-      it('should verify an rsa signature using a ' + keySize + '-bit key and PKCS#1 v1.5 padding', function () {
-        var signature = UTIL.decode64(params.signature);
-        var key = PKI.publicKeyFromPem(params.publicKeyPem);
+      it(`should verify an rsa signature using a ${keySize}-bit key and PKCS#1 v1.5 padding`, () => {
+        const signature = UTIL.decode64(params.signature);
+        const key = PKI.publicKeyFromPem(params.publicKeyPem);
 
-        var md = MD.sha1.create();
+        const md = MD.sha1.create();
         md.start();
         md.update('just testing');
 
@@ -649,21 +642,21 @@ describe('rsa', function () {
           so they can't be compared easily -- instead they are just verified
           using the verify() function which is tested against OpenSSL-generated
           signatures. */
-      it('should rsa sign using a ' + keySize + '-bit key and PSS padding', function () {
-        var privateKey = PKI.privateKeyFromPem(params.privateKeyPem);
-        var publicKey = PKI.publicKeyFromPem(params.publicKeyPem);
+      it(`should rsa sign using a ${keySize}-bit key and PSS padding`, () => {
+        const privateKey = PKI.privateKeyFromPem(params.privateKeyPem);
+        const publicKey = PKI.publicKeyFromPem(params.publicKeyPem);
 
-        var md = MD.sha1.create();
+        const md = MD.sha1.create();
         md.start();
         md.update('just testing');
 
         // create signature
-        var pss = PSS.create({
+        const pss = PSS.create({
           md: MD.sha1.create(),
           mgf: MGF.mgf1.create(MD.sha1.create()),
           saltLength: 20
         });
-        var signature = privateKey.sign(md, pss);
+        const signature = privateKey.sign(md, pss);
 
         // verify signature
         md.start();
@@ -671,15 +664,15 @@ describe('rsa', function () {
         expect(publicKey.verify(md.digest().getBytes(), signature, pss)).toBe(true);
       });
 
-      it('should verify an rsa signature using a ' + keySize + '-bit key and PSS padding', function () {
-        var signature = UTIL.decode64(params.signaturePss);
-        var key = PKI.publicKeyFromPem(params.publicKeyPem);
+      it(`should verify an rsa signature using a ${keySize}-bit key and PSS padding`, () => {
+        const signature = UTIL.decode64(params.signaturePss);
+        const key = PKI.publicKeyFromPem(params.publicKeyPem);
 
-        var md = MD.sha1.create();
+        const md = MD.sha1.create();
         md.start();
         md.update('just testing');
 
-        var pss = PSS.create({
+        const pss = PSS.create({
           md: MD.sha1.create(),
           mgf: MGF.mgf1.create(MD.sha1.create()),
           saltLength: 20
@@ -687,21 +680,21 @@ describe('rsa', function () {
         expect(key.verify(md.digest().getBytes(), signature, pss)).toBe(true);
       });
 
-      it('should rsa sign using a ' + keySize + '-bit key and PSS padding using pss named-param API', function () {
-        var privateKey = PKI.privateKeyFromPem(params.privateKeyPem);
-        var publicKey = PKI.publicKeyFromPem(params.publicKeyPem);
+      it(`should rsa sign using a ${keySize}-bit key and PSS padding using pss named-param API`, () => {
+        const privateKey = PKI.privateKeyFromPem(params.privateKeyPem);
+        const publicKey = PKI.publicKeyFromPem(params.publicKeyPem);
 
-        var md = MD.sha1.create();
+        const md = MD.sha1.create();
         md.start();
         md.update('just testing');
 
         // create signature
-        var pss = PSS.create({
+        const pss = PSS.create({
           md: MD.sha1.create(),
           mgf: MGF.mgf1.create(MD.sha1.create()),
           saltLength: 20
         });
-        var signature = privateKey.sign(md, pss);
+        const signature = privateKey.sign(md, pss);
 
         // verify signature
         md.start();
@@ -709,112 +702,103 @@ describe('rsa', function () {
         expect(publicKey.verify(md.digest().getBytes(), signature, pss)).toBe(true);
       });
 
-      it(
-        'should verify an rsa signature using a ' + keySize + '-bit key and PSS padding using pss named-param API',
-        function () {
-          var signature = UTIL.decode64(params.signaturePss);
-          var key = PKI.publicKeyFromPem(params.publicKeyPem);
+      it(`should verify an rsa signature using a ${keySize}-bit key and PSS padding using pss named-param API`, () => {
+        const signature = UTIL.decode64(params.signaturePss);
+        const key = PKI.publicKeyFromPem(params.publicKeyPem);
 
-          var md = MD.sha1.create();
-          md.start();
-          md.update('just testing');
+        const md = MD.sha1.create();
+        md.start();
+        md.update('just testing');
 
-          var pss = PSS.create({
-            md: MD.sha1.create(),
-            mgf: MGF.mgf1.create(MD.sha1.create()),
-            saltLength: 20
-          });
-          expect(key.verify(md.digest().getBytes(), signature, pss)).toBe(true);
-        }
-      );
+        const pss = PSS.create({
+          md: MD.sha1.create(),
+          mgf: MGF.mgf1.create(MD.sha1.create()),
+          saltLength: 20
+        });
+        expect(key.verify(md.digest().getBytes(), signature, pss)).toBe(true);
+      });
 
-      it('should rsa sign using a ' + keySize + '-bit key and PSS padding using salt "abc"', function () {
-        var privateKey = PKI.privateKeyFromPem(params.privateKeyPem);
+      it(`should rsa sign using a ${keySize}-bit key and PSS padding using salt "abc"`, () => {
+        const privateKey = PKI.privateKeyFromPem(params.privateKeyPem);
 
-        var md = MD.sha1.create();
+        const md = MD.sha1.create();
         md.start();
         md.update('just testing');
 
         // create signature
-        var pss = PSS.create({
+        const pss = PSS.create({
           md: MD.sha1.create(),
           mgf: MGF.mgf1.create(MD.sha1.create()),
           salt: UTIL.createBuffer('abc')
         });
-        var signature = privateKey.sign(md, pss);
-        var b64 = UTIL.encode64(signature);
+        const signature = privateKey.sign(md, pss);
+        const b64 = UTIL.encode64(signature);
         expect(b64).toBe(params.signatureWithAbcSalt);
       });
 
-      it(
-        'should verify an rsa signature using a ' + keySize + '-bit key and PSS padding using salt "abc"',
-        function () {
-          var signature = UTIL.decode64(params.signatureWithAbcSalt);
-          var key = PKI.publicKeyFromPem(params.publicKeyPem);
+      it(`should verify an rsa signature using a ${keySize}-bit key and PSS padding using salt "abc"`, () => {
+        const signature = UTIL.decode64(params.signatureWithAbcSalt);
+        const key = PKI.publicKeyFromPem(params.publicKeyPem);
 
-          var md = MD.sha1.create();
-          md.start();
-          md.update('just testing');
+        const md = MD.sha1.create();
+        md.start();
+        md.update('just testing');
 
-          var pss = PSS.create({
-            md: MD.sha1.create(),
-            mgf: MGF.mgf1.create(MD.sha1.create()),
-            saltLength: 3
-          });
-          expect(key.verify(md.digest().getBytes(), signature, pss)).toBe(true);
-        }
-      );
+        const pss = PSS.create({
+          md: MD.sha1.create(),
+          mgf: MGF.mgf1.create(MD.sha1.create()),
+          saltLength: 3
+        });
+        expect(key.verify(md.digest().getBytes(), signature, pss)).toBe(true);
+      });
 
-      it('should rsa sign using a ' + keySize + '-bit key and PSS padding using custom PRNG', function () {
-        var prng = RANDOM.createInstance();
+      it(`should rsa sign using a ${keySize}-bit key and PSS padding using custom PRNG`, () => {
+        const prng = RANDOM.createInstance();
         prng.seedFileSync = function (needed) {
           return UtilNamespace.fillString('a', needed);
         };
-        var privateKey = PKI.privateKeyFromPem(params.privateKeyPem);
+        const privateKey = PKI.privateKeyFromPem(params.privateKeyPem);
 
-        var md = MD.sha1.create();
+        const md = MD.sha1.create();
         md.start();
         md.update('just testing');
 
         // create signature
-        var pss = PSS.create({
+        const pss = PSS.create({
           md: MD.sha1.create(),
           mgf: MGF.mgf1.create(MD.sha1.create()),
           saltLength: 20,
           prng: prng
         });
-        var signature = privateKey.sign(md, pss);
-        var b64 = UTIL.encode64(signature);
+        const signature = privateKey.sign(md, pss);
+        const b64 = UTIL.encode64(signature);
         expect(b64).toBe(params.signatureWithCustomPrng);
       });
 
-      it(
-        'should verify an rsa signature using a ' + keySize + '-bit key and PSS padding using custom PRNG',
-        function () {
-          var prng = RANDOM.createInstance();
-          prng.seedFileSync = function (needed) {
-            return UtilNamespace.fillString('a', needed);
-          };
-          var signature = UTIL.decode64(params.signatureWithCustomPrng);
-          var key = PKI.publicKeyFromPem(params.publicKeyPem);
+      it(`should verify an rsa signature using a ${keySize}-bit key and PSS padding using custom PRNG`, () => {
+        const prng = RANDOM.createInstance();
+        prng.seedFileSync = function (needed) {
+          return UtilNamespace.fillString('a', needed);
+        };
+        const signature = UTIL.decode64(params.signatureWithCustomPrng);
+        const key = PKI.publicKeyFromPem(params.publicKeyPem);
 
-          var md = MD.sha1.create();
-          md.start();
-          md.update('just testing');
+        const md = MD.sha1.create();
+        md.start();
+        md.update('just testing');
 
-          var pss = PSS.create({
-            md: MD.sha1.create(),
-            mgf: MGF.mgf1.create(MD.sha1.create()),
-            saltLength: 20,
-            prng: prng
-          });
-          expect(key.verify(md.digest().getBytes(), signature, pss)).toBe(true);
-        }
-      );
+        const pss = PSS.create({
+          md: MD.sha1.create(),
+          mgf: MGF.mgf1.create(MD.sha1.create()),
+          saltLength: 20,
+          prng: prng
+        });
+        expect(key.verify(md.digest().getBytes(), signature, pss)).toBe(true);
+      });
     }
   })();
 
-  describe('signature verification', function () {
+  describe('signature verification', () => {
     // NOTE: Tests in this section, and associated fixes, are largely derived
     // from a detailed vulnerability report provided by Moosa Yahyazadeh
     // (moosa-yahyazadeh@uiowa.edu).
@@ -827,7 +811,7 @@ describe('rsa', function () {
     // params for tests
 
     // public modulus / 256 bytes
-    var N = new JSBN.BigInteger(
+    const N = new JSBN.BigInteger(
       'E932AC92252F585B3A80A4DD76A897C8B7652952FE788F6EC8DD640587A1EE56' +
         '47670A8AD4C2BE0F9FA6E49C605ADF77B5174230AF7BD50E5D6D6D6D28CCF0A8' +
         '86A514CC72E51D209CC772A52EF419F6A953F3135929588EBE9B351FCA61CED7' +
@@ -840,7 +824,7 @@ describe('rsa', function () {
     );
 
     // private exponent
-    var d = new JSBN.BigInteger(
+    const d = new JSBN.BigInteger(
       '009b771db6c374e59227006de8f9c5ba85cf98c63754505f9f30939803afc149' +
         '8eda44b1b1e32c7eb51519edbd9591ea4fce0f8175ca528e09939e48f37088a0' +
         '7059c36332f74368c06884f718c9f8114f1b8d4cb790c63b09d46778bfdc4134' +
@@ -854,13 +838,13 @@ describe('rsa', function () {
     );
 
     // public exponent
-    var e = new JSBN.BigInteger('3');
+    const e = new JSBN.BigInteger('3');
 
     // hash function
     // H = SHA-256 (OID = 0x608648016503040201)
 
     // message
-    var m = 'hello world!';
+    const m = 'hello world!';
 
     // to-be-signed RSA PKCS#1 v1.5 signature scheme input structure
     // I
@@ -874,10 +858,10 @@ describe('rsa', function () {
 
     function _checkBadTailingGarbage(publicKey: RsaPublicKey, S: string | Uint8Array): void {
       S = _signatureBytes(S);
-      var md = MD.sha256.create();
+      const md = MD.sha256.create();
       md.update(m);
 
-      expect(function () {
+      expect(() => {
         publicKey.verify(md.digest().getBytes(), S, undefined, {
           _skipPaddingChecks: true
         });
@@ -886,10 +870,10 @@ describe('rsa', function () {
 
     function _checkBadDigestInfo(publicKey: RsaPublicKey, S: string | Uint8Array, skipTailingGarbage = false): void {
       S = _signatureBytes(S);
-      var md = MD.sha256.create();
+      const md = MD.sha256.create();
       md.update(m);
 
-      expect(function () {
+      expect(() => {
         publicKey.verify(md.digest().getBytes(), S, undefined, {
           _parseAllDigestBytes: !skipTailingGarbage,
           _skipPaddingChecks: true
@@ -899,7 +883,7 @@ describe('rsa', function () {
 
     function _checkGoodDigestInfo(publicKey: RsaPublicKey, S: string | Uint8Array, skipTailingGarbage = false): void {
       S = _signatureBytes(S);
-      var md = MD.sha256.create();
+      const md = MD.sha256.create();
       md.update(m);
 
       expect(
@@ -910,8 +894,8 @@ describe('rsa', function () {
       ).toBeTruthy();
     }
 
-    it('should check DigestInfo structure', function () {
-      var publicKey = RSA.setPublicKey(N, e);
+    it('should check DigestInfo structure', () => {
+      const publicKey = RSA.setPublicKey(N, e);
       // 0xff bytes stolen from padding
       // unchecked portion of PKCS#1 encoded message used to forge a
       // signature when low public exponent is being used.
@@ -921,7 +905,7 @@ describe('rsa', function () {
 
       // 91 garbage byte injected as the value of a TLV replaced digest
       // algorithm structure
-      var I = UTIL.binary.hex.decode(
+      const I = UTIL.binary.hex.decode(
         '0001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
           'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
           'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
@@ -931,7 +915,7 @@ describe('rsa', function () {
           '8888888888888888888888888888888888888888888888888888888888880420' +
           '7509e5bda0c762d2bac7f90d758b5b2263fa01ccbc542ab5e3df163be08e6ca9'
       );
-      var S = UTIL.binary.hex.decode(
+      const S = UTIL.binary.hex.decode(
         'e7410e05bdc38d1c72fab784be41df3d3de2ae83894d9ec86cb5fe343d5dc7d4' +
           '5df2a36fc60363faf32f0d37ab457648af40a48a6c53ae7af0575e92cb1ffc23' +
           '6d55e1325af8c71b3ac313f2630fb498b8e1546093aca1ed56026a96cb525d99' +
@@ -945,13 +929,13 @@ describe('rsa', function () {
       _checkBadDigestInfo(publicKey, S);
     });
 
-    it('should check tailing garbage and DigestInfo [1]', function () {
-      var publicKey = RSA.setPublicKey(N, e);
+    it('should check tailing garbage and DigestInfo [1]', () => {
+      const publicKey = RSA.setPublicKey(N, e);
       // bytes stolen from padding and unchecked tailing bytes used to forge
       // a signature when low public exponent is used
 
       // 204 tailing garbage bytes injected after DigestInfo structure
-      var I = UTIL.binary.hex.decode(
+      const I = UTIL.binary.hex.decode(
         '000100302f300b060960864801650304020104207509e5bda0c762d2bac7f90d' +
           '758b5b2263fa01ccbc542ab5e3df163be08e6ca9888888888888888888888888' +
           '8888888888888888888888888888888888888888888888888888888888888888' +
@@ -961,7 +945,7 @@ describe('rsa', function () {
           '8888888888888888888888888888888888888888888888888888888888888888' +
           '8888888888888888888888888888888888888888888888888888888888888888'
       );
-      var S = UTIL.binary.hex.decode(
+      const S = UTIL.binary.hex.decode(
         'c2ad2fa23c246ee98c453d69023e7ec05956b48bd0e287341ba9d342ad49b0ff' +
           'f2bcbb9adc50f1ccbfc54106305cc74a88db89ff94901a08359893a08426373e' +
           '7949a8794798233445af6c48bc6ccbe278bdeb62c31e40c3bf0014af2faadcc9' +
@@ -976,15 +960,15 @@ describe('rsa', function () {
       _checkGoodDigestInfo(publicKey, S, true);
     });
 
-    it('should check tailing garbage and DigestInfo [2]', function () {
-      var publicKey = RSA.setPublicKey(N, e);
+    it('should check tailing garbage and DigestInfo [2]', () => {
+      const publicKey = RSA.setPublicKey(N, e);
       // bytes stolen from padding and unchecked tailing bytes used to forge
       // a signature when low public exponent is used
 
       // 215 tailing garbage bytes injected after DigestInfo structure
       // unchecked digest algorithm structure
       // combined with earlier issue
-      var I = UTIL.binary.hex.decode(
+      const I = UTIL.binary.hex.decode(
         '0001003024010004207509e5bda0c762d2bac7f90d758b5b2263fa01ccbc542a' +
           'b5e3df163be08e6ca98888888888888888888888888888888888888888888888' +
           '8888888888888888888888888888888888888888888888888888888888888888' +
@@ -994,7 +978,7 @@ describe('rsa', function () {
           '8888888888888888888888888888888888888888888888888888888888888888' +
           '8888888888888888888888888888888888888888888888888888888888888888'
       );
-      var S = UTIL.binary.hex.decode(
+      const S = UTIL.binary.hex.decode(
         'a7c5812d7fc0eef766a481aac18c8c48483daf9b5ffb6614bd98ebe4ecb746dd' +
           '493cf5dd2cbe16ecaa0b52109b744930eda49316605fc823fd57a68b5b2c62e8' +
           'c1b158b26e1547a2e33cdd79427d7c513f07d02261ffe43db197d8cddca2b5b4' +
@@ -1009,12 +993,12 @@ describe('rsa', function () {
       _checkBadDigestInfo(publicKey, S, true);
     });
 
-    it('should check tailing garbage and DigestInfo [e=3]', function () {
+    it('should check tailing garbage and DigestInfo [e=3]', () => {
       // signature forged without knowledge of private key for given message
       // and low exponent e=3
 
       // test data computed from a script
-      var N = new JSBN.BigInteger(
+      const N = new JSBN.BigInteger(
         '2943851338959486749023220128247883872673446416188780128906858510' +
           '0507839535636256317277708295678804401391394313946142335874609638' +
           '6660819509361141525748702240343825617847432837639613499808068190' +
@@ -1026,10 +1010,10 @@ describe('rsa', function () {
           '4062006872333417793816670825914214968706669312685485046743622307' +
           '25756397511775557878046572472650613407143'
       );
-      var e = new JSBN.BigInteger('3');
-      var publicKey = RSA.setPublicKey(N, e);
+      const e = new JSBN.BigInteger('3');
+      const publicKey = RSA.setPublicKey(N, e);
 
-      var S = UTIL.binary.hex.decode(
+      const S = UTIL.binary.hex.decode(
         '0000000000000000000000000000000000000000000000000000000000000000' +
           '0000000000000000000000000000000000000000000000000000000000000000' +
           '0000000000000000000000000000000000000000000000000000000000000000' +
@@ -1044,12 +1028,12 @@ describe('rsa', function () {
       _checkBadDigestInfo(publicKey, S, true);
     });
 
-    it('should check tailing garbage and DigestInfo [e=5]', function () {
+    it('should check tailing garbage and DigestInfo [e=5]', () => {
       // signature forged without knowledge of private key for given message
       // and low exponent e=5
 
       // test data computed from a script
-      var N = new JSBN.BigInteger(
+      const N = new JSBN.BigInteger(
         '2943851338959486749023220128247883872673446416188780128906858510' +
           '0507839535636256317277708295678804401391394313946142335874609638' +
           '6660819509361141525748702240343825617847432837639613499808068190' +
@@ -1061,10 +1045,10 @@ describe('rsa', function () {
           '4062006872333417793816670825914214968706669312685485046743622307' +
           '25756397511775557878046572472650613407143'
       );
-      var e = new JSBN.BigInteger('5');
-      var publicKey = RSA.setPublicKey(N, e);
+      const e = new JSBN.BigInteger('5');
+      const publicKey = RSA.setPublicKey(N, e);
 
-      var S = UTIL.binary.hex.decode(
+      const S = UTIL.binary.hex.decode(
         '0000000000000000000000000000000000000000000000000000000000000000' +
           '0000000000000000000000000000000000000000000000000000000000000000' +
           '0000000000000000000000000000000000000000000000000000000000000000' +
@@ -1079,12 +1063,12 @@ describe('rsa', function () {
       _checkBadDigestInfo(publicKey, S, true);
     });
 
-    it('should check tailing garbage and DigestInfo [e=17]', function () {
+    it('should check tailing garbage and DigestInfo [e=17]', () => {
       // signature forged without knowledge of private key for given message
       // and low exponent e=17
 
       // test data computed from a script
-      var N = new JSBN.BigInteger(
+      const N = new JSBN.BigInteger(
         '9283656416612985262941143827717696579056959956800096804440022580' +
           '8979605519224532102091105159037909758713334182004379540747102163' +
           '0328875171430160513961779154294247563032373839871165519961382202' +
@@ -1125,10 +1109,10 @@ describe('rsa', function () {
           '3846941219138832785295572786934547608717304766525989212989524778' +
           '5416834855450881318585909376917039'
       );
-      var e = new JSBN.BigInteger('17');
-      var publicKey = RSA.setPublicKey(N, e);
+      const e = new JSBN.BigInteger('17');
+      const publicKey = RSA.setPublicKey(N, e);
 
-      var S = UTIL.binary.hex.decode(
+      const S = UTIL.binary.hex.decode(
         '0000000000000000000000000000000000000000000000000000000000000000' +
           '0000000000000000000000000000000000000000000000000000000000000000' +
           '0000000000000000000000000000000000000000000000000000000000000000' +
@@ -1167,11 +1151,11 @@ describe('rsa', function () {
       _checkBadDigestInfo(publicKey, S, true);
     });
 
-    it('should check DigestInfo type octet [1]', function () {
-      var publicKey = RSA.setPublicKey(N, e);
+    it('should check DigestInfo type octet [1]', () => {
+      const publicKey = RSA.setPublicKey(N, e);
       // incorrect value for digest algorithm's type octet
       // 0x0c instead of correct 0x06
-      var I = UTIL.binary.hex.decode(
+      const I = UTIL.binary.hex.decode(
         '0001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
           'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
           'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
@@ -1181,7 +1165,7 @@ describe('rsa', function () {
           'ffffffffffffffffffffffff0030310c0d060960864801650304020105000420' +
           '7509e5bda0c762d2bac7f90d758b5b2263fa01ccbc542ab5e3df163be08e6ca9'
       );
-      var S = UTIL.binary.hex.decode(
+      const S = UTIL.binary.hex.decode(
         'd8298a199e1b6ac18f3c0067a004bd9ff7af87be6ad857d73cc3d24ef06195b8' +
           '2aaddb0194f8e61fc31453b9163062255e8baf9c480200d0991a5f764f63d5f6' +
           'afd283b9cd6afe54f0b7f738707b4eb6b8807539bb627e74db87a50413ab18e5' +
@@ -1195,11 +1179,11 @@ describe('rsa', function () {
       _checkBadDigestInfo(publicKey, S);
     });
 
-    it('should check DigestInfo type octet [2]', function () {
-      var publicKey = RSA.setPublicKey(N, e);
+    it('should check DigestInfo type octet [2]', () => {
+      const publicKey = RSA.setPublicKey(N, e);
       // incorrect value for hash value's type octet
       // 0x0a instead of correct 0x04
-      var I = UTIL.binary.hex.decode(
+      const I = UTIL.binary.hex.decode(
         '0001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
           'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
           'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
@@ -1209,7 +1193,7 @@ describe('rsa', function () {
           'ffffffffffffffffffffffff003031300d060960864801650304020105000a20' +
           '7509e5bda0c762d2bac7f90d758b5b2263fa01ccbc542ab5e3df163be08e6ca9'
       );
-      var S = UTIL.binary.hex.decode(
+      const S = UTIL.binary.hex.decode(
         'c1acdd3aef5f0439c254980295fc0d81b628df00726310a1041d79b5dd94c11d' +
           '3bcaf0236763c77c25d9ab49522ed2a7d6ea3a4e483a29838acd48f2d60a7902' +
           '75f4cd46e4b1d09c527a426ec373e8a21746ad3ea541d3b85ba4c303ff793ea8' +
@@ -1224,10 +1208,10 @@ describe('rsa', function () {
     });
   });
 
-  describe('GHSA-ppp5-5v6c-4jwp DigestInfo/padding checks', function () {
+  describe('GHSA-ppp5-5v6c-4jwp DigestInfo/padding checks', () => {
     // https://github.com/digitalbazaar/forge/security/advisories/GHSA-ppp5-5v6c-4jwp
     // test vectors are inline in this file
-    var publicKeyPem =
+    const publicKeyPem =
       '-----BEGIN RSA PUBLIC KEY-----\n' +
       'MIICCAKCAgEAw+dqbST8SB6v+is5lOMhrfOWd44qfLsSavTVzA9xRKHNTsXe6PLl\n' +
       'di6PLVaYHsnc1OTrJhS8g+NdvTsnR2+oYVFb8DEwp0aS3b9J14Cthm5lXjQH9Nov\n' +
@@ -1241,8 +1225,8 @@ describe('rsa', function () {
       'b8iWGvwLoKVNZGYa6s77r8dJc1ZPB2DolB9LEOo1nfwsMk1i8fPb+CvGaihyvaPR\n' +
       'GdbiIE6fkCjD8ZW/v5lrOYgpP0x+iwwD3z9ckaXgBpJy1BieHkuLKsUCAQM=\n' +
       '-----END RSA PUBLIC KEY-----\n';
-    var controlMsg = UTIL.hexToBytes('636f6e74726f6c2d6d657373616765');
-    var controlSig = UTIL.hexToBytes(
+    const controlMsg = UTIL.hexToBytes('636f6e74726f6c2d6d657373616765');
+    const controlSig = UTIL.hexToBytes(
       '4901e07c1efa0cb738795ece5c25a804a11a2d217cafa2c71ae18bdf0faa9fd5' +
         '2151c82648108fdad18af6e532417a0c532c667bf325e21730115ab01662f219' +
         '6cfe39b8b43e14859f69c722d71b19f1ae3ece2147b2ccf302a4150afd6484f1' +
@@ -1260,8 +1244,8 @@ describe('rsa', function () {
         '74e4b8a4eec734efacb95e0ee7662c241bc570f6c84a2e65950b6e0d46e882d4' +
         '76762a8942b34aec9cfad18cd9ee45a4abddaa8c2cbf7d9bbc1523969e4bb3ae'
     );
-    var forgedMsg = UTIL.hexToBytes('666f726765642d6d6573736167652d30');
-    var forgedSig = UTIL.hexToBytes(
+    const forgedMsg = UTIL.hexToBytes('666f726765642d6d6573736167652d30');
+    const forgedSig = UTIL.hexToBytes(
       '0000000000000000000000000000000000000000000000000000000000000000' +
         '0000000000000000000000000000000000000000000000000000000000000000' +
         '0000000000000000000000000000000000000000000000000000000000000000' +
@@ -1280,25 +1264,25 @@ describe('rsa', function () {
         'bb2af4438487d2f1cd4b462c7cf172b31d9f2615a54c6e908e1837b3b7fc09e0'
     );
 
-    it('should check control data', function () {
-      var publicKey = PKI.publicKeyFromPem(publicKeyPem);
-      var md = MD.sha256.create();
+    it('should check control data', () => {
+      const publicKey = PKI.publicKeyFromPem(publicKeyPem);
+      const md = MD.sha256.create();
       md.update(controlMsg);
       expect(publicKey.verify(md.digest().getBytes(), controlSig)).toBeTruthy();
     });
-    it('should check forged data (normal via padding check)', function () {
-      var publicKey = PKI.publicKeyFromPem(publicKeyPem);
-      var md = MD.sha256.create();
+    it('should check forged data (normal via padding check)', () => {
+      const publicKey = PKI.publicKeyFromPem(publicKeyPem);
+      const md = MD.sha256.create();
       md.update(forgedMsg);
-      expect(function () {
+      expect(() => {
         publicKey.verify(md.digest().getBytes(), forgedSig);
       }).toThrow('Encryption block is invalid.');
     });
-    it('should check forged data (via digestinfo length)', function () {
-      var publicKey = PKI.publicKeyFromPem(publicKeyPem);
-      var md = MD.sha256.create();
+    it('should check forged data (via digestinfo length)', () => {
+      const publicKey = PKI.publicKeyFromPem(publicKeyPem);
+      const md = MD.sha256.create();
       md.update(forgedMsg);
-      expect(function () {
+      expect(() => {
         publicKey.verify(md.digest().getBytes(), forgedSig, undefined, {
           _skipPaddingChecks: true
         });

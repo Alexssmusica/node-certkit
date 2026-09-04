@@ -27,15 +27,13 @@ type Pkcs12TestData = {
 
 type Pkcs12MacKey = { toHex: () => string };
 
-let _data: Pkcs12TestData;
-
-describe('pkcs12', function () {
+describe('pkcs12', () => {
   it('should create certificate-only p12', (ctx) => {
-    var p12Asn = PKCS12.toPkcs12Asn1(null, _data.certificate, null, {
+    const p12Asn = PKCS12.toPkcs12Asn1(null, _data.certificate, null, {
       useMac: false,
       generateLocalKeyId: false
     });
-    var p12Der = ASN1.toDer(p12Asn).getBytes();
+    const p12Der = ASN1.toDer(p12Asn).getBytes();
 
     /* The generated PKCS#12 file lacks a MAC, therefore pass -nomacver to
         OpenSSL: openssl pkcs12 -nomacver -nodes -in pkcs12_certonly.p12 */
@@ -43,12 +41,12 @@ describe('pkcs12', function () {
   });
 
   it('should create key-only p12', (ctx) => {
-    var privateKey = PKI.privateKeyFromPem(_data.privateKey);
-    var p12Asn = PKCS12.toPkcs12Asn1(privateKey, null, null, {
+    const privateKey = PKI.privateKeyFromPem(_data.privateKey);
+    const p12Asn = PKCS12.toPkcs12Asn1(privateKey, null, null, {
       useMac: false,
       generateLocalKeyId: false
     });
-    var p12Der = ASN1.toDer(p12Asn).getBytes();
+    const p12Der = ASN1.toDer(p12Asn).getBytes();
 
     /* The generated PKCS#12 file lacks a MAC, therefore pass -nomacver to
         OpenSSL: openssl pkcs12 -nomacver -nodes -in pkcs12_keyonly.p12 */
@@ -58,19 +56,19 @@ describe('pkcs12', function () {
   it('should create encrypted-key-only p12', (ctx) => {
     /* Note we need to mock the PRNG, since the PKCS#12 file uses encryption
         which otherwise would differ each time due to the randomized IV. */
-    var oldRandomGenerate = certkit.random.generate;
+    const oldRandomGenerate = certkit.random.generate;
     certkit.random.generate = function (num) {
       return UTIL.createBuffer().fillWithByte(0, num).getBytes();
     };
 
-    var privateKey = PKI.privateKeyFromPem(_data.privateKey);
-    var p12Asn = PKCS12.toPkcs12Asn1(privateKey, null, 'nopass', {
+    const privateKey = PKI.privateKeyFromPem(_data.privateKey);
+    const p12Asn = PKCS12.toPkcs12Asn1(privateKey, null, 'nopass', {
       useMac: false,
       generateLocalKeyId: false,
       count: 2048,
       prfAlgorithm: 'sha1'
     } as Pkcs12CreateOptions & EncryptPrivateKeyInfoOptions);
-    var p12Der = ASN1.toDer(p12Asn).getBytes();
+    const p12Der = ASN1.toDer(p12Asn).getBytes();
 
     // restore old random function
     certkit.random.generate = oldRandomGenerate;
@@ -81,9 +79,9 @@ describe('pkcs12', function () {
   });
 
   it('should import certificate-only p12', (ctx) => {
-    var p12Der = UTIL.decode64(_data.p12certonly);
-    var p12Asn1 = ASN1.fromDer(p12Der);
-    var p12 = PKCS12.pkcs12FromAsn1(p12Asn1);
+    const p12Der = UTIL.decode64(_data.p12certonly);
+    const p12Asn1 = ASN1.fromDer(p12Der);
+    const p12 = PKCS12.pkcs12FromAsn1(p12Asn1);
     expect(p12.version).toBe(3);
 
     // PKCS#12 PFX has exactly one SafeContents; it is not encrypted
@@ -99,9 +97,9 @@ describe('pkcs12', function () {
   });
 
   it('should import key-only p12', (ctx) => {
-    var p12Der = UTIL.decode64(_data.p12keyonly);
-    var p12Asn1 = ASN1.fromDer(p12Der);
-    var p12 = PKCS12.pkcs12FromAsn1(p12Asn1);
+    const p12Der = UTIL.decode64(_data.p12keyonly);
+    const p12Asn1 = ASN1.fromDer(p12Der);
+    const p12 = PKCS12.pkcs12FromAsn1(p12Asn1);
     expect(p12.version).toBe(3);
 
     // PKCS#12 PFX has exactly one SafeContents; it is not encrypted
@@ -113,15 +111,15 @@ describe('pkcs12', function () {
     expect(p12.safeContents[0].safeBags[0].type).toBe(PKI.oids.keyBag);
 
     // compare the key from the PFX by comparing both primes
-    var expected = PKI.privateKeyFromPem(_data.privateKey);
+    const expected = PKI.privateKeyFromPem(_data.privateKey);
     expect(p12.safeContents[0].safeBags[0].key!.p).toEqual(expected.p);
     expect(p12.safeContents[0].safeBags[0].key!.q).toEqual(expected.q);
   });
 
   it('should import encrypted-key-only p12', (ctx) => {
-    var p12Der = UTIL.decode64(_data.p12enckeyonly);
-    var p12Asn1 = ASN1.fromDer(p12Der);
-    var p12 = PKCS12.pkcs12FromAsn1(p12Asn1, 'nopass');
+    const p12Der = UTIL.decode64(_data.p12enckeyonly);
+    const p12Asn1 = ASN1.fromDer(p12Der);
+    const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, 'nopass');
     expect(p12.version).toBe(3);
 
     // PKCS#12 PFX has exactly one SafeContents; it is *not* encrypted,
@@ -134,15 +132,15 @@ describe('pkcs12', function () {
     expect(p12.safeContents[0].safeBags[0].type).toBe(PKI.oids.pkcs8ShroudedKeyBag);
 
     // compare the key from the PFX by comparing both primes
-    var expected = PKI.privateKeyFromPem(_data.privateKey);
+    const expected = PKI.privateKeyFromPem(_data.privateKey);
     expect(p12.safeContents[0].safeBags[0].key!.p).toEqual(expected.p);
     expect(p12.safeContents[0].safeBags[0].key!.q).toEqual(expected.q);
   });
 
   it('should import an encrypted-key-only p12', (ctx) => {
-    var p12Der = UTIL.decode64(_data.p12enckeyonly);
-    var p12Asn1 = ASN1.fromDer(p12Der);
-    var p12 = PKCS12.pkcs12FromAsn1(p12Asn1, 'nopass');
+    const p12Der = UTIL.decode64(_data.p12enckeyonly);
+    const p12Asn1 = ASN1.fromDer(p12Der);
+    const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, 'nopass');
     expect(p12.version).toBe(3);
 
     // PKCS#12 PFX has exactly one SafeContents; it is *not* encrypted,
@@ -155,15 +153,15 @@ describe('pkcs12', function () {
     expect(p12.safeContents[0].safeBags[0].type).toBe(PKI.oids.pkcs8ShroudedKeyBag);
 
     // compare the key from the PFX by comparing both primes
-    var expected = PKI.privateKeyFromPem(_data.privateKey);
+    const expected = PKI.privateKeyFromPem(_data.privateKey);
     expect(p12.safeContents[0].safeBags[0].key!.p).toEqual(expected.p);
     expect(p12.safeContents[0].safeBags[0].key!.q).toEqual(expected.q);
   });
 
   it('should import an encrypted p12 with keys and certificates', (ctx) => {
-    var p12Der = UTIL.decode64(_data.p12encmixed);
-    var p12Asn1 = ASN1.fromDer(p12Der);
-    var p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
+    const p12Der = UTIL.decode64(_data.p12encmixed);
+    const p12Asn1 = ASN1.fromDer(p12Der);
+    const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
     expect(p12.version).toBe(3);
 
     // PKCS#12 PFX has two SafeContents; first is *not* encrypted but
@@ -222,20 +220,20 @@ describe('pkcs12', function () {
   });
 
   it('should get bags by friendly name', (ctx) => {
-    var p12Der = UTIL.decode64(_data.p12encmixed);
-    var p12Asn1 = ASN1.fromDer(p12Der);
-    var p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
-    var bags = p12.getBags({ friendlyName: 'signaturekey' });
+    const p12Der = UTIL.decode64(_data.p12encmixed);
+    const p12Asn1 = ASN1.fromDer(p12Der);
+    const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
+    const bags = p12.getBags({ friendlyName: 'signaturekey' });
 
     expect(bags.friendlyName!.length).toBe(1);
     expect(bags.friendlyName![0].attributes.friendlyName![0]).toBe('signaturekey');
   });
 
   it('should get cert bags by friendly name', (ctx) => {
-    var p12Der = UTIL.decode64(_data.p12encmixed);
-    var p12Asn1 = ASN1.fromDer(p12Der);
-    var p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
-    var bags = p12.getBags({
+    const p12Der = UTIL.decode64(_data.p12encmixed);
+    const p12Asn1 = ASN1.fromDer(p12Der);
+    const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
+    const bags = p12.getBags({
       friendlyName: 'CN=1002753325,2.5.4.5=#130b3130303237353333323543',
       bagType: PKI.oids.certBag
     });
@@ -245,24 +243,24 @@ describe('pkcs12', function () {
   });
 
   it('should get all cert bags', (ctx) => {
-    var p12Der = UTIL.decode64(_data.p12encmixed);
-    var p12Asn1 = ASN1.fromDer(p12Der);
-    var p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
-    var bags = p12.getBags({
+    const p12Der = UTIL.decode64(_data.p12encmixed);
+    const p12Asn1 = ASN1.fromDer(p12Der);
+    const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
+    const bags = p12.getBags({
       bagType: PKI.oids.certBag
     });
 
     expect(bags[PKI.oids.certBag]!.length).toBe(6);
-    for (var i = 0; i < bags[PKI.oids.certBag]!.length; ++i) {
+    for (let i = 0; i < bags[PKI.oids.certBag]!.length; ++i) {
       expect(bags[PKI.oids.certBag]![i].type).toBe(PKI.oids.certBag);
     }
   });
 
   it('should get bags by local key ID', (ctx) => {
-    var p12Der = UTIL.decode64(_data.p12encmixed);
-    var p12Asn1 = ASN1.fromDer(p12Der);
-    var p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
-    var bags = p12.getBags({ localKeyId: 'Time 1311855238863' });
+    const p12Der = UTIL.decode64(_data.p12encmixed);
+    const p12Asn1 = ASN1.fromDer(p12Der);
+    const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
+    const bags = p12.getBags({ localKeyId: 'Time 1311855238863' });
 
     expect(bags.localKeyId!.length).toBe(2);
     expect(bags.localKeyId![0].attributes.localKeyId![0]).toBe('Time 1311855238863');
@@ -270,10 +268,10 @@ describe('pkcs12', function () {
   });
 
   it('should get cert bags by local key ID', (ctx) => {
-    var p12Der = UTIL.decode64(_data.p12encmixed);
-    var p12Asn1 = ASN1.fromDer(p12Der);
-    var p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
-    var bags = p12.getBags({
+    const p12Der = UTIL.decode64(_data.p12encmixed);
+    const p12Asn1 = ASN1.fromDer(p12Der);
+    const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
+    const bags = p12.getBags({
       localKeyId: 'Time 1311855238863',
       bagType: PKI.oids.certBag
     });
@@ -284,25 +282,25 @@ describe('pkcs12', function () {
   });
 
   it('should generate a PKCS#12 mac key', (ctx) => {
-    var salt = UTIL.createBuffer(UTIL.hexToBytes('A15D6AA8F8DAFC352F9EE1C192F09966EB85D17B'));
-    var expected = '03e46727268575c6ebd6bff828d0d09b0c914201263ca543';
-    var key = PKCS12.generateKey('123456', salt, 1, 1024, 24) as Pkcs12MacKey;
+    const salt = UTIL.createBuffer(UTIL.hexToBytes('A15D6AA8F8DAFC352F9EE1C192F09966EB85D17B'));
+    const expected = '03e46727268575c6ebd6bff828d0d09b0c914201263ca543';
+    const key = PKCS12.generateKey('123456', salt, 1, 1024, 24) as Pkcs12MacKey;
     expect(key.toHex()).toBe(expected);
   });
 
   it('should load a PKCS#12 with an ECDSA key in a certificate (unsupported key format)', (ctx) => {
-    var p12Der = UTIL.decode64(_data.p12ecdsa);
-    var p12Asn1 = ASN1.fromDer(p12Der);
-    var p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123321');
-    var bags = p12.getBags({ bagType: PKI.oids.certBag });
+    const p12Der = UTIL.decode64(_data.p12ecdsa);
+    const p12Asn1 = ASN1.fromDer(p12Der);
+    const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123321');
+    const bags = p12.getBags({ bagType: PKI.oids.certBag });
 
     expect(bags[PKI.oids.certBag]!.length).toBe(1);
-    var bag = bags[PKI.oids.certBag]![0];
+    const bag = bags[PKI.oids.certBag]![0];
     expect(bag.cert).toBe(null);
     expect('asn1' in bag).toBe(true);
 
     // convert to ASN.1, then DER, then PEM-encode
-    var msg: PemMessage = {
+    const msg: PemMessage = {
       type: 'CERTIFICATE',
       procType: null,
       contentDomain: null,
@@ -310,11 +308,11 @@ describe('pkcs12', function () {
       headers: [],
       body: ASN1.toDer(bag.asn1!).getBytes()
     };
-    var pem = PEM.encode(msg);
+    const pem = PEM.encode(msg);
     expect(pem).toBe(_data.p12ecdsaCert);
   });
   it('Issue #1127 optional macData is okay rfc5280#section-4.1.1.2', (ctx) => {
-    var b64Pfx =
+    const b64Pfx =
       'MIIKYAIBAzCCChwGCSqGSIb3DQEHAaCCCg0EggoJMIIKBTCCBhYGCS' +
       'qGSIb3DQEHAaCCBgcEggYDMIIF/zCCBfsGCyqGSIb3DQEMCgECoIIE' +
       '/jCCBPowHAYKKoZIhvcNAQwBAzAOBAincEwP070FfwICB9AEggTYAp' +
@@ -381,15 +379,15 @@ describe('pkcs12', function () {
       'I9J15ZRCTGNCz1qvN1TIaragHlv2+lQ91WDRd/QnIZAHcxj0j5wmh1' +
       'JFVLNkKRvDA7MB8wBwYFKw4DAhoEFMRoBxm71oVVRpPf9w7EBxc/rX' +
       'kDBBQv5N2Yn6i7hF+N3gzU7DWLCic+RAICB9A=';
-    var p12Der = certkit.util.decode64(b64Pfx);
-    var p12Asn1 = certkit.asn1.fromDer(p12Der);
-    var p12 = certkit.pkcs12.pkcs12FromAsn1(p12Asn1);
+    const p12Der = certkit.util.decode64(b64Pfx);
+    const p12Asn1 = certkit.asn1.fromDer(p12Der);
+    const p12 = certkit.pkcs12.pkcs12FromAsn1(p12Asn1);
     expect(p12, 'pkcs12FromAsn1 should return an object').toBeTruthy();
     expect(Array.isArray(p12.safeContents), 'safeContents should exist').toBeTruthy();
   });
 });
 
-_data = {
+const _data: Pkcs12TestData = {
   certificate:
     '-----BEGIN CERTIFICATE-----\r\n' +
     'MIIDtDCCApwCCQDUVBxA2DXi8zANBgkqhkiG9w0BAQUFADCBmzELMAkGA1UEBhMC\r\n' +

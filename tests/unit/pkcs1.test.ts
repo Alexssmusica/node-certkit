@@ -7,37 +7,37 @@ const MD = certkit.md;
 const PKCS1 = certkit.pkcs1;
 const PKI = certkit.pki;
 const UTIL = certkit.util;
-var BigInteger = JSBN.BigInteger;
+const BigInteger = JSBN.BigInteger;
 
 // RSA's test vectors for certkit's RSA-OAEP implementation:
 // http://www.rsa.com/rsalabs/node.asp?id=2125
-describe('pkcs1', function () {
+describe('pkcs1', () => {
   it('should detect invalid RSAES-OAEP padding', (ctx) => {
-    var keys = makeKey();
+    const keys = makeKey();
 
     // provide the seed to test the same input each time
-    var seed = UTIL.decode64('JRTfRpV1WmeyiOr0kFw27sZv0v0=');
+    const seed = UTIL.decode64('JRTfRpV1WmeyiOr0kFw27sZv0v0=');
 
     // test decrypting corrupted data: flip every bit (skip first byte to
     // avoid triggering other invalid encryption error) in the message this
     // tests the padding error handling
-    var encoded = PKCS1.encode_rsa_oaep(keys.publicKey, 'datadatadatadata', { seed: seed });
-    var encrypted = keys.publicKey.encrypt(encoded, null);
-    var bitLength = encrypted.length * 8;
+    const encoded = PKCS1.encode_rsa_oaep(keys.publicKey, 'datadatadatadata', { seed: seed });
+    const encrypted = keys.publicKey.encrypt(encoded, null);
+    let bitLength = encrypted.length * 8;
     // FIXME: test it too slow to run all the time -- temporary
     // change only does partial checks, need a longer term fix
     bitLength /= 8;
-    for (var bit = 8; bit < bitLength; ++bit) {
-      var byteIndex = bit / 8;
-      var bitInByte = bit % 8;
+    for (let bit = 8; bit < bitLength; ++bit) {
+      const byteIndex = bit / 8;
+      const bitInByte = bit % 8;
 
-      var out = encrypted.substring(0, byteIndex);
-      var mask = 0x1 << bitInByte;
+      let out = encrypted.substring(0, byteIndex);
+      const mask = 0x1 << bitInByte;
       out += String.fromCharCode(encrypted.charCodeAt(byteIndex) ^ mask);
       out += encrypted.substring(byteIndex + 1);
 
       try {
-        var decrypted = keys.privateKey.decrypt(out, null);
+        const decrypted = keys.privateKey.decrypt(out, null);
         PKCS1.decode_rsa_oaep(keys.privateKey, decrypted);
         throw {
           message: 'Expected an exception.'
@@ -50,12 +50,12 @@ describe('pkcs1', function () {
   });
 
   it('should detect leading zero bytes', (ctx) => {
-    var keys = makeKey();
-    var message = UtilNamespace.fillString('\x00', 80);
-    var encoded = PKCS1.encode_rsa_oaep(keys.publicKey, message);
-    var ciphertext = keys.publicKey.encrypt(encoded, null);
-    var decrypted = keys.privateKey.decrypt(ciphertext, null);
-    var decoded = PKCS1.decode_rsa_oaep(keys.privateKey, decrypted);
+    const keys = makeKey();
+    const message = UtilNamespace.fillString('\x00', 80);
+    const encoded = PKCS1.encode_rsa_oaep(keys.publicKey, message);
+    const ciphertext = keys.publicKey.encrypt(encoded, null);
+    const decrypted = keys.privateKey.decrypt(ciphertext, null);
+    const decoded = PKCS1.decode_rsa_oaep(keys.privateKey, decrypted);
     expect(message).toBe(decoded);
   });
 
@@ -63,8 +63,8 @@ describe('pkcs1', function () {
   testOAEPSHA256();
 
   function testOAEP() {
-    var modulus, exponent, d, p, q, dP, dQ, qInv, pubkey, privateKey;
-    var examples;
+    let modulus, exponent, d, p, q, dP, dQ, qInv, pubkey, privateKey;
+    let examples;
 
     // Example 1: A 1024-bit RSA Key Pair
     // Components of the RSA Key Pair
@@ -688,8 +688,8 @@ describe('pkcs1', function () {
   }
 
   function testOAEPSHA256() {
-    var modulus, exponent, d, p, q, dP, dQ, qInv, pubkey, privateKey;
-    var examples;
+    let modulus, exponent, d, p, q, dP, dQ, qInv, pubkey, privateKey;
+    let examples;
 
     // Example 1: A 1024-bit RSA Key Pair
     // Components of the RSA Key Pair
@@ -1313,13 +1313,13 @@ describe('pkcs1', function () {
   }
 
   function _bytesToBigInteger(bytes: string) {
-    var buffer = UTIL.createBuffer(bytes);
-    var hex = buffer.toHex();
+    const buffer = UTIL.createBuffer(bytes);
+    const hex = buffer.toHex();
     return new BigInteger(hex, 16);
   }
 
   function _base64ToBn(s: string) {
-    var decoded = UTIL.decode64(s);
+    const decoded = UTIL.decode64(s);
     return _bytesToBigInteger(decoded);
   }
 
@@ -1335,8 +1335,8 @@ describe('pkcs1', function () {
       md = MD.sha256.create();
     }
 
-    examples.forEach(function (ex: { title: string; message: string; seed: string; encrypted: string }) {
-      it('should test ' + ex.title, (ctx) => {
+    examples.forEach((ex: { title: string; message: string; seed: string; encrypted: string }) => {
+      it(`should test ${ex.title}`, (ctx) => {
         checkOAEPEncrypt(publicKey, privateKey, md, ex.message, ex.seed, ex.encrypted);
       });
     });
@@ -1350,14 +1350,14 @@ describe('pkcs1', function () {
     seedB64: string,
     expected: string
   ) {
-    var message = UTIL.decode64(messageB64);
-    var seed = UTIL.decode64(seedB64);
-    var encoded = PKCS1.encode_rsa_oaep(publicKey, message, { seed: seed, md: md });
-    var ciphertext = publicKey.encrypt(encoded, null);
+    const message = UTIL.decode64(messageB64);
+    const seed = UTIL.decode64(seedB64);
+    const encoded = PKCS1.encode_rsa_oaep(publicKey, message, { seed: seed, md: md });
+    let ciphertext = publicKey.encrypt(encoded, null);
     expect(expected).toBe(UTIL.encode64(ciphertext));
 
-    var decrypted = privateKey.decrypt(ciphertext, null);
-    var decoded = PKCS1.decode_rsa_oaep(privateKey, decrypted, { md: md });
+    const decrypted = privateKey.decrypt(ciphertext, null);
+    let decoded = PKCS1.decode_rsa_oaep(privateKey, decrypted, { md: md });
     expect(message).toBe(decoded);
 
     // test with higher-level API, default label, and generating a seed
@@ -1394,21 +1394,19 @@ describe('pkcs1', function () {
   }
 
   function makeKey() {
-    var modulus, exponent, d, p, q, dP, dQ, qInv, pubkey, privateKey;
-
     // Example 1: A 1024-bit RSA Key Pair
-    modulus =
+    const modulus =
       'qLOyhK+OtQs4cDSoYPFGxJGfMYdjzWxVmMiuSBGh4KvEx+CwgtaTpef87Wdc9GaFEncsDLxkp0LGxjD1M8jMcvYq6DPEC/JYQumEu3i9v5fAEH1VvbZi9cTg+rmEXLUUjvc5LdOq/5OuHmtme7PUJHYW1PW6ENTP0ibeiNOfFvs=';
-    exponent = 'AQAB';
-    d =
+    const exponent = 'AQAB';
+    const d =
       'UzOc/befyEZqZVxzFqyoXFX9j23YmP2vEZUX709S6P2OJY35P+4YD6DkqylpPNg7FSpVPUrE0YEri5+lrw5/Vf5zBN9BVwkm8zEfFcTWWnMsSDEW7j09LQrzVJrZv3y/t4rYhPhNW+sEck3HNpsx3vN9DPU56c/N095lNynq1dE=';
-    p = '0yc35yZ//hNBstXA0VCoG1hvsxMr7S+NUmKGSpy58wrzi+RIWY1BOhcu+4AsIazxwRxSDC8mpHHcrSEurHyjnQ==';
-    q = 'zIhT0dVNpjD6wAT0cfKBx7iYLYIkpJDtvrM9Pj1cyTxHZXA9HdeRZC8fEWoN2FK+JBmyr3K/6aAw6GCwKItddw==';
-    dP = 'DhK/FxjpzvVZm6HDiC/oBGqQh07vzo8szCDk8nQfsKM6OEiuyckwX77L0tdoGZZ9RnGsxkMeQDeWjbN4eOaVwQ==';
-    dQ = 'lSl7D5Wi+mfQBwfWCd/U/AXIna/C721upVvsdx6jM3NNklHnkILs2oZu/vE8RZ4aYxOGt+NUyJn18RLKhdcVgw==';
-    qInv = 'T0VsUCSTvcDtKrdWo6btTWc1Kml9QhbpMhKxJ6Y9VBHOb6mNXb79cyY+NygUJ0OBgWbtfdY2h90qjKHS9PvY4Q==';
-    pubkey = decodeBase64PublicKey(modulus, exponent);
-    privateKey = decodeBase64PrivateKey(modulus, exponent, d, p, q, dP, dQ, qInv);
+    const p = '0yc35yZ//hNBstXA0VCoG1hvsxMr7S+NUmKGSpy58wrzi+RIWY1BOhcu+4AsIazxwRxSDC8mpHHcrSEurHyjnQ==';
+    const q = 'zIhT0dVNpjD6wAT0cfKBx7iYLYIkpJDtvrM9Pj1cyTxHZXA9HdeRZC8fEWoN2FK+JBmyr3K/6aAw6GCwKItddw==';
+    const dP = 'DhK/FxjpzvVZm6HDiC/oBGqQh07vzo8szCDk8nQfsKM6OEiuyckwX77L0tdoGZZ9RnGsxkMeQDeWjbN4eOaVwQ==';
+    const dQ = 'lSl7D5Wi+mfQBwfWCd/U/AXIna/C721upVvsdx6jM3NNklHnkILs2oZu/vE8RZ4aYxOGt+NUyJn18RLKhdcVgw==';
+    const qInv = 'T0VsUCSTvcDtKrdWo6btTWc1Kml9QhbpMhKxJ6Y9VBHOb6mNXb79cyY+NygUJ0OBgWbtfdY2h90qjKHS9PvY4Q==';
+    const pubkey = decodeBase64PublicKey(modulus, exponent);
+    const privateKey = decodeBase64PrivateKey(modulus, exponent, d, p, q, dP, dQ, qInv);
 
     return { publicKey: pubkey, privateKey: privateKey };
   }
