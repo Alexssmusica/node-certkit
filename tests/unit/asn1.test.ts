@@ -1414,4 +1414,36 @@ describe('asn1', () => {
       //_test('02 04 FF FF FF FF', '02 01 FF');
     });
   })();
+
+  it('should reject ASN.1 objects whose type does not match a strict validator', () => {
+    const integer = ASN1.fromDer(UTIL.hexToBytes('020101'));
+
+    const strictValidator: Asn1Validator = {
+      tagClass: ASN1.Class.UNIVERSAL,
+      type: ASN1.Type.SEQUENCE,
+      constructed: true
+    };
+
+    const errors: string[] = [];
+    const ok = ASN1.validate(integer, strictValidator, {}, errors);
+    expect(ok).toBe(false);
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('should accept any ASN.1 type when validator type is omitted', () => {
+    const sequence = ASN1.fromDer(UTIL.hexToBytes('3000'));
+    const integer = ASN1.fromDer(UTIL.hexToBytes('020101'));
+
+    const permissiveValidator: Asn1Validator = {
+      tagClass: ASN1.Class.UNIVERSAL
+    };
+
+    const sequenceErrors: string[] = [];
+    expect(ASN1.validate(sequence, permissiveValidator, {}, sequenceErrors)).toBe(true);
+    expect(sequenceErrors).toEqual([]);
+
+    const integerErrors: string[] = [];
+    expect(ASN1.validate(integer, permissiveValidator, {}, integerErrors)).toBe(true);
+    expect(integerErrors).toEqual([]);
+  });
 });

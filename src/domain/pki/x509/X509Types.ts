@@ -71,7 +71,7 @@ export type CertificateExtensionFromAsn1Options = {
 
 export type DnAttribute = {
   type: string;
-  value: string;
+  value: string | Asn1Object[];
   valueTagClass: number;
   name?: string;
   shortName?: string;
@@ -82,7 +82,7 @@ export type DnAttribute = {
 /** Partial DN attribute accepted by setters; missing fields are filled by fillMissingFields. */
 export type DnAttributeInput = {
   type?: string;
-  value?: string;
+  value?: string | Asn1Object[];
   valueTagClass?: number;
   name?: string;
   shortName?: string;
@@ -171,6 +171,8 @@ export type MessageDigest = {
   start?: () => void;
 };
 
+export type PublicKeyFingerprintDigest = ReturnType<MessageDigest['digest']>;
+
 export type PublicKey = Pick<RsaPublicKey, 'n' | 'e' | 'verify'>;
 
 export type PrivateKey = Pick<RsaPrivateKey, 'sign'>;
@@ -197,7 +199,7 @@ export type X509Certificate = {
   verify: (child: X509Certificate) => boolean;
   isIssuer: (parent: X509Certificate) => boolean;
   issued: (child: X509Certificate) => boolean;
-  generateSubjectKeyIdentifier: () => string;
+  generateSubjectKeyIdentifier: () => PublicKeyFingerprintDigest;
   verifySubjectKeyIdentifier: () => boolean;
 };
 

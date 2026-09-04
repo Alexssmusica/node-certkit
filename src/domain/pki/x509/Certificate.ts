@@ -12,6 +12,7 @@ import type {
   DnAttributeInput,
   MessageDigest,
   PrivateKey,
+  PublicKeyFingerprintDigest,
   X509Certificate,
   X509CertificationRequest,
   X509Extension,
@@ -145,7 +146,15 @@ export class Certificate {
      *
      * @return the fingerprint as a byte buffer or other encoding based on options.
      */
-    pki.getPublicKeyFingerprint = function (key: RsaPublicKey, options?: PublicKeyFingerprintOptions) {
+    function getPublicKeyFingerprint(
+      key: RsaPublicKey,
+      options?: PublicKeyFingerprintOptions & { encoding?: undefined }
+    ): PublicKeyFingerprintDigest;
+    function getPublicKeyFingerprint(
+      key: RsaPublicKey,
+      options: PublicKeyFingerprintOptions & { encoding: 'hex' | 'binary' }
+    ): string;
+    function getPublicKeyFingerprint(key: RsaPublicKey, options?: PublicKeyFingerprintOptions) {
       options = options || {};
       const md = options.md || c.md.sha1.create();
       const type = options.type || 'RSAPublicKey';
@@ -178,7 +187,8 @@ export class Certificate {
         throw new Error('Unknown encoding "' + options.encoding + '".');
       }
       return digest;
-    };
+    }
+    pki.getPublicKeyFingerprint = getPublicKeyFingerprint;
 
     /**
      * Converts a PKCS#10 certification request (CSR) from PEM format.
@@ -482,7 +492,7 @@ export class Certificate {
        */
       cert.generateSubjectKeyIdentifier = function () {
         return pki.getPublicKeyFingerprint(cert.publicKey as RsaPublicKey, { type: 'RSAPublicKey' });
-      } as X509Certificate['generateSubjectKeyIdentifier'];
+      };
 
       /**
        * Verifies the subjectKeyIdentifier extension value for this certificate
@@ -496,9 +506,7 @@ export class Certificate {
         for (let i = 0; i < cert.extensions.length; ++i) {
           const ext = cert.extensions[i];
           if (ext.id === oid) {
-            const ski = (
-              cert.generateSubjectKeyIdentifier() as unknown as ReturnType<MessageDigest['digest']>
-            ).getBytes();
+            const ski = cert.generateSubjectKeyIdentifier().getBytes();
             return c.util.hexToBytes(ext.subjectKeyIdentifier!) === ski;
           }
         }

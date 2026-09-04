@@ -407,7 +407,7 @@ export class PbeService {
      *
      * @return the RSA key on success, null on failure.
      */
-    pkiMethods.decryptRsaPrivateKey = function (pem: string, password: string): RsaPrivateKey {
+    pkiMethods.decryptRsaPrivateKey = function (pem: string, password: string): RsaPrivateKey | null {
       let body = '';
 
       const msg = deps.pem.decode(pem)[0]!;
@@ -481,7 +481,7 @@ export class PbeService {
         if (cipher.finish()) {
           body = cipher.output!.getBytes();
         } else {
-          return null as unknown as RsaPrivateKey;
+          return null;
         }
       } else {
         body = msg.body;
@@ -491,7 +491,7 @@ export class PbeService {
       if (msg.type === 'ENCRYPTED PRIVATE KEY') {
         const decrypted = pkiMethods.decryptPrivateKeyInfo!(asn1.fromDer(body), password);
         if (decrypted === null) {
-          return null as unknown as RsaPrivateKey;
+          return null;
         }
         keyObj = decrypted;
       } else {

@@ -294,7 +294,7 @@ describe('rsa', () => {
       it(`should PKCS#8 encrypt and decrypt private key with ${algorithm}`, () => {
         let privateKey = PKI.privateKeyFromPem(_pem.privateKey);
         const encryptedPem = PKI.encryptRsaPrivateKey(privateKey, 'password', { algorithm: algorithm });
-        privateKey = PKI.decryptRsaPrivateKey(encryptedPem, 'password');
+        privateKey = PKI.decryptRsaPrivateKey(encryptedPem, 'password')!;
         expect(PKI.privateKeyToPem(privateKey)).toBe(_pem.privateKey);
       });
     });
@@ -311,7 +311,7 @@ describe('rsa', () => {
             algorithm: algorithm,
             prfAlgorithm: prfAlgorithm
           });
-          privateKey = PKI.decryptRsaPrivateKey(encryptedPem, 'password');
+          privateKey = PKI.decryptRsaPrivateKey(encryptedPem, 'password')!;
           expect(PKI.privateKeyToPem(privateKey)).toBe(_pem.privateKey);
         });
       });
@@ -327,7 +327,7 @@ describe('rsa', () => {
           algorithm: algorithm,
           legacy: true
         } as EncryptPrivateKeyInfoOptions & { legacy: boolean });
-        privateKey = PKI.decryptRsaPrivateKey(encryptedPem, 'password');
+        privateKey = PKI.decryptRsaPrivateKey(encryptedPem, 'password')!;
         expect(PKI.privateKeyToPem(privateKey)).toBe(_pem.privateKey);
       });
     });

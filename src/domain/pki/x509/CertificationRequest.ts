@@ -94,7 +94,7 @@ export class CertificationRequest {
         fillMissingFields([attr]);
         csr.attributes.push(attr as DnAttribute);
       };
-      csr.attributes = pki.CRIAttributesAsArray((capture.certificationRequestInfoAttributes || []) as Asn1Object);
+      csr.attributes = pki.CRIAttributesAsArray((capture.certificationRequestInfoAttributes || []) as Asn1Object[]);
 
       return csr;
     };

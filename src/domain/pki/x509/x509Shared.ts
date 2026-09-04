@@ -59,19 +59,18 @@ export class X509Shared {
      *
      * @param attributes the CRIAttributes to convert.
      */
-    pki.CRIAttributesAsArray = function (attributes: Asn1Object) {
+    pki.CRIAttributesAsArray = function (attributes: Asn1Object[]) {
       const rval: DnAttribute[] = [];
 
-      const attrList = attributes as unknown as Asn1Object[];
-      for (let si = 0; si < attrList.length; ++si) {
-        const seq = attrList[si]!;
+      for (let si = 0; si < attributes.length; ++si) {
+        const seq = attributes[si]!;
 
         const type = asn1.derToOid((seq.value as Asn1Object[])[0]!.value as string);
         const values = (seq.value as Asn1Object[])[1]!.value as Asn1Object[];
         for (let vi = 0; vi < values.length; ++vi) {
           const obj = {} as DnAttribute;
           obj.type = type;
-          obj.value = values[vi]!.value as string;
+          obj.value = values[vi]!.value as string | Asn1Object[];
           obj.valueTagClass = values[vi]!.type;
           if (obj.type in oids) {
             obj.name = oids[obj.type];
@@ -81,8 +80,9 @@ export class X509Shared {
           }
           if (obj.type === oids.extensionRequest) {
             obj.extensions = [];
-            for (let ei = 0; ei < (obj.value as unknown as Asn1Object[]).length; ++ei) {
-              obj.extensions.push(pki.certificateExtensionFromAsn1((obj.value as unknown as Asn1Object[])[ei]!));
+            const extValues = obj.value as Asn1Object[];
+            for (let ei = 0; ei < extValues.length; ++ei) {
+              obj.extensions.push(pki.certificateExtensionFromAsn1(extValues[ei]!));
             }
           }
           rval.push(obj);
@@ -137,7 +137,7 @@ export class X509Shared {
           valueTagClass = attr.valueTagClass;
 
           if (valueTagClass === asn1.Type.UTF8) {
-            value = c.util.encodeUtf8(value);
+            value = c.util.encodeUtf8(value as string);
           }
         }
 
@@ -173,7 +173,7 @@ export class X509Shared {
         ) {
           let value = attr.value;
           if (attr.valueTagClass === asn1.Type.UTF8) {
-            value = c.util.encodeUtf8(attr.value);
+            value = c.util.encodeUtf8(attr.value as string);
           }
           if (!(attr.shortName in rval)) {
             rval[attr.shortName] = value;
@@ -232,9 +232,9 @@ export class X509Shared {
           attr.valueConstructed = true;
           attr.valueTagClass = asn1.Type.SEQUENCE;
           if (!attr.value && attr.extensions) {
-            attr.value = [] as unknown as string;
+            attr.value = [];
             for (let ei = 0; ei < attr.extensions.length; ++ei) {
-              (attr.value as unknown as Asn1Object[]).push(
+              (attr.value as Asn1Object[]).push(
                 pki.certificateExtensionToAsn1(fillMissingExtensionFields(attr.extensions[ei]))
               );
             }
@@ -286,7 +286,7 @@ export class X509Shared {
           valueTagClass = attr.valueTagClass;
         }
         if (valueTagClass === asn1.Type.UTF8) {
-          value = c.util.encodeUtf8(value);
+          value = c.util.encodeUtf8(value as string);
         }
         let valueConstructed = false;
         if ('valueConstructed' in attr) {

@@ -29,6 +29,7 @@ import type {
   CertificateErrorMap,
   DnAttribute,
   MessageDigest,
+  PublicKeyFingerprintDigest,
   VerifyCallback,
   VerifyOptions,
   X509CaStore,
@@ -126,8 +127,6 @@ export type PublicKeyFingerprintOptions = {
   delimiter?: string;
 };
 
-export type PublicKeyFingerprint = string | ReturnType<MessageDigest['digest']>;
-
 export type EncryptPrivateKeyInfoOptions = {
   saltSize?: number;
   count?: number;
@@ -167,13 +166,16 @@ export type CertkitPki = {
   encryptedPrivateKeyToPem: (epki: Asn1Object, maxline?: number) => string;
   encryptedPrivateKeyFromPem: (pem: string) => Asn1Object;
   encryptRsaPrivateKey: (rsaKey: RsaPrivateKey, password: string, options?: EncryptPrivateKeyInfoOptions) => string;
-  decryptRsaPrivateKey: (pem: string, password: string) => RsaPrivateKey;
+  decryptRsaPrivateKey: (pem: string, password: string) => RsaPrivateKey | null;
   certificateFromPem: (pem: string, computeHash?: boolean, strict?: boolean) => X509Certificate;
   certificateToPem: (cert: X509Certificate, maxline?: number) => string;
   publicKeyFromPem: (pem: string) => RsaPublicKey;
   publicKeyToPem: (key: RsaPublicKey, maxline?: number) => string;
   publicKeyToRSAPublicKeyPem: (key: RsaPublicKey, maxline?: number) => string;
-  getPublicKeyFingerprint: (key: RsaPublicKey, options?: PublicKeyFingerprintOptions) => PublicKeyFingerprint;
+  getPublicKeyFingerprint: {
+    (key: RsaPublicKey, options?: PublicKeyFingerprintOptions & { encoding?: undefined }): PublicKeyFingerprintDigest;
+    (key: RsaPublicKey, options: PublicKeyFingerprintOptions & { encoding: 'hex' | 'binary' }): string;
+  };
   certificationRequestFromPem: (pem: string, computeHash?: boolean, strict?: boolean) => X509CertificationRequest;
   certificationRequestToPem: (csr: X509CertificationRequest, maxline?: number) => string;
   createCertificate: () => X509Certificate;
@@ -197,7 +199,7 @@ export type CertkitPki = {
     options?: VerifyCallback | VerifyOptions
   ) => boolean;
   RDNAttributesAsArray: (rdn: Asn1Object, md?: MessageDigest) => DnAttribute[];
-  CRIAttributesAsArray: (attributes: Asn1Object) => DnAttribute[];
+  CRIAttributesAsArray: (attributes: Asn1Object[]) => DnAttribute[];
   pemToDer: (pem: string) => ByteStringBuffer;
   privateKeyFromPem: (pem: string) => RsaPrivateKey;
   privateKeyToPem: (key: RsaPrivateKey, maxline?: number) => string;

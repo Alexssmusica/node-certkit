@@ -191,10 +191,7 @@ export function createFillMissingExtensionFields(deps: ExtensionFillDeps): FillM
       }
       e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.IA5STRING, false, e.comment);
     } else if (e.name === 'subjectKeyIdentifier' && options.cert) {
-      const skiDigest = options.cert.generateSubjectKeyIdentifier() as unknown as {
-        toHex(): string;
-        getBytes(): string;
-      };
+      const skiDigest = options.cert.generateSubjectKeyIdentifier();
       e.subjectKeyIdentifier = skiDigest.toHex();
       e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, skiDigest.getBytes());
     } else if (e.name === 'authorityKeyIdentifier' && options.cert) {
@@ -203,13 +200,7 @@ export function createFillMissingExtensionFields(deps: ExtensionFillDeps): FillM
 
       if (e.keyIdentifier) {
         const keyIdentifier =
-          e.keyIdentifier === true
-            ? (
-                options.cert.generateSubjectKeyIdentifier() as unknown as {
-                  getBytes(): string;
-                }
-              ).getBytes()
-            : e.keyIdentifier;
+          e.keyIdentifier === true ? options.cert.generateSubjectKeyIdentifier().getBytes() : e.keyIdentifier;
         seq.push(asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, false, keyIdentifier));
       }
 
