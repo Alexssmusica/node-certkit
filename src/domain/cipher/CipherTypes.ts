@@ -1,11 +1,17 @@
-import type {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import type {CipherModeOptions} from './cipherModeUtils.js';
+import type { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import type { CipherModeOptions } from './cipherModeUtils.js';
 
 export type CipherApi<TMode> = {
-  createCipher: (algorithm: string, key: unknown) => {
+  createCipher: (
+    algorithm: string,
+    key: unknown
+  ) => {
     start: (...args: unknown[]) => void;
   };
-  createDecipher: (algorithm: string, key: unknown) => {
+  createDecipher: (
+    algorithm: string,
+    key: unknown
+  ) => {
     start: (...args: unknown[]) => void;
   };
   registerAlgorithm: (name: string, factory: () => unknown) => void;

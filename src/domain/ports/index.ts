@@ -10,11 +10,7 @@ export interface RandomSource {
  * Port for probable prime generation.
  */
 export interface PrimeGenerator {
-  generateProbablePrime(
-    bits: number,
-    options: Record<string, unknown>,
-    callback: (err: Error | null, num?: unknown) => void
-  ): void;
+  generateProbablePrime(bits: number, options: Record<string, unknown>, callback: (err: Error | null, num?: unknown) => void): void;
 }
 
 /**
@@ -35,8 +31,12 @@ export interface NativeCryptoProvider {
     digest: string,
     callback: (err: Error | null, derivedKey: Buffer) => void
   ): void;
-  generateKeyPairSync(type: string, options: Record<string, unknown>): {publicKey: string; privateKey: string};
-  generateKeyPair(type: string, options: Record<string, unknown>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
+  generateKeyPairSync(type: string, options: Record<string, unknown>): { publicKey: string; privateKey: string };
+  generateKeyPair(
+    type: string,
+    options: Record<string, unknown>,
+    callback: (err: Error | null, publicKey: string, privateKey: string) => void
+  ): void;
 }
 
 /**

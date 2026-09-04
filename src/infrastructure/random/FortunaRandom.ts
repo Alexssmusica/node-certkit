@@ -1,5 +1,5 @@
-import {Fortuna, type PrngContext, type PrngPlugin} from '../prng/Fortuna.js';
-import {UtilNamespace} from '../../domain/util/UtilNamespace.js';
+import { Fortuna, type PrngContext, type PrngPlugin } from '../prng/Fortuna.js';
+import { UtilNamespace } from '../../domain/util/UtilNamespace.js';
 
 export type AesPrngBackend = {
   _expandKey: (key: unknown, decrypt: boolean) => unknown;
@@ -11,7 +11,7 @@ export type Sha256DigestFactory = {
     messageLength: number;
     start: () => void;
     update: (bytes: string) => void;
-    digest: () => {getBytes: () => string};
+    digest: () => { getBytes: () => string };
   };
 };
 
@@ -26,17 +26,7 @@ const RANDOM_CONTEXT_METHODS = [
   'seedFileSync'
 ] as const;
 
-const RANDOM_CONTEXT_PROPERTIES = [
-  'plugin',
-  'key',
-  'seed',
-  'time',
-  'reseeds',
-  'generated',
-  'keyBytes',
-  'pools',
-  'pool'
-] as const;
+const RANDOM_CONTEXT_PROPERTIES = ['plugin', 'key', 'seed', 'time', 'reseeds', 'generated', 'keyBytes', 'pools', 'pool'] as const;
 
 export type FortunaRandomNamespace = PrngContext & {
   getBytes: (count: number, callback?: (err: Error | null, bytes?: string) => void) => string | void;
@@ -57,22 +47,12 @@ export class FortunaRandom {
     return {
       formatKey(key: string) {
         const tmp = UtilNamespace.createBuffer(key);
-        const words = [
-          tmp.getInt32(),
-          tmp.getInt32(),
-          tmp.getInt32(),
-          tmp.getInt32()
-        ];
+        const words = [tmp.getInt32(), tmp.getInt32(), tmp.getInt32(), tmp.getInt32()];
         return deps.aes._expandKey(words, false);
       },
       formatSeed(seed: string) {
         const tmp = UtilNamespace.createBuffer(seed);
-        return [
-          tmp.getInt32(),
-          tmp.getInt32(),
-          tmp.getInt32(),
-          tmp.getInt32()
-        ];
+        return [tmp.getInt32(), tmp.getInt32(), tmp.getInt32(), tmp.getInt32()];
       },
       cipher(key: unknown, seed: unknown) {
         deps.aes._updateBlock(key, seed, prngAesOutput, false);
@@ -93,10 +73,10 @@ export class FortunaRandom {
 
   static spawnPrng(deps: FortunaRandomDependencies): FortunaRandomNamespace {
     const ctx = Fortuna.create(FortunaRandom.createPlugin(deps)) as FortunaRandomNamespace;
-    ctx.getBytes = function(count: number, callback?: (err: Error | null, bytes?: string) => void) {
+    ctx.getBytes = function (count: number, callback?: (err: Error | null, bytes?: string) => void) {
       return ctx.generate(count, callback);
     };
-    ctx.getBytesSync = function(count: number) {
+    ctx.getBytesSync = function (count: number) {
       const result = ctx.generate(count);
       if (typeof result === 'string') {
         return result;
@@ -106,22 +86,19 @@ export class FortunaRandom {
     return ctx;
   }
 
-  static mergeInto(
-    target: FortunaRandomNamespace | undefined,
-    deps: FortunaRandomDependencies
-  ): FortunaRandomNamespace {
+  static mergeInto(target: FortunaRandomNamespace | undefined, deps: FortunaRandomDependencies): FortunaRandomNamespace {
     const ctx = FortunaRandom.spawnPrng(deps);
 
     if (!target || !target.getBytes) {
       const random = ctx;
-      random.createInstance = function() {
+      random.createInstance = function () {
         return FortunaRandom.spawnPrng(deps);
       };
       return random;
     }
 
-    type MethodKey = typeof RANDOM_CONTEXT_METHODS[number];
-    type PropertyKey = typeof RANDOM_CONTEXT_PROPERTIES[number];
+    type MethodKey = (typeof RANDOM_CONTEXT_METHODS)[number];
+    type PropertyKey = (typeof RANDOM_CONTEXT_PROPERTIES)[number];
 
     for (let i = 0; i < RANDOM_CONTEXT_METHODS.length; ++i) {
       const key = RANDOM_CONTEXT_METHODS[i] as MethodKey;
@@ -132,7 +109,7 @@ export class FortunaRandom {
       (target as Record<string, unknown>)[key] = (ctx as Record<string, unknown>)[key];
     }
 
-    target.createInstance = function() {
+    target.createInstance = function () {
       return FortunaRandom.spawnPrng(deps);
     };
 

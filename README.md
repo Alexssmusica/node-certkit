@@ -33,19 +33,18 @@ handling, and low-level PKI operations.
 
 ## Usage
 
-### ESM
-
-```js
-import certkit from 'node-certkit';
-```
+The package is published as CommonJS (`lib/`). Both import styles are supported:
 
 ### CommonJS
 
-This package is ESM-only. On Node.js >= 24 you can load it with `require()`,
-but you must read the default export explicitly:
-
 ```js
 const certkit = require('node-certkit').default;
+```
+
+### ESM (Node.js consuming CJS)
+
+```js
+import certkit from 'node-certkit';
 ```
 
 ### Self-signed certificate

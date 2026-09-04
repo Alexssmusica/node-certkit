@@ -1,20 +1,19 @@
 import os from 'node:os';
 
 type EstimateCoresCallback = (err: null, cores: number) => void;
-type EstimateCoresOptions = {update?: boolean};
+type EstimateCoresOptions = { update?: boolean };
 
 export class EnvInfo {
   static nextTick = process.nextTick.bind(process);
 
-  static setImmediate: typeof setImmediate | typeof EnvInfo.nextTick =
-    typeof setImmediate === 'function' ? setImmediate : EnvInfo.nextTick;
+  static setImmediate: typeof setImmediate | typeof EnvInfo.nextTick = typeof setImmediate === 'function' ? setImmediate : EnvInfo.nextTick;
 
   static isNodejs = true;
 
   static globalScope = globalThis;
 
   static estimateCores(
-    target: {cores?: number},
+    target: { cores?: number },
     options: EstimateCoresOptions | EstimateCoresCallback,
     callback?: EstimateCoresCallback
   ): void {

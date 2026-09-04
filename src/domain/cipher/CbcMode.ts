@@ -1,11 +1,5 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import {
-  BlockCipherApi,
-  CipherModeOptions,
-  CipherModeStartOptions,
-  PadOptions,
-  transformIV
-} from './cipherModeUtils.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { BlockCipherApi, CipherModeOptions, CipherModeStartOptions, PadOptions, transformIV } from './cipherModeUtils.js';
 
 export class CbcMode {
   name = 'CBC';
@@ -75,8 +69,7 @@ export class CbcMode {
   }
 
   pad(input: ByteStringBuffer, _options?: PadOptions): boolean {
-    const padding = (input.length() === this.blockSize ?
-      this.blockSize : (this.blockSize - input.length()));
+    const padding = input.length() === this.blockSize ? this.blockSize : this.blockSize - input.length();
     input.fillWithByte(padding, padding);
     return true;
   }
@@ -88,7 +81,7 @@ export class CbcMode {
 
     const len = output.length();
     const count = output.at(len - 1);
-    if (count > (this.blockSize << 2)) {
+    if (count > this.blockSize << 2) {
       return false;
     }
 

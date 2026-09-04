@@ -6,4 +6,4 @@ import createCertkit from './createCertkit.js';
 const certkit = createCertkit();
 
 export default certkit;
-export {certkit, createCertkit};
+export { certkit, createCertkit };

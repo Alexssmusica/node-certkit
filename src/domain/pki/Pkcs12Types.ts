@@ -7,5 +7,5 @@ export type Pkcs12Deps = {
   pbe: any;
   random: any;
   pki: any;
-  pkcs7: {asn1: any};
+  pkcs7: { asn1: any };
 };

@@ -1,14 +1,14 @@
-import {Pkcs7Asn1} from '../domain/asn1/Pkcs7Asn1.js';
-import {Mgf} from '../domain/pki/Mgf.js';
-import {Mgf1} from '../domain/pki/Mgf1.js';
-import {OidRegistry} from '../domain/pki/OidRegistry.js';
-import {Pkcs1Codec} from '../domain/pki/Pkcs1Codec.js';
-import {PkiFacade, type PkiFacadeDeps} from '../domain/pki/PkiFacade.js';
-import {PssScheme} from '../domain/pki/PssScheme.js';
-import {RsaService} from '../domain/pki/RsaService.js';
-import {NodeCryptoProvider} from '../infrastructure/crypto/NodeCryptoProvider.js';
-import {NodePrimeGenerator} from '../infrastructure/prime/NodePrimeGenerator.js';
-import type {MutableCertkit, RsaService as RsaServiceType} from './CertkitAssemblyTypes.js';
+import { Pkcs7Asn1 } from '../domain/asn1/Pkcs7Asn1.js';
+import { Mgf } from '../domain/pki/Mgf.js';
+import { Mgf1 } from '../domain/pki/Mgf1.js';
+import { OidRegistry } from '../domain/pki/OidRegistry.js';
+import { Pkcs1Codec } from '../domain/pki/Pkcs1Codec.js';
+import { PkiFacade, type PkiFacadeDeps } from '../domain/pki/PkiFacade.js';
+import { PssScheme } from '../domain/pki/PssScheme.js';
+import { RsaService } from '../domain/pki/RsaService.js';
+import { NodeCryptoProvider } from '../infrastructure/crypto/NodeCryptoProvider.js';
+import { NodePrimeGenerator } from '../infrastructure/prime/NodePrimeGenerator.js';
+import type { MutableCertkit, RsaService as RsaServiceType } from './CertkitAssemblyTypes.js';
 
 function createPkiDeps(certkit: MutableCertkit, includePbe = false): PkiFacadeDeps {
   certkit.pki = certkit.pki || {};
@@ -28,14 +28,14 @@ function createPkiDeps(certkit: MutableCertkit, includePbe = false): PkiFacadeDe
     hmac: certkit.hmac as Record<string, unknown>,
     pss: certkit.pss as Record<string, unknown>,
     mgf: certkit.mgf as Record<string, unknown>,
-    pkcs7: {asn1: certkit.pkcs7!.asn1!},
+    pkcs7: { asn1: certkit.pkcs7!.asn1! },
     pki: certkit.pki
   } as unknown as PkiFacadeDeps;
   if (includePbe) {
     return {
       ...deps,
       pbe: (certkit.pki.pbe as Record<string, unknown>) || certkit.pbe!
-    } as PkiFacadeDeps & {pbe: Record<string, unknown>};
+    } as PkiFacadeDeps & { pbe: Record<string, unknown> };
   }
   return deps;
 }
@@ -116,7 +116,7 @@ export function assembleX509(certkit: MutableCertkit): void {
 }
 
 export function assemblePkcs12(certkit: MutableCertkit): void {
-  const deps = createPkiDeps(certkit, true) as PkiFacadeDeps & {pbe: Record<string, unknown>};
+  const deps = createPkiDeps(certkit, true) as PkiFacadeDeps & { pbe: Record<string, unknown> };
   const p12 = PkiFacade.attachPkcs12(deps);
   certkit.pkcs12 = certkit.pkcs12 || p12;
   Object.assign(certkit.pkcs12, p12);
@@ -124,5 +124,5 @@ export function assemblePkcs12(certkit: MutableCertkit): void {
 
 export function assemblePkiFinalize(certkit: MutableCertkit, rsaService: RsaServiceType): void {
   const deps = createPkiDeps(certkit, false);
-  PkiFacade.finalize({...deps, rsaService});
+  PkiFacade.finalize({ ...deps, rsaService });
 }

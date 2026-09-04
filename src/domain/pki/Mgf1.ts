@@ -1,4 +1,4 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 
 export type MessageDigest = {
   digestLength: number;
@@ -30,7 +30,7 @@ export class Mgf1 {
     };
   }
 
-  static createCertkitNamespace(): {create: typeof Mgf1.create} {
+  static createCertkitNamespace(): { create: typeof Mgf1.create } {
     return {
       create: Mgf1.create.bind(Mgf1)
     };

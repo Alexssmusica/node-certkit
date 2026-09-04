@@ -1,4 +1,4 @@
-import {describe, it, expect, beforeEach} from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import certkit from '../../src/presentation/index.js';
 /*
  * Regression Test for GHSA-554w-wpv2-vw27
@@ -8,17 +8,16 @@ import certkit from '../../src/presentation/index.js';
 const asn1 = certkit.asn1;
 const util = certkit.util;
 
-describe('GHSA-554w-wpv2-vw27 Security Patch', function() {
-
+describe('GHSA-554w-wpv2-vw27 Security Patch', function () {
   function createNestedDer(depth) {
     var obj = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, '\x00');
-    for(var i = 0; i < depth; i++) {
+    for (var i = 0; i < depth; i++) {
       obj = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [obj]);
     }
     return asn1.toDer(obj).getBytes();
   }
 
-  beforeEach(function() {
+  beforeEach(function () {
     // check max depth is the default
     expect(asn1.maxDepth).toBe(256);
   });
@@ -30,8 +29,8 @@ describe('GHSA-554w-wpv2-vw27 Security Patch', function() {
     var buf = util.createBuffer(der);
 
     // assert that it throws the correct error
-    expect(function() {
-      asn1.fromDer(buf, {strict: true});
+    expect(function () {
+      asn1.fromDer(buf, { strict: true });
     }).toThrow(/ASN.1 parsing error: Max depth exceeded./);
   });
 
@@ -42,8 +41,8 @@ describe('GHSA-554w-wpv2-vw27 Security Patch', function() {
     var buf = util.createBuffer(der);
 
     // assert that it throws the correct error
-    expect(function() {
-      asn1.fromDer(buf, {strict: true, maxDepth: 128});
+    expect(function () {
+      asn1.fromDer(buf, { strict: true, maxDepth: 128 });
     }).toThrow(/ASN.1 parsing error: Max depth exceeded./);
   });
 
@@ -57,7 +56,7 @@ describe('GHSA-554w-wpv2-vw27 Security Patch', function() {
     var buf = util.createBuffer(der);
 
     // verify with new default depth
-    asn1.fromDer(buf, {strict: true});
+    asn1.fromDer(buf, { strict: true });
 
     asn1.maxDepth = oldMaxDepth;
   });
@@ -68,7 +67,7 @@ describe('GHSA-554w-wpv2-vw27 Security Patch', function() {
     var der = createNestedDer(SAFE_DEPTH);
     var buf = util.createBuffer(der);
 
-    asn1.fromDer(buf, {strict: true});
+    asn1.fromDer(buf, { strict: true });
   });
 
   it('should still parse valid nested structures within optional limits', (ctx) => {
@@ -77,6 +76,6 @@ describe('GHSA-554w-wpv2-vw27 Security Patch', function() {
     var der = createNestedDer(SAFE_DEPTH);
     var buf = util.createBuffer(der);
 
-    asn1.fromDer(buf, {strict: true, maxDepth: 128});
+    asn1.fromDer(buf, { strict: true, maxDepth: 128 });
   });
 });

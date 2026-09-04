@@ -136,7 +136,7 @@ export class BaseNCodec {
 }
 
 /** Flat namespace matching legacy baseN module.exports shape. */
-export function createBaseNNamespace(): {encode: typeof BaseNCodec.encode; decode: typeof BaseNCodec.decode} {
+export function createBaseNNamespace(): { encode: typeof BaseNCodec.encode; decode: typeof BaseNCodec.decode } {
   return {
     encode: BaseNCodec.encode.bind(BaseNCodec),
     decode: BaseNCodec.decode.bind(BaseNCodec)

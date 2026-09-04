@@ -1,10 +1,5 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import {
-  BlockCipherApi,
-  CipherModeOptions,
-  CipherModeStartOptions,
-  transformIV
-} from './cipherModeUtils.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { BlockCipherApi, CipherModeOptions, CipherModeStartOptions, transformIV } from './cipherModeUtils.js';
 
 export class CfbMode {
   name = 'CFB';
@@ -79,14 +74,12 @@ export class CfbMode {
     }
 
     if (partialBytes > 0 && !finish) {
-      output.putBytes(this._partialOutput.getBytes(
-        partialBytes - this._partialBytes));
+      output.putBytes(this._partialOutput.getBytes(partialBytes - this._partialBytes));
       this._partialBytes = partialBytes;
       return true;
     }
 
-    output.putBytes(this._partialOutput.getBytes(
-      inputLength - this._partialBytes));
+    output.putBytes(this._partialOutput.getBytes(inputLength - this._partialBytes));
     this._partialBytes = 0;
   }
 
@@ -130,14 +123,12 @@ export class CfbMode {
     }
 
     if (partialBytes > 0 && !finish) {
-      output.putBytes(this._partialOutput.getBytes(
-        partialBytes - this._partialBytes));
+      output.putBytes(this._partialOutput.getBytes(partialBytes - this._partialBytes));
       this._partialBytes = partialBytes;
       return true;
     }
 
-    output.putBytes(this._partialOutput.getBytes(
-      inputLength - this._partialBytes));
+    output.putBytes(this._partialOutput.getBytes(inputLength - this._partialBytes));
     this._partialBytes = 0;
   }
 }

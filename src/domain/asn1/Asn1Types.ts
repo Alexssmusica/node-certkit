@@ -1,4 +1,4 @@
-import type {Asn1Codec} from './Asn1Codec.js';
+import type { Asn1Codec } from './Asn1Codec.js';
 
 export type Asn1Object = {
   tagClass: number;

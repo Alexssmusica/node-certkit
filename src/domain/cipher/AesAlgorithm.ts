@@ -1,10 +1,10 @@
 /* Migrated from lib/aes.js */
-import {UtilNamespace} from '../util/UtilNamespace.js';
-import {isArray} from '../util/typeChecks.js';
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import {BlockCipherApi} from './cipherModeUtils.js';
-import {CipherApi, CreateCipherOptions, ModeConstructor} from './CipherTypes.js';
-import {ensureAesTables} from './AesTables.js';
+import { UtilNamespace } from '../util/UtilNamespace.js';
+import { isArray } from '../util/typeChecks.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { BlockCipherApi } from './cipherModeUtils.js';
+import { CipherApi, CreateCipherOptions, ModeConstructor } from './CipherTypes.js';
+import { ensureAesTables } from './AesTables.js';
 
 type InitializeOptions = {
   key: string | number[] | ByteStringBuffer | unknown;
@@ -62,12 +62,7 @@ const Nb = 4;
  *
  * @return the cipher.
  */
-function startEncrypting(
-  key: unknown,
-  iv: unknown,
-  output: ByteStringBuffer | null,
-  mode?: string
-) {
+function startEncrypting(key: unknown, iv: unknown, output: ByteStringBuffer | null, mode?: string) {
   const cipher = _createCipher({
     key: key,
     output: output,
@@ -121,12 +116,7 @@ function createEncryptionCipher(key: unknown, mode?: string) {
  *
  * @return the cipher.
  */
-function startDecrypting(
-  key: unknown,
-  iv: unknown,
-  output: ByteStringBuffer | null,
-  mode?: string
-) {
+function startDecrypting(key: unknown, iv: unknown, output: ByteStringBuffer | null, mode?: string) {
   const cipher = _createCipher({
     key: key,
     output: output,
@@ -195,7 +185,7 @@ function _createCipher(options?: CreateCipherOptions) {
 
   // backwards compatible start API
   const start = cipher.start;
-  cipher.start = function(iv: unknown, startOptions: unknown) {
+  cipher.start = function (iv: unknown, startOptions: unknown) {
     // backwards compatibility: support second arg as output buffer
     let output: ByteStringBuffer | null = null;
     let opts: Record<string, unknown>;
@@ -274,11 +264,9 @@ export class AesAlgorithm {
       it must be 16, 24, or 32 bytes in length. If it is in 32-bit
       integers, it must be 4, 6, or 8 integers long. */
 
-    if (typeof key === 'string' &&
-      (key.length === 16 || key.length === 24 || key.length === 32)) {
+    if (typeof key === 'string' && (key.length === 16 || key.length === 24 || key.length === 32)) {
       key = UtilNamespace.createBuffer(key);
-    } else if (isArray(key) &&
-      (key.length === 16 || key.length === 24 || key.length === 32)) {
+    } else if (isArray(key) && (key.length === 16 || key.length === 24 || key.length === 32)) {
       tmp = key as number[];
       key = UtilNamespace.createBuffer();
       for (let i = 0; i < tmp.length; ++i) {
@@ -304,25 +292,24 @@ export class AesAlgorithm {
       keyWords = key as number[];
     }
 
-    if (!isArray(keyWords) ||
-      !(keyWords.length === 4 || keyWords.length === 6 || keyWords.length === 8)) {
+    if (!isArray(keyWords) || !(keyWords.length === 4 || keyWords.length === 6 || keyWords.length === 8)) {
       throw new Error('Invalid key parameter.');
     }
 
     const modeName = this.mode.name;
-    const encryptOp = (['CFB', 'OFB', 'CTR', 'GCM'].indexOf(modeName!) !== -1);
+    const encryptOp = ['CFB', 'OFB', 'CTR', 'GCM'].indexOf(modeName!) !== -1;
 
     this.#w = AesAlgorithm.#expandKey(keyWords, !!(options.decrypt && !encryptOp));
     this.#init = true;
   }
 
   static #expandKey(key: number[], decrypt: boolean): number[] {
-    const {sbox, rcon, imix} = ensureAesTables();
+    const { sbox, rcon, imix } = ensureAesTables();
 
-  // copy the key's words to initialize the key schedule
-  let w = key.slice(0);
+    // copy the key's words to initialize the key schedule
+    let w = key.slice(0);
 
-  /* RotWord() will rotate a word, moving the first byte to the last
+    /* RotWord() will rotate a word, moving the first byte to the last
     byte's position (shifting the other bytes left).
 
     We will be getting the value of Rcon at i / Nk. 'i' will iterate
@@ -332,33 +319,31 @@ export class AesAlgorithm {
     increase by 1. We use a counter iNk to keep track of this.
    */
 
-  // go through the rounds expanding the key
-  let temp, iNk = 1;
-  const Nk = w.length;
-  const Nr1 = Nk + 6 + 1;
-  let end = Nb * Nr1;
-  for(let i = Nk; i < end; ++i) {
-    temp = w[i - 1];
-    if(i % Nk === 0) {
-      // temp = SubWord(RotWord(temp)) ^ Rcon[i / Nk]
-      temp =
-        sbox[temp >>> 16 & 255] << 24 ^
-        sbox[temp >>> 8 & 255] << 16 ^
-        sbox[temp & 255] << 8 ^
-        sbox[temp >>> 24] ^ (rcon[iNk] << 24);
-      iNk++;
-    } else if(Nk > 6 && (i % Nk === 4)) {
-      // temp = SubWord(temp)
-      temp =
-        sbox[temp >>> 24] << 24 ^
-        sbox[temp >>> 16 & 255] << 16 ^
-        sbox[temp >>> 8 & 255] << 8 ^
-        sbox[temp & 255];
+    // go through the rounds expanding the key
+    let temp,
+      iNk = 1;
+    const Nk = w.length;
+    const Nr1 = Nk + 6 + 1;
+    let end = Nb * Nr1;
+    for (let i = Nk; i < end; ++i) {
+      temp = w[i - 1];
+      if (i % Nk === 0) {
+        // temp = SubWord(RotWord(temp)) ^ Rcon[i / Nk]
+        temp =
+          (sbox[(temp >>> 16) & 255] << 24) ^
+          (sbox[(temp >>> 8) & 255] << 16) ^
+          (sbox[temp & 255] << 8) ^
+          sbox[temp >>> 24] ^
+          (rcon[iNk] << 24);
+        iNk++;
+      } else if (Nk > 6 && i % Nk === 4) {
+        // temp = SubWord(temp)
+        temp = (sbox[temp >>> 24] << 24) ^ (sbox[(temp >>> 16) & 255] << 16) ^ (sbox[(temp >>> 8) & 255] << 8) ^ sbox[temp & 255];
+      }
+      w[i] = w[i - Nk] ^ temp;
     }
-    w[i] = w[i - Nk] ^ temp;
-  }
 
-  /* When we are updating a cipher block we always use the code path for
+    /* When we are updating a cipher block we always use the code path for
      encryption whether we are decrypting or not (to shorten code and
      simplify the generation of look up tables). However, because there
      are differences in the decryption algorithm, other than just swapping
@@ -405,53 +390,44 @@ export class AesAlgorithm {
      done. These changes are done inline with the other substitution
      described above.
   */
-  if(decrypt) {
-    let tmp;
-    const m0 = imix[0];
-    const m1 = imix[1];
-    const m2 = imix[2];
-    const m3 = imix[3];
-    const wnew = w.slice(0);
-    end = w.length;
-    for(let i = 0, wi = end - Nb; i < end; i += Nb, wi -= Nb) {
-      // do not sub the first or last round key (round keys are Nb
-      // words) as no column mixing is performed before they are added,
-      // but do change the key order
-      if(i === 0 || i === (end - Nb)) {
-        wnew[i] = w[wi];
-        wnew[i + 1] = w[wi + 3];
-        wnew[i + 2] = w[wi + 2];
-        wnew[i + 3] = w[wi + 1];
-      } else {
-        // substitute each round key byte because the inverse-mix
-        // table will inverse-substitute it (effectively cancel the
-        // substitution because round key bytes aren't sub'd in
-        // decryption mode) and swap indexes 3 and 1
-        for(let n = 0; n < Nb; ++n) {
-          tmp = w[wi + n];
-          wnew[i + (3&-n)] =
-            m0[sbox[tmp >>> 24]] ^
-            m1[sbox[tmp >>> 16 & 255]] ^
-            m2[sbox[tmp >>> 8 & 255]] ^
-            m3[sbox[tmp & 255]];
+    if (decrypt) {
+      let tmp;
+      const m0 = imix[0];
+      const m1 = imix[1];
+      const m2 = imix[2];
+      const m3 = imix[3];
+      const wnew = w.slice(0);
+      end = w.length;
+      for (let i = 0, wi = end - Nb; i < end; i += Nb, wi -= Nb) {
+        // do not sub the first or last round key (round keys are Nb
+        // words) as no column mixing is performed before they are added,
+        // but do change the key order
+        if (i === 0 || i === end - Nb) {
+          wnew[i] = w[wi];
+          wnew[i + 1] = w[wi + 3];
+          wnew[i + 2] = w[wi + 2];
+          wnew[i + 3] = w[wi + 1];
+        } else {
+          // substitute each round key byte because the inverse-mix
+          // table will inverse-substitute it (effectively cancel the
+          // substitution because round key bytes aren't sub'd in
+          // decryption mode) and swap indexes 3 and 1
+          for (let n = 0; n < Nb; ++n) {
+            tmp = w[wi + n];
+            wnew[i + (3 & -n)] = m0[sbox[tmp >>> 24]] ^ m1[sbox[(tmp >>> 16) & 255]] ^ m2[sbox[(tmp >>> 8) & 255]] ^ m3[sbox[tmp & 255]];
+          }
         }
       }
+      w = wnew;
     }
-    w = wnew;
+
+    return w;
   }
 
-  return w;
-  }
+  static #updateBlock(w: number[], input: number[], output: number[], decrypt: boolean): void {
+    const { sbox, isbox, mix, imix } = ensureAesTables();
 
-  static #updateBlock(
-    w: number[],
-    input: number[],
-    output: number[],
-    decrypt: boolean
-  ): void {
-    const {sbox, isbox, mix, imix} = ensureAesTables();
-
-  /*
+    /*
   Cipher(byte in[4*Nb], byte out[4*Nb], word w[Nb*(Nr+1)])
   begin
     byte state[4,Nb]
@@ -487,38 +463,38 @@ export class AesAlgorithm {
   end
   */
 
-  // Encrypt: AddRoundKey(state, w[0, Nb-1])
-  // Decrypt: AddRoundKey(state, w[Nr*Nb, (Nr+1)*Nb-1])
-  const Nr = w.length / 4 - 1;
-  let m0, m1, m2, m3, sub;
-  if(decrypt) {
-    m0 = imix[0];
-    m1 = imix[1];
-    m2 = imix[2];
-    m3 = imix[3];
-    sub = isbox;
-  } else {
-    m0 = mix[0];
-    m1 = mix[1];
-    m2 = mix[2];
-    m3 = mix[3];
-    sub = sbox;
-  }
-  let a, b, c, d, a2, b2, c2;
-  a = input[0] ^ w[0];
-  b = input[decrypt ? 3 : 1] ^ w[1];
-  c = input[2] ^ w[2];
-  d = input[decrypt ? 1 : 3] ^ w[3];
-  let i = 3;
+    // Encrypt: AddRoundKey(state, w[0, Nb-1])
+    // Decrypt: AddRoundKey(state, w[Nr*Nb, (Nr+1)*Nb-1])
+    const Nr = w.length / 4 - 1;
+    let m0, m1, m2, m3, sub;
+    if (decrypt) {
+      m0 = imix[0];
+      m1 = imix[1];
+      m2 = imix[2];
+      m3 = imix[3];
+      sub = isbox;
+    } else {
+      m0 = mix[0];
+      m1 = mix[1];
+      m2 = mix[2];
+      m3 = mix[3];
+      sub = sbox;
+    }
+    let a, b, c, d, a2, b2, c2;
+    a = input[0] ^ w[0];
+    b = input[decrypt ? 3 : 1] ^ w[1];
+    c = input[2] ^ w[2];
+    d = input[decrypt ? 1 : 3] ^ w[3];
+    let i = 3;
 
-  /* In order to share code we follow the encryption algorithm when both
+    /* In order to share code we follow the encryption algorithm when both
     encrypting and decrypting. To account for the changes required in the
     decryption algorithm, we use different lookup tables when decrypting
     and use a modified key schedule to account for the difference in the
     order of transformations applied when performing rounds. We also get
     key rounds in reverse order (relative to encryption). */
-  for(let round = 1; round < Nr; ++round) {
-    /* As described above, we'll be using table lookups to perform the
+    for (let round = 1; round < Nr; ++round) {
+      /* As described above, we'll be using table lookups to perform the
       column mixing. Each column is stored as a word in the state (the
       array 'input' has one column as a word at each index). In order to
       AesAlgorithm.#mix! a column, we perform these transformations on each row in c,
@@ -633,32 +609,16 @@ export class AesAlgorithm {
       having to do it on each iteration, we swapped the 2nd and 4th rows
       in the decryption key schedule. We also have to do the swap above
       when we first pull in the input and when we set the final output. */
-    a2 =
-      m0[a >>> 24] ^
-      m1[b >>> 16 & 255] ^
-      m2[c >>> 8 & 255] ^
-      m3[d & 255] ^ w[++i];
-    b2 =
-      m0[b >>> 24] ^
-      m1[c >>> 16 & 255] ^
-      m2[d >>> 8 & 255] ^
-      m3[a & 255] ^ w[++i];
-    c2 =
-      m0[c >>> 24] ^
-      m1[d >>> 16 & 255] ^
-      m2[a >>> 8 & 255] ^
-      m3[b & 255] ^ w[++i];
-    d =
-      m0[d >>> 24] ^
-      m1[a >>> 16 & 255] ^
-      m2[b >>> 8 & 255] ^
-      m3[c & 255] ^ w[++i];
-    a = a2;
-    b = b2;
-    c = c2;
-  }
+      a2 = m0[a >>> 24] ^ m1[(b >>> 16) & 255] ^ m2[(c >>> 8) & 255] ^ m3[d & 255] ^ w[++i];
+      b2 = m0[b >>> 24] ^ m1[(c >>> 16) & 255] ^ m2[(d >>> 8) & 255] ^ m3[a & 255] ^ w[++i];
+      c2 = m0[c >>> 24] ^ m1[(d >>> 16) & 255] ^ m2[(a >>> 8) & 255] ^ m3[b & 255] ^ w[++i];
+      d = m0[d >>> 24] ^ m1[(a >>> 16) & 255] ^ m2[(b >>> 8) & 255] ^ m3[c & 255] ^ w[++i];
+      a = a2;
+      b = b2;
+      c = c2;
+    }
 
-  /*
+    /*
     Encrypt:
     SubBytes(state)
     ShiftRows(state)
@@ -669,27 +629,11 @@ export class AesAlgorithm {
     InvSubBytes(state)
     AddRoundKey(state, w[0, Nb-1])
    */
-  // Note: rows are shifted inline
-  output[0] =
-    (sub[a >>> 24] << 24) ^
-    (sub[b >>> 16 & 255] << 16) ^
-    (sub[c >>> 8 & 255] << 8) ^
-    (sub[d & 255]) ^ w[++i];
-  output[decrypt ? 3 : 1] =
-    (sub[b >>> 24] << 24) ^
-    (sub[c >>> 16 & 255] << 16) ^
-    (sub[d >>> 8 & 255] << 8) ^
-    (sub[a & 255]) ^ w[++i];
-  output[2] =
-    (sub[c >>> 24] << 24) ^
-    (sub[d >>> 16 & 255] << 16) ^
-    (sub[a >>> 8 & 255] << 8) ^
-    (sub[b & 255]) ^ w[++i];
-  output[decrypt ? 1 : 3] =
-    (sub[d >>> 24] << 24) ^
-    (sub[a >>> 16 & 255] << 16) ^
-    (sub[b >>> 8 & 255] << 8) ^
-    (sub[c & 255]) ^ w[++i];
+    // Note: rows are shifted inline
+    output[0] = (sub[a >>> 24] << 24) ^ (sub[(b >>> 16) & 255] << 16) ^ (sub[(c >>> 8) & 255] << 8) ^ sub[d & 255] ^ w[++i];
+    output[decrypt ? 3 : 1] = (sub[b >>> 24] << 24) ^ (sub[(c >>> 16) & 255] << 16) ^ (sub[(d >>> 8) & 255] << 8) ^ sub[a & 255] ^ w[++i];
+    output[2] = (sub[c >>> 24] << 24) ^ (sub[(d >>> 16) & 255] << 16) ^ (sub[(a >>> 8) & 255] << 8) ^ sub[b & 255] ^ w[++i];
+    output[decrypt ? 1 : 3] = (sub[d >>> 24] << 24) ^ (sub[(a >>> 16) & 255] << 16) ^ (sub[(b >>> 8) & 255] << 8) ^ sub[c & 255] ^ w[++i];
   }
 
   static registerAlgorithms(cipher: CipherApi<AesAlgorithm['mode']>): void {
@@ -710,12 +654,8 @@ export class AesAlgorithm {
       createDecryptionCipher,
       Algorithm: AesAlgorithm,
       _expandKey: (key: number[], decrypt: boolean) => AesAlgorithm.#expandKey(key, decrypt),
-      _updateBlock: (
-        w: number[],
-        input: number[],
-        output: number[],
-        decrypt: boolean
-      ) => AesAlgorithm.#updateBlock(w, input, output, decrypt)
+      _updateBlock: (w: number[], input: number[], output: number[], decrypt: boolean) =>
+        AesAlgorithm.#updateBlock(w, input, output, decrypt)
     } as AesNamespaceObject;
   }
 }

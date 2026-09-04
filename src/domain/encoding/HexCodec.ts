@@ -14,7 +14,7 @@ export class HexCodec {
     for (; i < hex.length; i += 2) {
       out[j++] = parseInt(hex.substr(i, 2), 16);
     }
-    return output ? (j - off) : out;
+    return output ? j - off : out;
   }
 
   static decodeToString(hex: string): string {

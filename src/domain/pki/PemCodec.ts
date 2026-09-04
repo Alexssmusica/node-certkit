@@ -1,4 +1,4 @@
-import {Base64Codec} from '../encoding/Base64Codec.js';
+import { Base64Codec } from '../encoding/Base64Codec.js';
 
 export type PemProcType = {
   version: string;
@@ -42,11 +42,11 @@ export class PemCodec {
       rval += PemCodec.foldHeader(header);
     }
     if (msg.contentDomain) {
-      header = {name: 'Content-Domain', values: [msg.contentDomain]};
+      header = { name: 'Content-Domain', values: [msg.contentDomain] };
       rval += PemCodec.foldHeader(header);
     }
     if (msg.dekInfo) {
-      header = {name: 'DEK-Info', values: [msg.dekInfo.algorithm]};
+      header = { name: 'DEK-Info', values: [msg.dekInfo.algorithm] };
       if (msg.dekInfo.parameters) {
         header.values.push(msg.dekInfo.parameters);
       }
@@ -116,7 +116,7 @@ export class PemCodec {
 
         match = rHeader.exec(line);
         if (match) {
-          const header: PemHeader = {name: match[1]!, values: []};
+          const header: PemHeader = { name: match[1]!, values: [] };
           const values = match[2]!.split(',');
           for (let vi = 0; vi < values.length; ++vi) {
             header.values.push(PemCodec.ltrim(values[vi]!));
@@ -124,21 +124,18 @@ export class PemCodec {
 
           if (!msg.procType) {
             if (header.name !== 'Proc-Type') {
-              throw new Error('Invalid PEM formatted message. The first ' +
-                'encapsulated header must be "Proc-Type".');
+              throw new Error('Invalid PEM formatted message. The first ' + 'encapsulated header must be "Proc-Type".');
             } else if (header.values.length !== 2) {
-              throw new Error('Invalid PEM formatted message. The "Proc-Type" ' +
-                'header must have two subfields.');
+              throw new Error('Invalid PEM formatted message. The "Proc-Type" ' + 'header must have two subfields.');
             }
-            msg.procType = {version: values[0]!, type: values[1]!};
+            msg.procType = { version: values[0]!, type: values[1]! };
           } else if (!msg.contentDomain && header.name === 'Content-Domain') {
             msg.contentDomain = values[0] || '';
           } else if (!msg.dekInfo && header.name === 'DEK-Info') {
             if (header.values.length === 0) {
-              throw new Error('Invalid PEM formatted message. The "DEK-Info" ' +
-                'header must have at least one subfield.');
+              throw new Error('Invalid PEM formatted message. The "DEK-Info" ' + 'header must have at least one subfield.');
             }
-            msg.dekInfo = {algorithm: values[0]!, parameters: values[1] || null};
+            msg.dekInfo = { algorithm: values[0]!, parameters: values[1] || null };
           } else {
             msg.headers.push(header);
           }
@@ -148,8 +145,7 @@ export class PemCodec {
       }
 
       if ((msg.procType as unknown) === 'ENCRYPTED' && !msg.dekInfo) {
-        throw new Error('Invalid PEM formatted message. The "DEK-Info" ' +
-          'header must be present if "Proc-Type" is "ENCRYPTED".');
+        throw new Error('Invalid PEM formatted message. The "DEK-Info" ' + 'header must be present if "Proc-Type" is "ENCRYPTED".');
       }
     }
 
@@ -160,7 +156,7 @@ export class PemCodec {
     return rval;
   }
 
-  static createCertkitNamespace(): {encode: typeof PemCodec.encode; decode: typeof PemCodec.decode} {
+  static createCertkitNamespace(): { encode: typeof PemCodec.encode; decode: typeof PemCodec.decode } {
     return {
       encode: PemCodec.encode.bind(PemCodec),
       decode: PemCodec.decode.bind(PemCodec)
@@ -188,10 +184,9 @@ export class PemCodec {
           ++candidate;
           rval = rval.substr(0, candidate) + '\r\n ' + rval.substr(candidate);
         } else {
-          rval = rval.substr(0, candidate) +
-            '\r\n' + insert + rval.substr(candidate + 1);
+          rval = rval.substr(0, candidate) + '\r\n' + insert + rval.substr(candidate + 1);
         }
-        length = (i - candidate - 1);
+        length = i - candidate - 1;
         candidate = -1;
         ++i;
       } else if (rval[i] === ' ' || rval[i] === '\t' || rval[i] === ',') {

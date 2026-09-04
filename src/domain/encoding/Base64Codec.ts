@@ -1,4 +1,4 @@
-import {BASE64, BASE64_IDX} from './Base64Tables.js';
+import { BASE64, BASE64_IDX } from './Base64Tables.js';
 
 export class Base64Codec {
   static encodeString(input: string, maxline?: number): string {
@@ -79,11 +79,7 @@ export class Base64Codec {
     return output;
   }
 
-  static decode(
-    input: string,
-    output?: Uint8Array,
-    offset?: number
-  ): Uint8Array | number {
+  static decode(input: string, output?: Uint8Array, offset?: number): Uint8Array | number {
     let out = output;
     if (!out) {
       out = new Uint8Array(Math.ceil(input.length / 4) * 3);
@@ -110,6 +106,6 @@ export class Base64Codec {
       }
     }
 
-    return output ? (j - off) : out.subarray(0, j);
+    return output ? j - off : out.subarray(0, j);
   }
 }

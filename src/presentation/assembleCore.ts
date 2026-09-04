@@ -1,17 +1,17 @@
-import {Asn1Codec} from '../domain/asn1/Asn1Codec.js';
-import {createBaseNNamespace} from '../domain/encoding/BaseNCodec.js';
-import {BigInteger} from '../domain/math/BigInteger.js';
-import {PemCodec} from '../domain/pki/PemCodec.js';
-import {PrimeService} from '../domain/prime/PrimeService.js';
-import {createUtilNamespace} from '../domain/util/UtilNamespace.js';
-import {Fortuna} from '../infrastructure/prng/Fortuna.js';
-import {FortunaRandom, type FortunaRandomDependencies} from '../infrastructure/random/FortunaRandom.js';
-import type {MutableCertkit} from './CertkitAssemblyTypes.js';
+import { Asn1Codec } from '../domain/asn1/Asn1Codec.js';
+import { createBaseNNamespace } from '../domain/encoding/BaseNCodec.js';
+import { BigInteger } from '../domain/math/BigInteger.js';
+import { PemCodec } from '../domain/pki/PemCodec.js';
+import { PrimeService } from '../domain/prime/PrimeService.js';
+import { createUtilNamespace } from '../domain/util/UtilNamespace.js';
+import { Fortuna } from '../infrastructure/prng/Fortuna.js';
+import { FortunaRandom, type FortunaRandomDependencies } from '../infrastructure/random/FortunaRandom.js';
+import type { MutableCertkit } from './CertkitAssemblyTypes.js';
 
 export function assembleUtil(certkit: MutableCertkit): void {
   const baseN = createBaseNNamespace();
   const namespace = createUtilNamespace(baseN);
-  const util = certkit.util = certkit.util || namespace;
+  const util = (certkit.util = certkit.util || namespace);
   Object.assign(util, namespace);
 }
 
@@ -29,7 +29,7 @@ export function assemblePem(certkit: MutableCertkit): void {
 }
 
 export function assembleJsbn(certkit: MutableCertkit): void {
-  certkit.jsbn = certkit.jsbn || {} as NonNullable<MutableCertkit['jsbn']>;
+  certkit.jsbn = certkit.jsbn || ({} as NonNullable<MutableCertkit['jsbn']>);
   certkit.jsbn.BigInteger = BigInteger;
 }
 

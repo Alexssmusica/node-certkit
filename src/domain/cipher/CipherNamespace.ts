@@ -1,5 +1,5 @@
-import {BlockCipher} from './BlockCipher.js';
-import {CipherModes, CipherModesObject} from './CipherModes.js';
+import { BlockCipher } from './BlockCipher.js';
+import { CipherModes, CipherModesObject } from './CipherModes.js';
 
 export type CipherAlgorithmFactory = () => unknown;
 
@@ -35,7 +35,7 @@ export class CipherNamespace {
         }
 
         return new BlockCipher({
-          algorithm: api as BlockCipher extends {algorithm: infer A} ? A : never,
+          algorithm: api as BlockCipher extends { algorithm: infer A } ? A : never,
           key: key as string,
           decrypt: false
         });
@@ -53,7 +53,7 @@ export class CipherNamespace {
         }
 
         return new BlockCipher({
-          algorithm: api as BlockCipher extends {algorithm: infer A} ? A : never,
+          algorithm: api as BlockCipher extends { algorithm: infer A } ? A : never,
           key: key as string,
           decrypt: true
         });

@@ -1,22 +1,15 @@
 /* eslint-disable @typescript-eslint/no-this-alias -- legacy node-forge RSA key POJO pattern */
-import type {Asn1Object, Asn1Validator} from '../asn1/Asn1Types.js';
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import {BigInteger} from '../math/BigInteger.js';
-import type {BigIntegerRandomSource} from '../math/BigInteger.js';
-import type {NativeCryptoProvider, PemKeyCodec, PrimeGenerator} from '../ports/index.js';
-import {UtilNamespace} from '../util/UtilNamespace.js';
-import {createRsaValidators} from './RsaAsn1.js';
-import type {
-  KeyPairGenerationState,
-  RsaKeyMaterial,
-  RsaKeyPair,
-  RsaPrivateKey,
-  RsaPublicKey,
-  RsaServiceDeps
-} from './RsaTypes.js';
-import {Pkcs1Codec} from './Pkcs1Codec.js';
-import {PemCodec} from './PemCodec.js';
-import type {CertkitRsaNamespace} from './CertkitPkiTypes.js';
+import type { Asn1Object, Asn1Validator } from '../asn1/Asn1Types.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { BigInteger } from '../math/BigInteger.js';
+import type { BigIntegerRandomSource } from '../math/BigInteger.js';
+import type { NativeCryptoProvider, PemKeyCodec, PrimeGenerator } from '../ports/index.js';
+import { UtilNamespace } from '../util/UtilNamespace.js';
+import { createRsaValidators } from './RsaAsn1.js';
+import type { KeyPairGenerationState, RsaKeyMaterial, RsaKeyPair, RsaPrivateKey, RsaPublicKey, RsaServiceDeps } from './RsaTypes.js';
+import { Pkcs1Codec } from './Pkcs1Codec.js';
+import { PemCodec } from './PemCodec.js';
+import type { CertkitRsaNamespace } from './CertkitPkiTypes.js';
 
 const GCD_30_DELTA = [6, 4, 2, 4, 2, 4, 6, 2];
 
@@ -41,9 +34,11 @@ function bnToBytes(b: BigInteger): string {
     hex = '00' + hex;
   }
   const bytes = UtilNamespace.hexToBytes(hex);
-  if (bytes.length > 1 &&
+  if (
+    bytes.length > 1 &&
     ((bytes.charCodeAt(0) === 0 && (bytes.charCodeAt(1) & 0x80) === 0) ||
-    (bytes.charCodeAt(0) === 0xFF && (bytes.charCodeAt(1) & 0x80) === 0x80))) {
+      (bytes.charCodeAt(0) === 0xff && (bytes.charCodeAt(1) & 0x80) === 0x80))
+  ) {
     return bytes.substr(1);
   }
   return bytes;
@@ -85,12 +80,7 @@ export class RsaService {
     this.#pemKeyCodec = codec;
   }
 
-  #createAsn1(
-    tagClass: number,
-    type: number,
-    constructed: boolean,
-    value: unknown
-  ): Asn1Object {
+  #createAsn1(tagClass: number, type: number, constructed: boolean, value: unknown): Asn1Object {
     return this.#asn1.create(tagClass, type, constructed, value, null) as Asn1Object;
   }
 
@@ -101,7 +91,8 @@ export class RsaService {
         const msg = PemCodec.decode(pem)[0]!;
         if (msg.type !== 'PRIVATE KEY' && msg.type !== 'RSA PRIVATE KEY') {
           const error = new Error(
-            'Could not convert private key from PEM; PEM header type is not "PRIVATE KEY" or "RSA PRIVATE KEY".') as Error & {
+            'Could not convert private key from PEM; PEM header type is not "PRIVATE KEY" or "RSA PRIVATE KEY".'
+          ) as Error & {
             headerType?: string;
           };
           error.headerType = msg.type;
@@ -117,7 +108,8 @@ export class RsaService {
         const msg = PemCodec.decode(pem)[0]!;
         if (msg.type !== 'PUBLIC KEY' && msg.type !== 'RSA PUBLIC KEY') {
           const error = new Error(
-            'Could not convert public key from PEM; PEM header type is not "PUBLIC KEY" or "RSA PUBLIC KEY".') as Error & {
+            'Could not convert public key from PEM; PEM header type is not "PUBLIC KEY" or "RSA PUBLIC KEY".'
+          ) as Error & {
             headerType?: string;
           };
           error.headerType = msg.type;
@@ -139,25 +131,22 @@ export class RsaService {
     return this.#pemKeyCodec;
   }
 
-  #emsaPkcs1v15encode(md: {algorithm: string; digest(): ByteStringBuffer}): string {
+  #emsaPkcs1v15encode(md: { algorithm: string; digest(): ByteStringBuffer }): string {
     const asn1 = this.#asn1;
     let oid: string;
     if (md.algorithm in this.#oids) {
       oid = this.#oids[md.algorithm]!;
     } else {
-      const error = new Error('Unknown message digest algorithm.') as Error & {algorithm?: string};
+      const error = new Error('Unknown message digest algorithm.') as Error & { algorithm?: string };
       error.algorithm = md.algorithm;
       throw error;
     }
     const oidBytes = asn1.oidToDer(oid).getBytes();
     const digestInfo = this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
     const digestAlgorithm = this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
-    (digestAlgorithm.value as Asn1Object[]).push(
-      this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OID, false, oidBytes));
-    (digestAlgorithm.value as Asn1Object[]).push(
-      this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, ''));
-    const digest = this.#createAsn1(
-      asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, md.digest().getBytes());
+    (digestAlgorithm.value as Asn1Object[]).push(this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OID, false, oidBytes));
+    (digestAlgorithm.value as Asn1Object[]).push(this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, ''));
+    const digest = this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, md.digest().getBytes());
     (digestInfo.value as Asn1Object[]).push(digestAlgorithm);
     (digestInfo.value as Asn1Object[]).push(digest);
     return asn1.toDer(digestInfo).getBytes();
@@ -184,8 +173,7 @@ export class RsaService {
 
     let r: BigInteger;
     do {
-      r = new BigInteger(
-        UtilNamespace.bytesToHex(this.#random.getBytesSync(key.n.bitLength() / 8)), 16);
+      r = new BigInteger(UtilNamespace.bytesToHex(this.#random.getBytesSync(key.n.bitLength() / 8)), 16);
     } while (r.compareTo(key.n) >= 0 || !r.gcd(key.n).equals(BigInteger.ONE));
     x = x.multiply(r.modPow(key.e, key.n)).mod(key.n);
 
@@ -205,7 +193,7 @@ export class RsaService {
     const eb = new ByteStringBuffer();
     const k = Math.ceil(key.n.bitLength() / 8);
 
-    if (m.length > (k - 11)) {
+    if (m.length > k - 11) {
       const error = new Error('Message is too long for PKCS#1 v1.5 padding.') as Error & {
         length?: number;
         max?: number;
@@ -220,7 +208,7 @@ export class RsaService {
 
     let padNum = k - 3 - m.length;
     if (bt === 0x00 || bt === 0x01) {
-      const padByte = (bt === 0x00) ? 0x00 : 0xFF;
+      const padByte = bt === 0x00 ? 0x00 : 0xff;
       for (let i = 0; i < padNum; ++i) {
         eb.putByte(padByte);
       }
@@ -245,21 +233,17 @@ export class RsaService {
     return eb;
   }
 
-  #decodePkcs1v15(
-    em: string,
-    key: RsaKeyMaterial,
-    pub: boolean,
-    ml?: number | false,
-    options?: {_skipPaddingChecks?: boolean}
-  ): string {
+  #decodePkcs1v15(em: string, key: RsaKeyMaterial, pub: boolean, ml?: number | false, options?: { _skipPaddingChecks?: boolean }): string {
     const k = Math.ceil(key.n.bitLength() / 8);
     const eb = new ByteStringBuffer(em);
     const first = eb.getByte();
     const bt = eb.getByte();
-    if (first !== 0x00 ||
+    if (
+      first !== 0x00 ||
       (pub && bt !== 0x00 && bt !== 0x01) ||
       (!pub && bt !== 0x02) ||
-      (pub && bt === 0x00 && typeof ml === 'undefined')) {
+      (pub && bt === 0x00 && typeof ml === 'undefined')
+    ) {
       throw new Error('Encryption block is invalid.');
     }
 
@@ -274,7 +258,7 @@ export class RsaService {
     } else if (bt === 0x01) {
       padNum = 0;
       while (eb.length() > 1) {
-        if (eb.getByte() !== 0xFF) {
+        if (eb.getByte() !== 0xff) {
           --eb.read;
           break;
         }
@@ -298,7 +282,7 @@ export class RsaService {
     }
 
     const zero = eb.getByte();
-    if (zero !== 0x00 || padNum !== (k - 3 - eb.length())) {
+    if (zero !== 0x00 || padNum !== k - 3 - eb.length()) {
       throw new Error('Encryption block is invalid.');
     }
 
@@ -312,7 +296,7 @@ export class RsaService {
     const k = Math.ceil(key.n.bitLength() / 8);
 
     if (bt !== false && bt !== true) {
-      pub = (bt === 0x02);
+      pub = bt === 0x02;
       eb = this.#encodePkcs1v15(m, key, bt as number);
     } else {
       eb = new ByteStringBuffer();
@@ -368,16 +352,16 @@ export class RsaService {
 
   setPublicKey(n: BigInteger, e: BigInteger): RsaPublicKey {
     const service = this;
-    const key = {n, e} as RsaPublicKey;
+    const key = { n, e } as RsaPublicKey;
 
-    key.encrypt = function(data, scheme, schemeOptions) {
+    key.encrypt = function (data, scheme, schemeOptions) {
       if (typeof scheme === 'string') {
         scheme = scheme.toUpperCase();
       } else if (scheme === undefined) {
         scheme = 'RSAES-PKCS1-V1_5';
       }
 
-      let schemeObj: {encode: (m: string, key: RsaKeyMaterial, pub?: boolean) => string};
+      let schemeObj: { encode: (m: string, key: RsaKeyMaterial, pub?: boolean) => string };
       if (scheme === 'RSAES-PKCS1-V1_5') {
         schemeObj = {
           encode(m, k) {
@@ -388,12 +372,21 @@ export class RsaService {
         schemeObj = {
           encode(m, k) {
             return Pkcs1Codec.encodeRsaOaep(
-              k, m, schemeOptions as Parameters<typeof Pkcs1Codec.encodeRsaOaep>[2],
-              undefined, undefined, (count) => service.#random.getBytesSync(count));
+              k,
+              m,
+              schemeOptions as Parameters<typeof Pkcs1Codec.encodeRsaOaep>[2],
+              undefined,
+              undefined,
+              (count) => service.#random.getBytesSync(count)
+            );
           }
         };
       } else if (['RAW', 'NONE', 'NULL', null].indexOf(scheme as string | null) !== -1) {
-        schemeObj = {encode(e) { return e; }};
+        schemeObj = {
+          encode(e) {
+            return e;
+          }
+        };
       } else if (typeof scheme === 'string') {
         throw new Error('Unsupported encryption scheme: "' + scheme + '".');
       } else {
@@ -404,33 +397,34 @@ export class RsaService {
       return service.encrypt(encoded, key, true);
     };
 
-    key.verify = function(digest, signature, scheme, options) {
+    key.verify = function (digest, signature, scheme, options) {
       if (typeof scheme === 'string') {
         scheme = scheme.toUpperCase();
       } else if (scheme === undefined) {
         scheme = 'RSASSA-PKCS1-V1_5';
       }
       if (options === undefined) {
-        options = {_parseAllDigestBytes: true, _skipPaddingChecks: false};
+        options = { _parseAllDigestBytes: true, _skipPaddingChecks: false };
       }
       const verifyOptions = {
-        _parseAllDigestBytes: (options as {_parseAllDigestBytes?: boolean})._parseAllDigestBytes !== false,
-        _skipPaddingChecks: (options as {_skipPaddingChecks?: boolean})._skipPaddingChecks === true
+        _parseAllDigestBytes: (options as { _parseAllDigestBytes?: boolean })._parseAllDigestBytes !== false,
+        _skipPaddingChecks: (options as { _skipPaddingChecks?: boolean })._skipPaddingChecks === true
       };
 
-      let schemeObj: {verify: (digest: string, d: string, modBits?: number) => boolean};
+      let schemeObj: { verify: (digest: string, d: string, modBits?: number) => boolean };
       if (scheme === 'RSASSA-PKCS1-V1_5') {
         schemeObj = {
           verify(dig, d) {
             d = service.#decodePkcs1v15(d, key, true, undefined, verifyOptions);
-            const obj = service.#asn1.fromDer(d, {parseAllBytes: verifyOptions._parseAllDigestBytes});
+            const obj = service.#asn1.fromDer(d, { parseAllBytes: verifyOptions._parseAllDigestBytes });
             const capture: Record<string, string> = {};
             const errors: unknown[] = [];
-            if (!service.#asn1.validate(obj, service.digestInfoValidator, capture, errors) ||
+            if (
+              !service.#asn1.validate(obj, service.digestInfoValidator, capture, errors) ||
               !Array.isArray((obj as Asn1Object).value) ||
-              ((obj as Asn1Object).value as unknown[]).length !== 2) {
-              const error = new Error(
-                'ASN.1 object does not contain a valid RSASSA-PKCS1-v1_5 DigestInfo value.') as Error & {
+              ((obj as Asn1Object).value as unknown[]).length !== 2
+            ) {
+              const error = new Error('ASN.1 object does not contain a valid RSASSA-PKCS1-v1_5 DigestInfo value.') as Error & {
                 errors?: unknown[];
               };
               error.errors = errors;
@@ -438,11 +432,18 @@ export class RsaService {
             }
             const oid = service.#asn1.derToOid(capture.algorithmIdentifier!);
             const oids = service.#oids;
-            if (!(oid === oids.md2 || oid === oids.md5 || oid === oids.sha1 ||
-              oid === oids.sha224 || oid === oids.sha256 || oid === oids.sha384 ||
-              oid === oids.sha512 || oid === oids['sha512-224'] || oid === oids['sha512-256'])) {
-              const error = new Error(
-                'Unknown RSASSA-PKCS1-v1_5 DigestAlgorithm identifier.') as Error & {oid?: string};
+            if (!(
+              oid === oids.md2 ||
+              oid === oids.md5 ||
+              oid === oids.sha1 ||
+              oid === oids.sha224 ||
+              oid === oids.sha256 ||
+              oid === oids.sha384 ||
+              oid === oids.sha512 ||
+              oid === oids['sha512-224'] ||
+              oid === oids['sha512-256']
+            )) {
+              const error = new Error('Unknown RSASSA-PKCS1-v1_5 DigestAlgorithm identifier.') as Error & { oid?: string };
               error.oid = oid;
               throw error;
             }
@@ -450,7 +451,8 @@ export class RsaService {
               if (!('parameters' in capture)) {
                 throw new Error(
                   'ASN.1 object does not contain a valid RSASSA-PKCS1-v1_5 DigestInfo value. ' +
-                  'Missing algorithm identifier NULL parameters.');
+                    'Missing algorithm identifier NULL parameters.'
+                );
               }
             }
             return dig === capture.digest;
@@ -475,13 +477,19 @@ export class RsaService {
   }
 
   setPrivateKey(
-    n: BigInteger, e: BigInteger, d: BigInteger,
-    p: BigInteger, q: BigInteger, dP: BigInteger, dQ: BigInteger, qInv: BigInteger
+    n: BigInteger,
+    e: BigInteger,
+    d: BigInteger,
+    p: BigInteger,
+    q: BigInteger,
+    dP: BigInteger,
+    dQ: BigInteger,
+    qInv: BigInteger
   ): RsaPrivateKey {
     const service = this;
-    const key = {n, e, d, p, q, dP, dQ, qInv} as RsaPrivateKey;
+    const key = { n, e, d, p, q, dP, dQ, qInv } as RsaPrivateKey;
 
-    key.decrypt = function(data, scheme, schemeOptions) {
+    key.decrypt = function (data, scheme, schemeOptions) {
       if (typeof scheme === 'string') {
         scheme = scheme.toUpperCase();
       } else if (scheme === undefined) {
@@ -490,18 +498,21 @@ export class RsaService {
 
       const decrypted = service.decrypt(data, key, false, false);
 
-      let schemeObj: {decode: (d: string, key: RsaKeyMaterial, pub?: boolean) => string};
+      let schemeObj: { decode: (d: string, key: RsaKeyMaterial, pub?: boolean) => string };
       if (scheme === 'RSAES-PKCS1-V1_5') {
-        schemeObj = {decode: (d, k, pub) => service.#decodePkcs1v15(d, k, pub!)};
+        schemeObj = { decode: (d, k, pub) => service.#decodePkcs1v15(d, k, pub!) };
       } else if (scheme === 'RSA-OAEP' || scheme === 'RSAES-OAEP') {
         schemeObj = {
           decode(d, k) {
-            return Pkcs1Codec.decodeRsaOaep(
-              k, d, schemeOptions as Parameters<typeof Pkcs1Codec.decodeRsaOaep>[2]);
+            return Pkcs1Codec.decodeRsaOaep(k, d, schemeOptions as Parameters<typeof Pkcs1Codec.decodeRsaOaep>[2]);
           }
         };
       } else if (['RAW', 'NONE', 'NULL', null].indexOf(scheme as string | null) !== -1) {
-        schemeObj = {decode(d) { return d; }};
+        schemeObj = {
+          decode(d) {
+            return d;
+          }
+        };
       } else {
         throw new Error('Unsupported encryption scheme: "' + scheme + '".');
       }
@@ -509,18 +520,18 @@ export class RsaService {
       return schemeObj.decode(decrypted, key, false);
     };
 
-    key.sign = function(md, scheme) {
+    key.sign = function (md, scheme) {
       let bt: boolean | number = false;
       if (typeof scheme === 'string') {
         scheme = scheme.toUpperCase();
       }
 
-      let schemeObj: {encode: (md: unknown, modBits?: number) => string};
+      let schemeObj: { encode: (md: unknown, modBits?: number) => string };
       if (scheme === undefined || scheme === 'RSASSA-PKCS1-V1_5') {
-        schemeObj = {encode: (m) => service.#emsaPkcs1v15encode(m as {algorithm: string; digest(): ByteStringBuffer})};
+        schemeObj = { encode: (m) => service.#emsaPkcs1v15encode(m as { algorithm: string; digest(): ByteStringBuffer }) };
         bt = 0x01;
       } else if (scheme === 'NONE' || scheme === 'NULL' || scheme === null) {
-        schemeObj = {encode: () => md as string};
+        schemeObj = { encode: () => md as string };
         bt = 0x01;
       } else {
         schemeObj = scheme as typeof schemeObj;
@@ -533,18 +544,14 @@ export class RsaService {
     return key;
   }
 
-  createKeyPairGenerationState(
-    bits?: number | string,
-    e?: number,
-    options?: Record<string, unknown>
-  ): KeyPairGenerationState {
+  createKeyPairGenerationState(bits?: number | string, e?: number, options?: Record<string, unknown>): KeyPairGenerationState {
     if (typeof bits === 'string') {
       bits = parseInt(bits, 10);
     }
     bits = bits || 2048;
 
     options = options || {};
-    const prng = (options.prng as {getBytesSync(count: number): string}) || this.#random;
+    const prng = (options.prng as { getBytesSync(count: number): string }) || this.#random;
     const rng: BigIntegerRandomSource = {
       nextBytes(x: number[]): void {
         const b = prng.getBytesSync(x.length);
@@ -592,32 +599,33 @@ export class RsaService {
     let total = 0;
     while (state.keys === null && (n <= 0 || total < n)) {
       if (state.state === 0) {
-        const bits = (state.p === null) ? state.pBits : state.qBits;
+        const bits = state.p === null ? state.pBits : state.qBits;
         const bits1 = (bits as number) - 1;
 
         if (state.pqState === 0) {
           state.num = new BigInteger(bits as number, state.rng as BigIntegerRandomSource);
           if (!(state.num as BigInteger).testBit(bits1)) {
-            (state.num as BigInteger).bitwiseTo(
-              BigInteger.ONE.shiftLeft(bits1), op_or, state.num as BigInteger);
+            (state.num as BigInteger).bitwiseTo(BigInteger.ONE.shiftLeft(bits1), op_or, state.num as BigInteger);
           }
-          (state.num as BigInteger).dAddOffset(
-            31 - (state.num as BigInteger).mod(THIRTY).byteValue(), 0);
+          (state.num as BigInteger).dAddOffset(31 - (state.num as BigInteger).mod(THIRTY).byteValue(), 0);
           deltaIdx = 0;
           state.pqState = 1;
         } else if (state.pqState === 1) {
           if ((state.num as BigInteger).bitLength() > (bits as number)) {
             state.pqState = 0;
-          } else if ((state.num as BigInteger).isProbablePrime(
-            getMillerRabinTests((state.num as BigInteger).bitLength()))) {
+          } else if ((state.num as BigInteger).isProbablePrime(getMillerRabinTests((state.num as BigInteger).bitLength()))) {
             state.pqState = 2;
           } else {
             (state.num as BigInteger).dAddOffset(GCD_30_DELTA[deltaIdx++ % 8], 0);
           }
         } else if (state.pqState === 2) {
           state.pqState =
-            ((state.num as BigInteger).subtract(BigInteger.ONE).gcd(state.e as BigInteger)
-              .compareTo(BigInteger.ONE) === 0) ? 3 : 0;
+            (state.num as BigInteger)
+              .subtract(BigInteger.ONE)
+              .gcd(state.e as BigInteger)
+              .compareTo(BigInteger.ONE) === 0
+              ? 3
+              : 0;
         } else if (state.pqState === 3) {
           state.pqState = 0;
           if (state.p === null) {
@@ -662,10 +670,15 @@ export class RsaService {
         const d = (state.e as BigInteger).modInverse(state.phi as BigInteger);
         state.keys = {
           privateKey: this.setPrivateKey(
-            state.n as BigInteger, state.e as BigInteger, d,
-            state.p as BigInteger, state.q as BigInteger,
-            d.mod(state.p1 as BigInteger), d.mod(state.q1 as BigInteger),
-            (state.q as BigInteger).modInverse(state.p as BigInteger)),
+            state.n as BigInteger,
+            state.e as BigInteger,
+            d,
+            state.p as BigInteger,
+            state.q as BigInteger,
+            d.mod(state.p1 as BigInteger),
+            d.mod(state.q1 as BigInteger),
+            (state.q as BigInteger).modInverse(state.p as BigInteger)
+          ),
           publicKey: this.setPublicKey(state.n as BigInteger, state.e as BigInteger)
         };
       }
@@ -678,12 +691,7 @@ export class RsaService {
     return state.keys !== null;
   }
 
-  generateKeyPair(
-    bits?: unknown,
-    e?: unknown,
-    options?: unknown,
-    callback?: unknown
-  ): RsaKeyPair | void {
+  generateKeyPair(bits?: unknown, e?: unknown, options?: unknown, callback?: unknown): RsaKeyPair | void {
     if (arguments.length === 1) {
       if (typeof bits === 'object') {
         options = bits;
@@ -731,33 +739,35 @@ export class RsaService {
     const pemCodec = this.#getPemKeyCodec();
     const nativeCrypto = this.#nativeCrypto;
 
-    if (!this.#usePureJavaScript && !opts.prng &&
-      (bits as number) >= 256 && (bits as number) <= 16384 &&
-      (e === 0x10001 || e === 3)) {
+    if (!this.#usePureJavaScript && !opts.prng && (bits as number) >= 256 && (bits as number) <= 16384 && (e === 0x10001 || e === 3)) {
       if (callback) {
         if (nativeCrypto && typeof nativeCrypto.generateKeyPair === 'function') {
-          return nativeCrypto.generateKeyPair('rsa', {
-            modulusLength: bits,
-            publicExponent: e,
-            publicKeyEncoding: {type: 'spki', format: 'pem'},
-            privateKeyEncoding: {type: 'pkcs8', format: 'pem'}
-          }, (err, pub, priv) => {
-            if (err) {
-              return (callback as (err: Error | null) => void)(err);
+          return nativeCrypto.generateKeyPair(
+            'rsa',
+            {
+              modulusLength: bits,
+              publicExponent: e,
+              publicKeyEncoding: { type: 'spki', format: 'pem' },
+              privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
+            },
+            (err, pub, priv) => {
+              if (err) {
+                return (callback as (err: Error | null) => void)(err);
+              }
+              (callback as (err: Error | null, keypair?: RsaKeyPair) => void)(null, {
+                privateKey: pemCodec.privateKeyFromPem(priv) as RsaPrivateKey,
+                publicKey: pemCodec.publicKeyFromPem(pub) as RsaPublicKey
+              });
             }
-            (callback as (err: Error | null, keypair?: RsaKeyPair) => void)(null, {
-              privateKey: pemCodec.privateKeyFromPem(priv) as RsaPrivateKey,
-              publicKey: pemCodec.publicKeyFromPem(pub) as RsaPublicKey
-            });
-          });
+          );
         }
       } else {
         if (nativeCrypto && typeof nativeCrypto.generateKeyPairSync === 'function') {
           const keypair = nativeCrypto.generateKeyPairSync('rsa', {
             modulusLength: bits,
             publicExponent: e,
-            publicKeyEncoding: {type: 'spki', format: 'pem'},
-            privateKeyEncoding: {type: 'pkcs8', format: 'pem'}
+            publicKeyEncoding: { type: 'spki', format: 'pem' },
+            privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
           });
           return {
             privateKey: pemCodec.privateKeyFromPem(keypair.privateKey) as RsaPrivateKey,
@@ -829,15 +839,23 @@ export class RsaService {
         state.q = tmp;
       }
 
-      if ((state.p as BigInteger).subtract(BigInteger.ONE).gcd(state.e as BigInteger)
-        .compareTo(BigInteger.ONE) !== 0) {
+      if (
+        (state.p as BigInteger)
+          .subtract(BigInteger.ONE)
+          .gcd(state.e as BigInteger)
+          .compareTo(BigInteger.ONE) !== 0
+      ) {
         state.p = null;
         generate();
         return;
       }
 
-      if ((state.q as BigInteger).subtract(BigInteger.ONE).gcd(state.e as BigInteger)
-        .compareTo(BigInteger.ONE) !== 0) {
+      if (
+        (state.q as BigInteger)
+          .subtract(BigInteger.ONE)
+          .gcd(state.e as BigInteger)
+          .compareTo(BigInteger.ONE) !== 0
+      ) {
         state.q = null;
         getPrime(state.qBits as number, finish);
         return;
@@ -863,10 +881,15 @@ export class RsaService {
       const d = (state.e as BigInteger).modInverse(state.phi as BigInteger);
       callback(null, {
         privateKey: service.setPrivateKey(
-          state.n as BigInteger, state.e as BigInteger, d,
-          state.p as BigInteger, state.q as BigInteger,
-          d.mod(state.p1 as BigInteger), d.mod(state.q1 as BigInteger),
-          (state.q as BigInteger).modInverse(state.p as BigInteger)),
+          state.n as BigInteger,
+          state.e as BigInteger,
+          d,
+          state.p as BigInteger,
+          state.q as BigInteger,
+          d.mod(state.p1 as BigInteger),
+          d.mod(state.q1 as BigInteger),
+          (state.q as BigInteger).modInverse(state.p as BigInteger)
+        ),
         publicKey: service.setPublicKey(state.n as BigInteger, state.e as BigInteger)
       });
     }
@@ -875,15 +898,12 @@ export class RsaService {
   wrapRsaPrivateKey(rsaKey: Asn1Object): Asn1Object {
     const asn1 = this.#asn1;
     return this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-      this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false,
-        asn1.integerToDer(0).getBytes()),
+      this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, asn1.integerToDer(0).getBytes()),
       this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-        this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OID, false,
-          asn1.oidToDer(this.#oids.rsaEncryption!).getBytes()),
+        this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(this.#oids.rsaEncryption!).getBytes()),
         this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, '')
       ]),
-      this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false,
-        asn1.toDer(rsaKey).getBytes())
+      this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, asn1.toDer(rsaKey).getBytes())
     ]);
   }
 
@@ -898,8 +918,7 @@ export class RsaService {
     capture = {};
     errors = [];
     if (!asn1.validate(obj, this.rsaPrivateKeyValidator, capture, errors)) {
-      const error = new Error(
-        'Cannot read private key. ASN.1 object does not contain an RSAPrivateKey.') as Error & {
+      const error = new Error('Cannot read private key. ASN.1 object does not contain an RSAPrivateKey.') as Error & {
         errors?: unknown[];
       };
       error.errors = errors;
@@ -914,14 +933,14 @@ export class RsaService {
       new BigInteger(new ByteStringBuffer(capture.privateKeyPrime2!).toHex(), 16),
       new BigInteger(new ByteStringBuffer(capture.privateKeyExponent1!).toHex(), 16),
       new BigInteger(new ByteStringBuffer(capture.privateKeyExponent2!).toHex(), 16),
-      new BigInteger(new ByteStringBuffer(capture.privateKeyCoefficient!).toHex(), 16));
+      new BigInteger(new ByteStringBuffer(capture.privateKeyCoefficient!).toHex(), 16)
+    );
   }
 
   privateKeyToRSAPrivateKey(key: RsaPrivateKey): Asn1Object {
     const asn1 = this.#asn1;
     return this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-      this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false,
-        asn1.integerToDer(0).getBytes()),
+      this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, asn1.integerToDer(0).getBytes()),
       this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, bnToBytes(key.n)),
       this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, bnToBytes(key.e)),
       this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, bnToBytes(key.d)),
@@ -940,7 +959,7 @@ export class RsaService {
     if (asn1.validate(obj, this.publicKeyValidator, capture, errors)) {
       const oid = asn1.derToOid(capture.publicKeyOid as string);
       if (oid !== this.#oids.rsaEncryption) {
-        const error = new Error('Cannot read public key. Unknown OID.') as Error & {oid?: string};
+        const error = new Error('Cannot read public key. Unknown OID.') as Error & { oid?: string };
         error.oid = oid;
         throw error;
       }
@@ -949,8 +968,7 @@ export class RsaService {
 
     const cap: Record<string, string> = {};
     if (!asn1.validate(obj, this.rsaPublicKeyValidator, cap, errors)) {
-      const error = new Error(
-        'Cannot read public key. ASN.1 object does not contain an RSAPublicKey.') as Error & {
+      const error = new Error('Cannot read public key. ASN.1 object does not contain an RSAPublicKey.') as Error & {
         errors?: unknown[];
       };
       error.errors = errors;
@@ -959,20 +977,18 @@ export class RsaService {
 
     return this.setPublicKey(
       new BigInteger(new ByteStringBuffer(cap.publicKeyModulus!).toHex(), 16),
-      new BigInteger(new ByteStringBuffer(cap.publicKeyExponent!).toHex(), 16));
+      new BigInteger(new ByteStringBuffer(cap.publicKeyExponent!).toHex(), 16)
+    );
   }
 
   publicKeyToSubjectPublicKeyInfo(key: RsaPublicKey): Asn1Object {
     const asn1 = this.#asn1;
     return this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
       this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-        this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OID, false,
-          asn1.oidToDer(this.#oids.rsaEncryption!).getBytes()),
+        this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(this.#oids.rsaEncryption!).getBytes()),
         this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, '')
       ]),
-      this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false, [
-        this.publicKeyToRSAPublicKey(key)
-      ])
+      this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false, [this.publicKeyToRSAPublicKey(key)])
     ]);
   }
 

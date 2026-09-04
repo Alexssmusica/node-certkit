@@ -1,7 +1,7 @@
-import type {NativeCryptoProvider} from '../ports/index.js';
-import type {DigestAlgorithmRegistry, HmacContext} from '../digest/Hmac.js';
-import {UtilNamespace} from '../util/UtilNamespace.js';
-import {EnvInfo} from '../../infrastructure/env/EnvInfo.js';
+import type { NativeCryptoProvider } from '../ports/index.js';
+import type { DigestAlgorithmRegistry, HmacContext } from '../digest/Hmac.js';
+import { UtilNamespace } from '../util/UtilNamespace.js';
+import { EnvInfo } from '../../infrastructure/env/EnvInfo.js';
 
 export type Pbkdf2Dependencies = {
   usePureJavaScript: boolean;
@@ -14,7 +14,7 @@ type MessageDigest = {
   digestLength: number;
   start: () => void;
   update: (bytes: string) => void;
-  digest: () => {getBytes: () => string};
+  digest: () => { getBytes: () => string };
 };
 
 export type Pbkdf2Callback = (err: Error | null, key?: string) => void;
@@ -51,7 +51,7 @@ export class Pbkdf2 {
         nativeCrypto.available &&
         nativeCrypto.pbkdf2Available &&
         (md === null || typeof md !== 'object') &&
-        (nativeCrypto.pbkdf2SyncSupportsDigest || (!md || md === 'sha1'))
+        (nativeCrypto.pbkdf2SyncSupportsDigest || !md || md === 'sha1')
       ) {
         if (typeof md !== 'string') {
           md = 'sha1';
@@ -67,7 +67,7 @@ export class Pbkdf2 {
         }
         const done: Pbkdf2Callback = callback;
         if (!nativeCrypto.pbkdf2SyncSupportsDigest) {
-          nativeCrypto.pbkdf2!(pBuf.toString('binary'), sBuf.toString('binary'), c, dkLen, digest, function(err, key) {
+          nativeCrypto.pbkdf2!(pBuf.toString('binary'), sBuf.toString('binary'), c, dkLen, digest, function (err, key) {
             if (err) {
               return done(err);
             }
@@ -75,7 +75,7 @@ export class Pbkdf2 {
           });
           return;
         }
-        nativeCrypto.pbkdf2!(pBuf.toString('binary'), sBuf.toString('binary'), c, dkLen, digest, function(err, key) {
+        nativeCrypto.pbkdf2!(pBuf.toString('binary'), sBuf.toString('binary'), c, dkLen, digest, function (err, key) {
           if (err) {
             return done(err);
           }
@@ -97,7 +97,7 @@ export class Pbkdf2 {
       const mdObj = md as MessageDigest;
       const hLen = mdObj.digestLength;
 
-      if (dkLen > (0xFFFFFFFF * hLen)) {
+      if (dkLen > 0xffffffff * hLen) {
         const err = new Error('Derived key is too long.');
         if (callback) {
           return callback(err);
@@ -130,7 +130,7 @@ export class Pbkdf2 {
             u_c1 = u_c;
           }
 
-          dk += (i < len) ? xor : xor.substr(0, r);
+          dk += i < len ? xor : xor.substr(0, r);
         }
         return dk;
       }
@@ -164,7 +164,7 @@ export class Pbkdf2 {
           return;
         }
 
-        dk += (i < len) ? xor : xor.substr(0, r);
+        dk += i < len ? xor : xor.substr(0, r);
 
         ++i;
         outer();

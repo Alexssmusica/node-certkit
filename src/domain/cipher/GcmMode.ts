@@ -1,12 +1,5 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import {
-  BlockCipherApi,
-  CipherModeOptions,
-  CipherModeStartOptions,
-  PadOptions,
-  from64To32,
-  inc32
-} from './cipherModeUtils.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { BlockCipherApi, CipherModeOptions, CipherModeStartOptions, PadOptions, from64To32, inc32 } from './cipherModeUtils.js';
 
 export class GcmMode {
   name = 'GCM';
@@ -39,7 +32,7 @@ export class GcmMode {
     this._outBlock = new Array(this._ints);
     this._partialOutput = new ByteStringBuffer();
     this._partialBytes = 0;
-    this._R = 0xE1000000;
+    this._R = 0xe1000000;
   }
 
   start(options: CipherModeStartOptions): void {
@@ -66,7 +59,7 @@ export class GcmMode {
     this._tag = null;
     if (options.decrypt) {
       this._tag = new ByteStringBuffer(options.tag!).getBytes();
-      if (this._tag.length !== (this._tagLength! / 8)) {
+      if (this._tag.length !== this._tagLength! / 8) {
         throw new Error('Authentication tag does not match tag length.');
       }
     }
@@ -86,12 +79,9 @@ export class GcmMode {
     } else {
       this._j0 = [0, 0, 0, 0];
       while (iv.length() > 0) {
-        this._j0 = this.ghash(
-          this._hashSubkey, this._j0,
-          [iv.getInt32(), iv.getInt32(), iv.getInt32(), iv.getInt32()]);
+        this._j0 = this.ghash(this._hashSubkey, this._j0, [iv.getInt32(), iv.getInt32(), iv.getInt32(), iv.getInt32()]);
       }
-      this._j0 = this.ghash(
-        this._hashSubkey, this._j0, [0, 0].concat(from64To32(ivLength * 8)));
+      this._j0 = this.ghash(this._hashSubkey, this._j0, [0, 0].concat(from64To32(ivLength * 8)));
     }
 
     this._inBlock = this._j0.slice(0);
@@ -125,7 +115,7 @@ export class GcmMode {
 
     if (this._partialBytes === 0 && inputLength >= this.blockSize) {
       for (let i = 0; i < this._ints; ++i) {
-        output.putInt32(this._outBlock[i]! ^= input.getInt32());
+        output.putInt32((this._outBlock[i]! ^= input.getInt32()));
       }
       this._cipherLength! += this.blockSize;
     } else {
@@ -160,14 +150,12 @@ export class GcmMode {
 
       if (partialBytes > 0 && !finish) {
         input.read -= this.blockSize;
-        output.putBytes(this._partialOutput.getBytes(
-          partialBytes - this._partialBytes));
+        output.putBytes(this._partialOutput.getBytes(partialBytes - this._partialBytes));
         this._partialBytes = partialBytes;
         return true;
       }
 
-      output.putBytes(this._partialOutput.getBytes(
-        inputLength - this._partialBytes));
+      output.putBytes(this._partialOutput.getBytes(inputLength - this._partialBytes));
       this._partialBytes = 0;
     }
 
@@ -232,7 +220,7 @@ export class GcmMode {
     const v_i = y.slice(0);
 
     for (let i = 0; i < 128; ++i) {
-      const x_i = x[(i / 32) | 0]! & (1 << (31 - i % 32));
+      const x_i = x[(i / 32) | 0]! & (1 << (31 - (i % 32)));
       if (x_i) {
         z_i[0] ^= v_i[0]!;
         z_i[1] ^= v_i[1]!;
@@ -262,7 +250,7 @@ export class GcmMode {
     const z = [0, 0, 0, 0];
     for (let i = 0; i < 32; ++i) {
       const idx = (i / 8) | 0;
-      const x_i = (x[idx]! >>> ((7 - (i % 8)) * 4)) & 0xF;
+      const x_i = (x[idx]! >>> ((7 - (i % 8)) * 4)) & 0xf;
       const ah = this._m![i]![x_i]!;
       z[0] ^= ah[0]!;
       z[1] ^= ah[1]!;
@@ -288,7 +276,7 @@ export class GcmMode {
     for (let i = 0; i < size; ++i) {
       const tmp = [0, 0, 0, 0];
       const idx = (i / perInt) | 0;
-      const shft = ((perInt - 1 - (i % perInt)) * bits);
+      const shft = (perInt - 1 - (i % perInt)) * bits;
       tmp[idx] = (1 << (bits - 1)) << shft;
       m[i] = this.generateSubHashTable(this.multiply(tmp, h), bits);
     }
@@ -302,7 +290,7 @@ export class GcmMode {
     m[half] = mid.slice(0);
     let i = half >>> 1;
     while (i > 0) {
-      this.pow(m[2 * i]!, m[i] = []);
+      this.pow(m[2 * i]!, (m[i] = []));
       i >>= 1;
     }
     i = 2;
@@ -310,12 +298,7 @@ export class GcmMode {
       for (let j = 1; j < i; ++j) {
         const m_i = m[i]!;
         const m_j = m[j]!;
-        m[i + j] = [
-          m_i[0]! ^ m_j[0]!,
-          m_i[1]! ^ m_j[1]!,
-          m_i[2]! ^ m_j[2]!,
-          m_i[3]! ^ m_j[3]!
-        ];
+        m[i + j] = [m_i[0]! ^ m_j[0]!, m_i[1]! ^ m_j[1]!, m_i[2]! ^ m_j[2]!, m_i[3]! ^ m_j[3]!];
       }
       i *= 2;
     }

@@ -3,14 +3,14 @@
  * Centralizes cross-namespace aliases for the flat certkit object.
  */
 export interface CertkitNamespace {
-  options: {usePureJavaScript: boolean};
-  pkcs5?: {pbkdf2?: unknown};
+  options: { usePureJavaScript: boolean };
+  pkcs5?: { pbkdf2?: unknown };
   pbkdf2?: unknown;
-  pkcs7?: {asn1?: unknown};
+  pkcs7?: { asn1?: unknown };
   pkcs7asn1?: unknown;
-  mgf?: {mgf1?: unknown};
+  mgf?: { mgf1?: unknown };
   mgf1?: unknown;
-  pki?: {oids?: Record<string, string>; rsa?: unknown};
+  pki?: { oids?: Record<string, string>; rsa?: unknown };
   oids?: Record<string, string>;
   rsa?: unknown;
   sha512?: {

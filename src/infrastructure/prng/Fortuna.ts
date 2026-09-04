@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
-import {ByteStringBuffer} from '../../domain/buffer/ByteStringBuffer.js';
-import {EnvInfo} from '../env/EnvInfo.js';
+import { ByteStringBuffer } from '../../domain/buffer/ByteStringBuffer.js';
+import { EnvInfo } from '../env/EnvInfo.js';
 
 export type PrngPlugin = {
   md: {
@@ -16,7 +16,7 @@ type MessageDigestInstance = {
   messageLength: number;
   start: () => void;
   update: (bytes: string) => void;
-  digest: () => {getBytes: () => string};
+  digest: () => { getBytes: () => string };
 };
 
 export type PrngContext = {
@@ -65,7 +65,7 @@ export class Fortuna {
     ctx.pools = pools;
     ctx.pool = 0;
 
-    ctx.generate = function(count: number, callback?: (err: Error | null, bytes?: string) => void) {
+    ctx.generate = function (count: number, callback?: (err: Error | null, bytes?: string) => void) {
       if (!callback) {
         return ctx.generateSync(count);
       }
@@ -79,6 +79,7 @@ export class Fortuna {
       ctx.key = null;
 
       generate();
+      return;
 
       function generate(err?: Error | null): void {
         if (err) {
@@ -94,7 +95,7 @@ export class Fortuna {
         }
 
         if (ctx.key === null) {
-          return EnvInfo.nextTick(function() {
+          return EnvInfo.nextTick(function () {
             _reseed(generate);
           });
         }
@@ -110,7 +111,7 @@ export class Fortuna {
       }
     };
 
-    ctx.generateSync = function(count: number): string {
+    ctx.generateSync = function (count: number): string {
       const cipher = ctx.plugin.cipher;
       const increment = ctx.plugin.increment;
       const formatKey = ctx.plugin.formatKey;
@@ -145,7 +146,7 @@ export class Fortuna {
         return callback();
       }
       const needed = (32 - ctx.pools[0]!.messageLength) << 5;
-      ctx.seedFile(needed, function(err, bytes) {
+      ctx.seedFile(needed, function (err, bytes) {
         if (err) {
           return callback(err);
         }
@@ -165,7 +166,7 @@ export class Fortuna {
     }
 
     function _seed(): void {
-      ctx.reseeds = (ctx.reseeds === 0xffffffff) ? 0 : ctx.reseeds + 1;
+      ctx.reseeds = ctx.reseeds === 0xffffffff ? 0 : ctx.reseeds + 1;
 
       const mdInstance = ctx.plugin.md.create();
       mdInstance.update(ctx.keyBytes);
@@ -193,12 +194,12 @@ export class Fortuna {
     function defaultSeedFile(needed: number): string {
       let getRandomValues: ((arr: Uint32Array) => Uint32Array) | null = null;
       const globalScope = EnvInfo.globalScope as typeof globalThis & {
-        crypto?: {getRandomValues: (arr: Uint32Array) => Uint32Array};
-        msCrypto?: {getRandomValues: (arr: Uint32Array) => Uint32Array};
+        crypto?: { getRandomValues: (arr: Uint32Array) => Uint32Array };
+        msCrypto?: { getRandomValues: (arr: Uint32Array) => Uint32Array };
       };
       const webCrypto = globalScope.crypto || globalScope.msCrypto;
       if (webCrypto && webCrypto.getRandomValues) {
-        getRandomValues = function(arr: Uint32Array) {
+        getRandomValues = function (arr: Uint32Array) {
           return webCrypto.getRandomValues(arr);
         };
       }
@@ -214,11 +215,12 @@ export class Fortuna {
               b.putInt32(entropy[i]!);
             }
           } catch (e) {
-            const QuotaExceededErrorCtor = (globalThis as {
-              QuotaExceededError?: new (...args: unknown[]) => Error;
-            }).QuotaExceededError;
-            if (!(typeof QuotaExceededErrorCtor !== 'undefined' &&
-              e instanceof QuotaExceededErrorCtor)) {
+            const QuotaExceededErrorCtor = (
+              globalThis as {
+                QuotaExceededError?: new (...args: unknown[]) => Error;
+              }
+            ).QuotaExceededError;
+            if (!(typeof QuotaExceededErrorCtor !== 'undefined' && e instanceof QuotaExceededErrorCtor)) {
               throw e;
             }
           }
@@ -229,17 +231,17 @@ export class Fortuna {
         let hi: number, lo: number, next: number;
         let seed = Math.floor(Math.random() * 0x010000);
         while (b.length() < needed) {
-          lo = 16807 * (seed & 0xFFFF);
+          lo = 16807 * (seed & 0xffff);
           hi = 16807 * (seed >> 16);
-          lo += (hi & 0x7FFF) << 16;
+          lo += (hi & 0x7fff) << 16;
           lo += hi >> 15;
-          lo = (lo & 0x7FFFFFFF) + (lo >> 31);
-          seed = lo & 0xFFFFFFFF;
+          lo = (lo & 0x7fffffff) + (lo >> 31);
+          seed = lo & 0xffffffff;
 
           for (let i = 0; i < 3; ++i) {
             next = seed >>> (i << 3);
             next ^= Math.floor(Math.random() * 0x0100);
-            b.putByte(next & 0xFF);
+            b.putByte(next & 0xff);
           }
         }
       }
@@ -248,19 +250,19 @@ export class Fortuna {
     }
 
     if (crypto) {
-      ctx.seedFile = function(needed: number, callback: (err: Error | null, bytes?: string) => void) {
-        crypto.randomBytes(needed, function(err, bytes) {
+      ctx.seedFile = function (needed: number, callback: (err: Error | null, bytes?: string) => void) {
+        crypto.randomBytes(needed, function (err, bytes) {
           if (err) {
             return callback(err);
           }
           callback(null, bytes.toString('binary'));
         });
       };
-      ctx.seedFileSync = function(needed: number): string {
+      ctx.seedFileSync = function (needed: number): string {
         return crypto.randomBytes(needed).toString('binary');
       };
     } else {
-      ctx.seedFile = function(needed: number, callback: (err: Error | null, bytes?: string) => void) {
+      ctx.seedFile = function (needed: number, callback: (err: Error | null, bytes?: string) => void) {
         try {
           callback(null, defaultSeedFile(needed));
         } catch (e) {
@@ -270,18 +272,18 @@ export class Fortuna {
       ctx.seedFileSync = defaultSeedFile;
     }
 
-    ctx.collect = function(bytes: string) {
+    ctx.collect = function (bytes: string) {
       const count = bytes.length;
       for (let i = 0; i < count; ++i) {
         ctx.pools[ctx.pool]!.update(bytes.substr(i, 1));
-        ctx.pool = (ctx.pool === 31) ? 0 : ctx.pool + 1;
+        ctx.pool = ctx.pool === 31 ? 0 : ctx.pool + 1;
       }
     };
 
-    ctx.collectInt = function(i: number, n: number) {
+    ctx.collectInt = function (i: number, n: number) {
       let bytes = '';
       for (let x = 0; x < n; x += 8) {
-        bytes += String.fromCharCode((i >> x) & 0xFF);
+        bytes += String.fromCharCode((i >> x) & 0xff);
       }
       ctx.collect(bytes);
     };
@@ -289,7 +291,7 @@ export class Fortuna {
     return ctx;
   }
 
-  static createCertkitNamespace(): {create: typeof Fortuna.create} {
+  static createCertkitNamespace(): { create: typeof Fortuna.create } {
     return {
       create: Fortuna.create.bind(Fortuna)
     };

@@ -1,10 +1,5 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import {
-  BlockCipherApi,
-  CipherModeOptions,
-  CipherModeStartOptions,
-  transformIV
-} from './cipherModeUtils.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { BlockCipherApi, CipherModeOptions, CipherModeStartOptions, transformIV } from './cipherModeUtils.js';
 
 export class OfbMode {
   name = 'OFB';
@@ -76,22 +71,16 @@ export class OfbMode {
     }
 
     if (partialBytes > 0 && !finish) {
-      output.putBytes(this._partialOutput.getBytes(
-        partialBytes - this._partialBytes));
+      output.putBytes(this._partialOutput.getBytes(partialBytes - this._partialBytes));
       this._partialBytes = partialBytes;
       return true;
     }
 
-    output.putBytes(this._partialOutput.getBytes(
-      inputLength - this._partialBytes));
+    output.putBytes(this._partialOutput.getBytes(inputLength - this._partialBytes));
     this._partialBytes = 0;
   }
 
-  decrypt(
-    input: ByteStringBuffer,
-    output: ByteStringBuffer,
-    finish: boolean
-  ): boolean | void {
+  decrypt(input: ByteStringBuffer, output: ByteStringBuffer, finish: boolean): boolean | void {
     return this.encrypt(input, output, finish);
   }
 }

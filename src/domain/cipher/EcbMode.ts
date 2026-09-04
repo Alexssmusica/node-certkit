@@ -1,10 +1,5 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import {
-  BlockCipherApi,
-  CipherModeOptions,
-  CipherModeStartOptions,
-  PadOptions
-} from './cipherModeUtils.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { BlockCipherApi, CipherModeOptions, CipherModeStartOptions, PadOptions } from './cipherModeUtils.js';
 
 export class EcbMode {
   name = 'ECB';
@@ -58,8 +53,7 @@ export class EcbMode {
   }
 
   pad(input: ByteStringBuffer, _options?: PadOptions): boolean {
-    const padding = (input.length() === this.blockSize ?
-      this.blockSize : (this.blockSize - input.length()));
+    const padding = input.length() === this.blockSize ? this.blockSize : this.blockSize - input.length();
     input.fillWithByte(padding, padding);
     return true;
   }
@@ -71,7 +65,7 @@ export class EcbMode {
 
     const len = output.length();
     const count = output.at(len - 1);
-    if (count > (this.blockSize << 2)) {
+    if (count > this.blockSize << 2) {
       return false;
     }
 

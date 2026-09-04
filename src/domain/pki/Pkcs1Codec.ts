@@ -1,16 +1,16 @@
-import {Sha1} from '../digest/Sha1.js';
-import {UtilNamespace} from '../util/UtilNamespace.js';
-import type {MessageDigest} from './Mgf1.js';
+import { Sha1 } from '../digest/Sha1.js';
+import { UtilNamespace } from '../util/UtilNamespace.js';
+import type { MessageDigest } from './Mgf1.js';
 
 export type RsaOaepKey = {
-  n: {bitLength(): number};
+  n: { bitLength(): number };
 };
 
 export type RsaOaepOptions = {
   label?: string;
   seed?: string;
   md?: MessageDigest;
-  mgf1?: {md?: MessageDigest};
+  mgf1?: { md?: MessageDigest };
 };
 
 function rsaMgf1(seed: string, maskLength: number, hash?: MessageDigest): string {
@@ -20,8 +20,7 @@ function rsaMgf1(seed: string, maskLength: number, hash?: MessageDigest): string
   let t = '';
   const count = Math.ceil(maskLength / hash.digestLength);
   for (let i = 0; i < count; ++i) {
-    const c = String.fromCharCode(
-      (i >> 24) & 0xFF, (i >> 16) & 0xFF, (i >> 8) & 0xFF, i & 0xFF);
+    const c = String.fromCharCode((i >> 24) & 0xff, (i >> 16) & 0xff, (i >> 8) & 0xff, i & 0xff);
     hash.start();
     hash.update(seed + c);
     t += hash.digest().getBytes();
@@ -94,8 +93,7 @@ export class Pkcs1Codec {
       }
       seed = getRandomBytes(md.digestLength);
     } else if (seed.length !== md.digestLength) {
-      const error = new Error(
-        'Invalid RSAES-OAEP seed. The seed length must match the digest length.') as Error & {
+      const error = new Error('Invalid RSAES-OAEP seed. The seed length must match the digest length.') as Error & {
         seedLength?: number;
         digestLength?: number;
       };
@@ -112,12 +110,7 @@ export class Pkcs1Codec {
     return '\x00' + maskedSeed + maskedDB;
   }
 
-  static decodeRsaOaep(
-    key: RsaOaepKey,
-    em: string,
-    options?: RsaOaepOptions | string,
-    mdArg?: MessageDigest
-  ): string {
+  static decodeRsaOaep(key: RsaOaepKey, em: string, options?: RsaOaepOptions | string, mdArg?: MessageDigest): string {
     let label: string | undefined;
     let md: MessageDigest | undefined;
     let mgf1Md: MessageDigest | undefined;
@@ -175,10 +168,10 @@ export class Pkcs1Codec {
     const db = UtilNamespace.xorBytes(maskedDB, dbMask, maskedDB.length);
     const lHashPrime = db.substring(0, md.digestLength);
 
-    let error: number = (y !== '\x00') ? 1 : 0;
+    let error: number = y !== '\x00' ? 1 : 0;
 
     for (let i = 0; i < md.digestLength; ++i) {
-      error |= (lHash.charAt(i) !== lHashPrime.charAt(i)) ? 1 : 0;
+      error |= lHash.charAt(i) !== lHashPrime.charAt(i) ? 1 : 0;
     }
 
     let in_ps = 1;
@@ -187,7 +180,7 @@ export class Pkcs1Codec {
       const code = db.charCodeAt(j);
       const is_0 = (code & 0x1) ^ 0x1;
       const error_mask = in_ps ? 0xfffe : 0x0000;
-      error |= (code & error_mask) ? 1 : 0;
+      error |= code & error_mask ? 1 : 0;
       in_ps = in_ps & is_0;
       index += in_ps;
     }
@@ -200,16 +193,8 @@ export class Pkcs1Codec {
   }
 
   static createCertkitNamespace(getRandomBytes: (count: number) => string): {
-    encode_rsa_oaep: (
-      key: RsaOaepKey,
-      message: string,
-      options?: RsaOaepOptions | string
-    ) => string;
-    decode_rsa_oaep: (
-      key: RsaOaepKey,
-      em: string,
-      options?: RsaOaepOptions | string
-    ) => string;
+    encode_rsa_oaep: (key: RsaOaepKey, message: string, options?: RsaOaepOptions | string) => string;
+    decode_rsa_oaep: (key: RsaOaepKey, em: string, options?: RsaOaepOptions | string) => string;
   } {
     return {
       encode_rsa_oaep(key, message, options) {

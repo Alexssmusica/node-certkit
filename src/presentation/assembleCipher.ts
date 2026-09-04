@@ -1,9 +1,9 @@
-import {AesAlgorithm} from '../domain/cipher/AesAlgorithm.js';
-import {CipherNamespace} from '../domain/cipher/CipherNamespace.js';
-import {CipherModes} from '../domain/cipher/CipherModes.js';
-import {DesAlgorithm} from '../domain/cipher/DesAlgorithm.js';
-import {Rc2Cipher} from '../domain/cipher/Rc2Cipher.js';
-import type {MutableCertkit} from './CertkitAssemblyTypes.js';
+import { AesAlgorithm } from '../domain/cipher/AesAlgorithm.js';
+import { CipherNamespace } from '../domain/cipher/CipherNamespace.js';
+import { CipherModes } from '../domain/cipher/CipherModes.js';
+import { DesAlgorithm } from '../domain/cipher/DesAlgorithm.js';
+import { Rc2Cipher } from '../domain/cipher/Rc2Cipher.js';
+import type { MutableCertkit } from './CertkitAssemblyTypes.js';
 
 export function assembleCipher(certkit: MutableCertkit): void {
   const cipher = CipherNamespace.createCertkitNamespace();

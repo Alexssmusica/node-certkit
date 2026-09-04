@@ -3,8 +3,10 @@
   "compilerOptions": {
     "rootDir": ".",
     "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "allowJs": false,
-    "checkJs": false
+    "incremental": false
   },
   "include": ["tests/**/*.ts", "src/**/*.ts"]
 }

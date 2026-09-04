@@ -1,9 +1,9 @@
-import {EcbMode} from './EcbMode.js';
-import {CbcMode} from './CbcMode.js';
-import {CfbMode} from './CfbMode.js';
-import {OfbMode} from './OfbMode.js';
-import {CtrMode} from './CtrMode.js';
-import {GcmMode} from './GcmMode.js';
+import { EcbMode } from './EcbMode.js';
+import { CbcMode } from './CbcMode.js';
+import { CfbMode } from './CfbMode.js';
+import { OfbMode } from './OfbMode.js';
+import { CtrMode } from './CtrMode.js';
+import { GcmMode } from './GcmMode.js';
 
 export type CipherModesObject = {
   ecb: typeof EcbMode;

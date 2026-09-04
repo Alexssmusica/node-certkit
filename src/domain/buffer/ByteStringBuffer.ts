@@ -1,16 +1,10 @@
-import {checkBitsParam} from './checkBitsParam.js';
-import {isArrayBuffer, isArrayBufferView} from '../util/typeChecks.js';
-import {decodeUtf8, encodeUtf8} from '../encoding/Utf8Codec.js';
+import { checkBitsParam } from './checkBitsParam.js';
+import { isArrayBuffer, isArrayBufferView } from '../util/typeChecks.js';
+import { decodeUtf8, encodeUtf8 } from '../encoding/Utf8Codec.js';
 
 const MAX_CONSTRUCTED_STRING_LENGTH = 4096;
 
-export type ByteStringBufferInput =
-  | string
-  | ArrayBuffer
-  | ArrayBufferView
-  | Buffer
-  | ByteStringBuffer
-  | {data: string; read: number};
+export type ByteStringBufferInput = string | ArrayBuffer | ArrayBufferView | Buffer | ByteStringBuffer | { data: string; read: number };
 
 /**
  * Constructor for a binary string backed byte buffer.
@@ -42,8 +36,7 @@ export class ByteStringBuffer {
       }
     } else if (
       b instanceof ByteStringBuffer ||
-      (typeof b === 'object' && b !== null && typeof b.data === 'string' &&
-        typeof b.read === 'number')
+      (typeof b === 'object' && b !== null && typeof b.data === 'string' && typeof b.read === 'number')
     ) {
       this.data = b.data;
       this.read = b.read;
@@ -98,45 +91,37 @@ export class ByteStringBuffer {
   }
 
   putInt16(i: number): this {
-    return this.putBytes(
-      String.fromCharCode(i >> 8 & 0xFF) +
-      String.fromCharCode(i & 0xFF));
+    return this.putBytes(String.fromCharCode((i >> 8) & 0xff) + String.fromCharCode(i & 0xff));
   }
 
   putInt24(i: number): this {
-    return this.putBytes(
-      String.fromCharCode(i >> 16 & 0xFF) +
-      String.fromCharCode(i >> 8 & 0xFF) +
-      String.fromCharCode(i & 0xFF));
+    return this.putBytes(String.fromCharCode((i >> 16) & 0xff) + String.fromCharCode((i >> 8) & 0xff) + String.fromCharCode(i & 0xff));
   }
 
   putInt32(i: number): this {
     return this.putBytes(
-      String.fromCharCode(i >> 24 & 0xFF) +
-      String.fromCharCode(i >> 16 & 0xFF) +
-      String.fromCharCode(i >> 8 & 0xFF) +
-      String.fromCharCode(i & 0xFF));
+      String.fromCharCode((i >> 24) & 0xff) +
+        String.fromCharCode((i >> 16) & 0xff) +
+        String.fromCharCode((i >> 8) & 0xff) +
+        String.fromCharCode(i & 0xff)
+    );
   }
 
   putInt16Le(i: number): this {
-    return this.putBytes(
-      String.fromCharCode(i & 0xFF) +
-      String.fromCharCode(i >> 8 & 0xFF));
+    return this.putBytes(String.fromCharCode(i & 0xff) + String.fromCharCode((i >> 8) & 0xff));
   }
 
   putInt24Le(i: number): this {
-    return this.putBytes(
-      String.fromCharCode(i & 0xFF) +
-      String.fromCharCode(i >> 8 & 0xFF) +
-      String.fromCharCode(i >> 16 & 0xFF));
+    return this.putBytes(String.fromCharCode(i & 0xff) + String.fromCharCode((i >> 8) & 0xff) + String.fromCharCode((i >> 16) & 0xff));
   }
 
   putInt32Le(i: number): this {
     return this.putBytes(
-      String.fromCharCode(i & 0xFF) +
-      String.fromCharCode(i >> 8 & 0xFF) +
-      String.fromCharCode(i >> 16 & 0xFF) +
-      String.fromCharCode(i >> 24 & 0xFF));
+      String.fromCharCode(i & 0xff) +
+        String.fromCharCode((i >> 8) & 0xff) +
+        String.fromCharCode((i >> 16) & 0xff) +
+        String.fromCharCode((i >> 24) & 0xff)
+    );
   }
 
   putInt(i: number, n: number): this {
@@ -144,7 +129,7 @@ export class ByteStringBuffer {
     let bytes = '';
     do {
       n -= 8;
-      bytes += String.fromCharCode((i >> n) & 0xFF);
+      bytes += String.fromCharCode((i >> n) & 0xff);
     } while (n > 0);
     return this.putBytes(bytes);
   }
@@ -156,7 +141,7 @@ export class ByteStringBuffer {
     return this.putInt(i, n);
   }
 
-  putBuffer(buffer: {getBytes(count?: number): string}): this {
+  putBuffer(buffer: { getBytes(count?: number): string }): this {
     return this.putBytes(buffer.getBytes());
   }
 
@@ -165,55 +150,45 @@ export class ByteStringBuffer {
   }
 
   getInt16(): number {
-    const rval = (
-      this.data.charCodeAt(this.read) << 8 ^
-      this.data.charCodeAt(this.read + 1));
+    const rval = (this.data.charCodeAt(this.read) << 8) ^ this.data.charCodeAt(this.read + 1);
     this.read += 2;
     return rval;
   }
 
   getInt24(): number {
-    const rval = (
-      this.data.charCodeAt(this.read) << 16 ^
-      this.data.charCodeAt(this.read + 1) << 8 ^
-      this.data.charCodeAt(this.read + 2));
+    const rval = (this.data.charCodeAt(this.read) << 16) ^ (this.data.charCodeAt(this.read + 1) << 8) ^ this.data.charCodeAt(this.read + 2);
     this.read += 3;
     return rval;
   }
 
   getInt32(): number {
-    const rval = (
-      this.data.charCodeAt(this.read) << 24 ^
-      this.data.charCodeAt(this.read + 1) << 16 ^
-      this.data.charCodeAt(this.read + 2) << 8 ^
-      this.data.charCodeAt(this.read + 3));
+    const rval =
+      (this.data.charCodeAt(this.read) << 24) ^
+      (this.data.charCodeAt(this.read + 1) << 16) ^
+      (this.data.charCodeAt(this.read + 2) << 8) ^
+      this.data.charCodeAt(this.read + 3);
     this.read += 4;
     return rval;
   }
 
   getInt16Le(): number {
-    const rval = (
-      this.data.charCodeAt(this.read) ^
-      this.data.charCodeAt(this.read + 1) << 8);
+    const rval = this.data.charCodeAt(this.read) ^ (this.data.charCodeAt(this.read + 1) << 8);
     this.read += 2;
     return rval;
   }
 
   getInt24Le(): number {
-    const rval = (
-      this.data.charCodeAt(this.read) ^
-      this.data.charCodeAt(this.read + 1) << 8 ^
-      this.data.charCodeAt(this.read + 2) << 16);
+    const rval = this.data.charCodeAt(this.read) ^ (this.data.charCodeAt(this.read + 1) << 8) ^ (this.data.charCodeAt(this.read + 2) << 16);
     this.read += 3;
     return rval;
   }
 
   getInt32Le(): number {
-    const rval = (
+    const rval =
       this.data.charCodeAt(this.read) ^
-      this.data.charCodeAt(this.read + 1) << 8 ^
-      this.data.charCodeAt(this.read + 2) << 16 ^
-      this.data.charCodeAt(this.read + 3) << 24);
+      (this.data.charCodeAt(this.read + 1) << 8) ^
+      (this.data.charCodeAt(this.read + 2) << 16) ^
+      (this.data.charCodeAt(this.read + 3) << 24);
     this.read += 4;
     return rval;
   }
@@ -246,16 +221,14 @@ export class ByteStringBuffer {
     } else if (count === 0) {
       rval = '';
     } else {
-      rval = (this.read === 0) ? this.data : this.data.slice(this.read);
+      rval = this.read === 0 ? this.data : this.data.slice(this.read);
       this.clear();
     }
     return rval;
   }
 
   bytes(count?: number): string {
-    return (typeof count === 'undefined' ?
-      this.data.slice(this.read) :
-      this.data.slice(this.read, this.read + count));
+    return typeof count === 'undefined' ? this.data.slice(this.read) : this.data.slice(this.read, this.read + count);
   }
 
   at(i: number): number {
@@ -263,9 +236,7 @@ export class ByteStringBuffer {
   }
 
   setAt(i: number, b: number): this {
-    this.data = this.data.substr(0, this.read + i) +
-      String.fromCharCode(b) +
-      this.data.substr(this.read + i + 1);
+    this.data = this.data.substr(0, this.read + i) + String.fromCharCode(b) + this.data.substr(this.read + i + 1);
     return this;
   }
 

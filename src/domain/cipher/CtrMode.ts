@@ -1,11 +1,5 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import {
-  BlockCipherApi,
-  CipherModeOptions,
-  CipherModeStartOptions,
-  inc32,
-  transformIV
-} from './cipherModeUtils.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { BlockCipherApi, CipherModeOptions, CipherModeStartOptions, inc32, transformIV } from './cipherModeUtils.js';
 
 export class CtrMode {
   name = 'CTR';
@@ -70,25 +64,19 @@ export class CtrMode {
       }
 
       if (partialBytes > 0 && !finish) {
-        output.putBytes(this._partialOutput.getBytes(
-          partialBytes - this._partialBytes));
+        output.putBytes(this._partialOutput.getBytes(partialBytes - this._partialBytes));
         this._partialBytes = partialBytes;
         return true;
       }
 
-      output.putBytes(this._partialOutput.getBytes(
-        inputLength - this._partialBytes));
+      output.putBytes(this._partialOutput.getBytes(inputLength - this._partialBytes));
       this._partialBytes = 0;
     }
 
     inc32(this._inBlock!);
   }
 
-  decrypt(
-    input: ByteStringBuffer,
-    output: ByteStringBuffer,
-    finish: boolean
-  ): boolean | void {
+  decrypt(input: ByteStringBuffer, output: ByteStringBuffer, finish: boolean): boolean | void {
     return this.encrypt(input, output, finish);
   }
 }

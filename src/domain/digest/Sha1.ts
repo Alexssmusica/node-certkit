@@ -1,6 +1,6 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import {encodeUtf8} from '../encoding/Utf8Codec.js';
-import {UtilNamespace} from '../util/UtilNamespace.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { encodeUtf8 } from '../encoding/Utf8Codec.js';
+import { UtilNamespace } from '../util/UtilNamespace.js';
 
 interface Sha1State {
   h0: number;
@@ -72,10 +72,10 @@ export class Sha1 {
     this.#input = new ByteStringBuffer();
     this.#state = {
       h0: 0x67452301,
-      h1: 0xEFCDAB89,
-      h2: 0x98BADCFE,
+      h1: 0xefcdab89,
+      h2: 0x98badcfe,
       h3: 0x10325476,
-      h4: 0xC3D2E1F0
+      h4: 0xc3d2e1f0
     };
     return md;
   }
@@ -93,7 +93,7 @@ export class Sha1 {
       fullMessageLength[i] += lenParts[1]!;
       lenParts[1] = lenParts[0]! + ((fullMessageLength[i]! / 0x100000000) >>> 0);
       fullMessageLength[i] = fullMessageLength[i]! >>> 0;
-      lenParts[0] = ((lenParts[1]! / 0x100000000) >>> 0);
+      lenParts[0] = (lenParts[1]! / 0x100000000) >>> 0;
     }
 
     this.#input.putBytes(msg);
@@ -110,9 +110,7 @@ export class Sha1 {
     const finalBlock = new ByteStringBuffer();
     finalBlock.putBytes(this.#input.bytes());
 
-    const remaining =
-      md.fullMessageLength![md.fullMessageLength!.length - 1]! +
-      md.messageLengthSize;
+    const remaining = md.fullMessageLength![md.fullMessageLength!.length - 1]! + md.messageLengthSize;
 
     const overflow = remaining & (md.blockLength - 1);
     finalBlock.putBytes(Sha1.#padding!.substr(0, md.blockLength - overflow));
@@ -167,7 +165,7 @@ export class Sha1 {
         t = bytes.getInt32();
         w[i] = t;
         f = d ^ (b & (c ^ d));
-        t = ((a << 5) | (a >>> 27)) + f + e + 0x5A827999 + t;
+        t = ((a << 5) | (a >>> 27)) + f + e + 0x5a827999 + t;
         e = d;
         d = c;
         c = ((b << 30) | (b >>> 2)) >>> 0;
@@ -175,11 +173,11 @@ export class Sha1 {
         a = t;
       }
       for (; i < 20; ++i) {
-        t = (w[i - 3]! ^ w[i - 8]! ^ w[i - 14]! ^ w[i - 16]!);
+        t = w[i - 3]! ^ w[i - 8]! ^ w[i - 14]! ^ w[i - 16]!;
         t = (t << 1) | (t >>> 31);
         w[i] = t;
         f = d ^ (b & (c ^ d));
-        t = ((a << 5) | (a >>> 27)) + f + e + 0x5A827999 + t;
+        t = ((a << 5) | (a >>> 27)) + f + e + 0x5a827999 + t;
         e = d;
         d = c;
         c = ((b << 30) | (b >>> 2)) >>> 0;
@@ -187,11 +185,11 @@ export class Sha1 {
         a = t;
       }
       for (; i < 32; ++i) {
-        t = (w[i - 3]! ^ w[i - 8]! ^ w[i - 14]! ^ w[i - 16]!);
+        t = w[i - 3]! ^ w[i - 8]! ^ w[i - 14]! ^ w[i - 16]!;
         t = (t << 1) | (t >>> 31);
         w[i] = t;
         f = b ^ c ^ d;
-        t = ((a << 5) | (a >>> 27)) + f + e + 0x6ED9EBA1 + t;
+        t = ((a << 5) | (a >>> 27)) + f + e + 0x6ed9eba1 + t;
         e = d;
         d = c;
         c = ((b << 30) | (b >>> 2)) >>> 0;
@@ -199,11 +197,11 @@ export class Sha1 {
         a = t;
       }
       for (; i < 40; ++i) {
-        t = (w[i - 6]! ^ w[i - 16]! ^ w[i - 28]! ^ w[i - 32]!);
+        t = w[i - 6]! ^ w[i - 16]! ^ w[i - 28]! ^ w[i - 32]!;
         t = (t << 2) | (t >>> 30);
         w[i] = t;
         f = b ^ c ^ d;
-        t = ((a << 5) | (a >>> 27)) + f + e + 0x6ED9EBA1 + t;
+        t = ((a << 5) | (a >>> 27)) + f + e + 0x6ed9eba1 + t;
         e = d;
         d = c;
         c = ((b << 30) | (b >>> 2)) >>> 0;
@@ -211,11 +209,11 @@ export class Sha1 {
         a = t;
       }
       for (; i < 60; ++i) {
-        t = (w[i - 6]! ^ w[i - 16]! ^ w[i - 28]! ^ w[i - 32]!);
+        t = w[i - 6]! ^ w[i - 16]! ^ w[i - 28]! ^ w[i - 32]!;
         t = (t << 2) | (t >>> 30);
         w[i] = t;
         f = (b & c) | (d & (b ^ c));
-        t = ((a << 5) | (a >>> 27)) + f + e + 0x8F1BBCDC + t;
+        t = ((a << 5) | (a >>> 27)) + f + e + 0x8f1bbcdc + t;
         e = d;
         d = c;
         c = ((b << 30) | (b >>> 2)) >>> 0;
@@ -223,11 +221,11 @@ export class Sha1 {
         a = t;
       }
       for (; i < 80; ++i) {
-        t = (w[i - 6]! ^ w[i - 16]! ^ w[i - 28]! ^ w[i - 32]!);
+        t = w[i - 6]! ^ w[i - 16]! ^ w[i - 28]! ^ w[i - 32]!;
         t = (t << 2) | (t >>> 30);
         w[i] = t;
         f = b ^ c ^ d;
-        t = ((a << 5) | (a >>> 27)) + f + e + 0xCA62C1D6 + t;
+        t = ((a << 5) | (a >>> 27)) + f + e + 0xca62c1d6 + t;
         e = d;
         d = c;
         c = ((b << 30) | (b >>> 2)) >>> 0;

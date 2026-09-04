@@ -1,4 +1,4 @@
-import {encodeUtf8, decodeUtf8} from './Utf8Codec.js';
+import { encodeUtf8, decodeUtf8 } from './Utf8Codec.js';
 
 export class Utf16Codec {
   static encode(str: string, output?: Uint8Array, offset?: number): Uint8Array | number {
@@ -14,7 +14,7 @@ export class Utf16Codec {
       view[k++] = str.charCodeAt(i);
       j += 2;
     }
-    return output ? (j - off) : out;
+    return output ? j - off : out;
   }
 
   static decode(bytes: Uint8Array): string {
@@ -34,7 +34,7 @@ export class Utf8TextCodec {
     for (let i = 0; i < encoded.length; ++i) {
       out[j++] = encoded.charCodeAt(i);
     }
-    return output ? (j - off) : out;
+    return output ? j - off : out;
   }
 
   static decode(bytes: Uint8Array): string {

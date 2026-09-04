@@ -1,8 +1,8 @@
-import type {PemKeyCodec} from '../ports/index.js';
-import {PemCodec} from './PemCodec.js';
-import {PbeService} from './PbeService.js';
-import {Pkcs12Service} from './Pkcs12Service.js';
-import {X509Service} from './X509Service.js';
+import type { PemKeyCodec } from '../ports/index.js';
+import { PemCodec } from './PemCodec.js';
+import { PbeService } from './PbeService.js';
+import { Pkcs12Service } from './Pkcs12Service.js';
+import { X509Service } from './X509Service.js';
 
 export type PkiFacadeDeps = {
   asn1: Record<string, unknown>;
@@ -20,12 +20,12 @@ export type PkiFacadeDeps = {
   hmac: Record<string, unknown>;
   pss: Record<string, unknown>;
   mgf: Record<string, unknown>;
-  pkcs7: {asn1: Record<string, unknown>};
+  pkcs7: { asn1: Record<string, unknown> };
   pki: Record<string, unknown>;
 };
 
 export type PkiFinalizeDeps = PkiFacadeDeps & {
-  rsaService: {setPemKeyCodec(codec: PemKeyCodec): void};
+  rsaService: { setPemKeyCodec(codec: PemKeyCodec): void };
 };
 
 /**
@@ -34,7 +34,7 @@ export type PkiFinalizeDeps = PkiFacadeDeps & {
  */
 export class PkiFacade {
   static attachPbe(deps: PkiFacadeDeps): Record<string, unknown> {
-    const {pbe, pkiMethods} = PbeService.createCertkitNamespace({
+    const { pbe, pkiMethods } = PbeService.createCertkitNamespace({
       asn1: deps.asn1,
       oids: deps.oids,
       md: deps.md,
@@ -70,7 +70,7 @@ export class PkiFacade {
     Object.assign(deps.pki, x509Methods);
   }
 
-  static attachPkcs12(deps: PkiFacadeDeps & {pbe: Record<string, unknown>}): Record<string, unknown> {
+  static attachPkcs12(deps: PkiFacadeDeps & { pbe: Record<string, unknown> }): Record<string, unknown> {
     return Pkcs12Service.createCertkitNamespace({
       asn1: deps.asn1,
       oids: deps.oids,
@@ -99,7 +99,7 @@ export class PkiFacade {
   static #attachPemMethods(pki: Record<string, unknown>, deps: PkiFacadeDeps): void {
     const asn1 = deps.asn1;
 
-    pki.pemToDer = function(pem: string) {
+    pki.pemToDer = function (pem: string) {
       const msg = deps.pem.decode(pem)[0]!;
       if (msg.procType?.type === 'ENCRYPTED') {
         throw new Error('Could not convert PEM to DER; PEM is encrypted.');
@@ -107,11 +107,12 @@ export class PkiFacade {
       return (deps.util.createBuffer as (body: string) => unknown)(msg.body);
     };
 
-    pki.privateKeyFromPem = function(pem: string) {
+    pki.privateKeyFromPem = function (pem: string) {
       const msg = deps.pem.decode(pem)[0]!;
       if (msg.type !== 'PRIVATE KEY' && msg.type !== 'RSA PRIVATE KEY') {
         const error = new Error(
-          'Could not convert private key from PEM; PEM header type is not "PRIVATE KEY" or "RSA PRIVATE KEY".') as Error & {
+          'Could not convert private key from PEM; PEM header type is not "PRIVATE KEY" or "RSA PRIVATE KEY".'
+        ) as Error & {
           headerType?: string;
         };
         error.headerType = msg.type;
@@ -120,32 +121,26 @@ export class PkiFacade {
       if (msg.procType?.type === 'ENCRYPTED') {
         throw new Error('Could not convert private key from PEM; PEM is encrypted.');
       }
-      const obj = (asn1 as {fromDer: (body: string) => unknown}).fromDer(msg.body);
+      const obj = (asn1 as { fromDer: (body: string) => unknown }).fromDer(msg.body);
       return (pki.privateKeyFromAsn1 as (o: unknown) => unknown)(obj);
     };
 
-    pki.privateKeyToPem = function(key: unknown, maxline?: number) {
+    pki.privateKeyToPem = function (key: unknown, maxline?: number) {
       const msg = {
         type: 'RSA PRIVATE KEY',
-        body: (asn1 as {toDer: (o: unknown) => {getBytes(): string}}).toDer(
-          (pki.privateKeyToAsn1 as (k: unknown) => unknown)(key)
-        ).getBytes()
+        body: (asn1 as { toDer: (o: unknown) => { getBytes(): string } })
+          .toDer((pki.privateKeyToAsn1 as (k: unknown) => unknown)(key))
+          .getBytes()
       };
-      return (deps.pem.encode as (msg: {type: string; body: string}, options?: {maxline?: number}) => string)(
-        msg,
-        {maxline}
-      );
+      return (deps.pem.encode as (msg: { type: string; body: string }, options?: { maxline?: number }) => string)(msg, { maxline });
     };
 
-    pki.privateKeyInfoToPem = function(keyInfo: unknown, maxline?: number) {
+    pki.privateKeyInfoToPem = function (keyInfo: unknown, maxline?: number) {
       const msg = {
         type: 'PRIVATE KEY',
-        body: (asn1 as {toDer: (o: unknown) => {getBytes(): string}}).toDer(keyInfo).getBytes()
+        body: (asn1 as { toDer: (o: unknown) => { getBytes(): string } }).toDer(keyInfo).getBytes()
       };
-      return (deps.pem.encode as (msg: {type: string; body: string}, options?: {maxline?: number}) => string)(
-        msg,
-        {maxline}
-      );
+      return (deps.pem.encode as (msg: { type: string; body: string }, options?: { maxline?: number }) => string)(msg, { maxline });
     };
   }
 }

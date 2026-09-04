@@ -1,12 +1,12 @@
-import type {X509Runtime} from './X509Runtime.js';
-import type {X509Helpers} from './X509Types.js';
-import type {DistinguishedName, X509CaStore, X509Certificate} from './X509Types.js';
+import type { X509Runtime } from './X509Runtime.js';
+import type { X509Helpers } from './X509Types.js';
+import type { DistinguishedName, X509CaStore, X509Certificate } from './X509Types.js';
 
 type CaStoreCtx = X509Runtime & {
-  util: {isArray: (v: unknown) => boolean};
-  md: {sha1: {create: () => {update: (b: string) => void; digest: () => {toHex: () => string}}}};
+  util: { isArray: (v: unknown) => boolean };
+  md: { sha1: { create: () => { update: (b: string) => void; digest: () => { toHex: () => string } } } };
   asn1: {
-    toDer: (obj: unknown) => {getBytes: () => string};
+    toDer: (obj: unknown) => { getBytes: () => string };
   };
   pki: {
     certificateFromPem: (pem: string) => X509Certificate;
@@ -23,16 +23,16 @@ export class CaStore {
     const pki = c.pki;
     const dnToAsn1 = h.dnToAsn1;
 
-    pki.createCaStore = function(certs?: Array<X509Certificate | string>): X509CaStore {
+    pki.createCaStore = function (certs?: Array<X509Certificate | string>): X509CaStore {
       const caStore = {
         certs: {} as Record<string, X509Certificate | X509Certificate[]>
       } as X509CaStore;
 
-      caStore.getIssuer = function(cert: X509Certificate) {
+      caStore.getIssuer = function (cert: X509Certificate) {
         return CaStore.#getBySubject(caStore, cert.issuer, c, pki, dnToAsn1);
       };
 
-      caStore.addCertificate = function(cert: X509Certificate | string) {
+      caStore.addCertificate = function (cert: X509Certificate | string) {
         if (typeof cert === 'string') {
           cert = pki.certificateFromPem(cert);
         }
@@ -54,7 +54,7 @@ export class CaStore {
         }
       };
 
-      caStore.hasCertificate = function(cert: X509Certificate | string): boolean {
+      caStore.hasCertificate = function (cert: X509Certificate | string): boolean {
         if (typeof cert === 'string') {
           cert = pki.certificateFromPem(cert);
         }
@@ -77,7 +77,7 @@ export class CaStore {
         return false;
       };
 
-      caStore.listAllCertificates = function(): X509Certificate[] {
+      caStore.listAllCertificates = function (): X509Certificate[] {
         const certList: X509Certificate[] = [];
 
         for (const hash in caStore.certs) {
@@ -96,7 +96,7 @@ export class CaStore {
         return certList;
       };
 
-      caStore.removeCertificate = function(cert: X509Certificate | string): X509Certificate | null {
+      caStore.removeCertificate = function (cert: X509Certificate | string): X509Certificate | null {
         let result: X509Certificate | null = null;
 
         if (typeof cert === 'string') {

@@ -1,7 +1,7 @@
 /**
  * Message digest algorithm registry.
  */
-import type {MdRegistry} from './MdRegistry.js';
+import type { MdRegistry } from './MdRegistry.js';
 
 export class DigestRegistry {
   readonly algorithms: Record<string, unknown> = {};

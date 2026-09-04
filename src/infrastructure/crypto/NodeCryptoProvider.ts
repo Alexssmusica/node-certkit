@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import type {NativeCryptoProvider} from '../../domain/ports/index.js';
+import type { NativeCryptoProvider } from '../../domain/ports/index.js';
 
 export class NodeCryptoProvider implements NativeCryptoProvider {
   readonly available = true;
@@ -18,8 +18,7 @@ export class NodeCryptoProvider implements NativeCryptoProvider {
     if (this.pbkdf2SyncSupportsDigest && digest) {
       return crypto.pbkdf2Sync(password, salt, iterations, keylen, digest);
     }
-    return (crypto.pbkdf2Sync as (p: string, s: string, i: number, k: number) => Buffer)(
-      password, salt, iterations, keylen);
+    return (crypto.pbkdf2Sync as (p: string, s: string, i: number, k: number) => Buffer)(password, salt, iterations, keylen);
   }
 
   pbkdf2(
@@ -34,12 +33,16 @@ export class NodeCryptoProvider implements NativeCryptoProvider {
       crypto.pbkdf2(password, salt, iterations, keylen, digest, callback);
       return;
     }
-    (crypto.pbkdf2 as unknown as (
-      p: string, s: string, i: number, k: number, cb: (err: Error | null, key: Buffer) => void
-    ) => void)(password, salt, iterations, keylen, callback);
+    (crypto.pbkdf2 as unknown as (p: string, s: string, i: number, k: number, cb: (err: Error | null, key: Buffer) => void) => void)(
+      password,
+      salt,
+      iterations,
+      keylen,
+      callback
+    );
   }
 
-  generateKeyPairSync(_type: string, options: Record<string, unknown>): {publicKey: string; privateKey: string} {
+  generateKeyPairSync(_type: string, options: Record<string, unknown>): { publicKey: string; privateKey: string } {
     return crypto.generateKeyPairSync('rsa', options as unknown as crypto.RSAKeyPairOptions<'pem', 'pem'>);
   }
 

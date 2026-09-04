@@ -1,8 +1,8 @@
-import {describe, it, expect, beforeAll, beforeEach, afterEach, afterAll} from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import certkit from '../../src/presentation/index.js';
 const JSBN = certkit.jsbn;
-describe('jsbn', function() {
-  describe('GHSA-5m6q-g25r-mvwx', function() {
+describe('jsbn', function () {
+  describe('GHSA-5m6q-g25r-mvwx', function () {
     // regression tests for GHSA-5m6q-g25r-mvwx
     // test BigInteger.modInverse does not infinite loop with 0 inputs.
     var BigInteger = JSBN.BigInteger;

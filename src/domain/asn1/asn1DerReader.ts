@@ -1,9 +1,9 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import {Asn1Codec} from './Asn1Codec.js';
-import type {Asn1FromDerOptions, Asn1Object, DerError} from './Asn1Types.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { Asn1Codec } from './Asn1Codec.js';
+import type { Asn1FromDerOptions, Asn1Object, DerError } from './Asn1Types.js';
 
 export function checkBufferLength(bytes: ByteStringBuffer, remaining: number, n: number): void {
-  if(n > remaining) {
+  if (n > remaining) {
     const error = new Error('Too few bytes to parse DER.') as DerError;
     error.available = bytes.length();
     error.remaining = remaining;
@@ -18,25 +18,25 @@ export function getValueLength(bytes: ByteStringBuffer, remaining: number): numb
   // fromDer already checked that this byte exists
   const b2 = bytes.getByte();
   remaining--;
-  if(b2 === 0x80) {
+  if (b2 === 0x80) {
     return undefined;
   }
 
   // see if the length is "short form" or "long form" (bit 8 set)
   let length;
   const longForm = b2 & 0x80;
-  if(!longForm) {
+  if (!longForm) {
     // length is just the first byte
     length = b2;
   } else {
     // the number of bytes the length is specified in bits 7 through 1
     // and each length byte is in big-endian base-256
-    const longFormBytes = b2 & 0x7F;
+    const longFormBytes = b2 & 0x7f;
     checkBufferLength(bytes, remaining, longFormBytes);
     length = bytes.getInt(longFormBytes << 3);
   }
   // FIXME: this will only happen for 32 bit getInt with high bit set
-  if(length < 0) {
+  if (length < 0) {
     throw new Error('Negative length: ' + length);
   }
   return length;
@@ -63,9 +63,8 @@ export function fromDerInternal(
     decodeBitStrings: boolean;
   }
 ): Asn1Object {
-
   // check depth limit
-  if(depth >= options.maxDepth) {
+  if (depth >= options.maxDepth) {
     throw new Error('ASN.1 parsing error: Max depth exceeded.');
   }
 
@@ -81,10 +80,10 @@ export function fromDerInternal(
   remaining--;
 
   // get the tag class
-  const tagClass = (b1 & 0xC0);
+  const tagClass = b1 & 0xc0;
 
   // get the type (bits 1-5)
-  const type = b1 & 0x1F;
+  const type = b1 & 0x1f;
 
   // get the variable value length and adjust remaining bytes
   start = bytes.length();
@@ -92,8 +91,8 @@ export function fromDerInternal(
   remaining -= start - bytes.length();
 
   // ensure there are enough bytes to get the value
-  if(length !== undefined && length > remaining) {
-    if(options.strict) {
+  if (length !== undefined && length > remaining) {
+    if (options.strict) {
       const error = new Error('Too few bytes to read ASN.1 value.') as DerError;
       error.available = bytes.length();
       error.remaining = remaining;
@@ -110,15 +109,15 @@ export function fromDerInternal(
   let bitStringContents;
 
   // constructed flag is bit 6 (32 = 0x20) of the first byte
-  const constructed = ((b1 & 0x20) === 0x20);
-  if(constructed) {
+  const constructed = (b1 & 0x20) === 0x20;
+  if (constructed) {
     // parse child asn1 objects from the value
     value = [];
-    if(length === undefined) {
+    if (length === undefined) {
       // asn1 object of indefinite length, read until end tag
-      for(;;) {
+      for (;;) {
         checkBufferLength(bytes, remaining, 2);
-        if(bytes.bytes(2) === String.fromCharCode(0, 0)) {
+        if (bytes.bytes(2) === String.fromCharCode(0, 0)) {
           bytes.getBytes(2);
           remaining -= 2;
           break;
@@ -129,7 +128,7 @@ export function fromDerInternal(
       }
     } else {
       // parsing asn1 object of definite length
-      while(length > 0) {
+      while (length > 0) {
         start = bytes.length();
         value.push(fromDerInternal(bytes, length, depth + 1, options));
         remaining -= start - bytes.length();
@@ -139,25 +138,28 @@ export function fromDerInternal(
   }
 
   // if a BIT STRING, save the contents including padding
-  if(value === undefined && tagClass === Asn1Codec.Class.UNIVERSAL &&
-    type === Asn1Codec.Type.BITSTRING) {
+  if (value === undefined && tagClass === Asn1Codec.Class.UNIVERSAL && type === Asn1Codec.Type.BITSTRING) {
     bitStringContents = bytes.bytes(length);
   }
 
   // determine if a non-constructed value should be decoded as a composed
   // value that contains other ASN.1 objects. BIT STRINGs (and OCTET STRINGs)
   // can be used this way.
-  if(value === undefined && options.decodeBitStrings &&
+  if (
+    value === undefined &&
+    options.decodeBitStrings &&
     tagClass === Asn1Codec.Class.UNIVERSAL &&
     // FIXME: OCTET STRINGs not yet supported here
     // .. other parts of certkit expect to decode OCTET STRINGs manually
-    (type === Asn1Codec.Type.BITSTRING /*|| type === Asn1Codec.Type.OCTETSTRING*/) &&
-    length !== undefined && length > 1) {
+    type === Asn1Codec.Type.BITSTRING /*|| type === Asn1Codec.Type.OCTETSTRING*/ &&
+    length !== undefined &&
+    length > 1
+  ) {
     // save read position
     const savedRead = bytes.read;
     const savedRemaining = remaining;
     let unused = 0;
-    if(type === Asn1Codec.Type.BITSTRING) {
+    if (type === Asn1Codec.Type.BITSTRING) {
       /* The first octet gives the number of bits by which the length of the
         bit string is less than the next multiple of eight (this is called
         the "number of unused bits").
@@ -169,7 +171,7 @@ export function fromDerInternal(
       remaining--;
     }
     // if all bits are used, maybe the BIT/OCTET STRING holds ASN.1 objs
-    if(unused === 0) {
+    if (unused === 0) {
       try {
         // attempt to parse child asn1 object from the value
         // (stored in array to signal composed value)
@@ -182,42 +184,40 @@ export function fromDerInternal(
         const composed = fromDerInternal(bytes, remaining, depth + 1, subOptions as any);
         let used = start - bytes.length();
         remaining -= used;
-        if(type == Asn1Codec.Type.BITSTRING) {
+        if (type == Asn1Codec.Type.BITSTRING) {
           used++;
         }
 
         // if the data all decoded and the class indicates UNIVERSAL or
         // CONTEXT_SPECIFIC then assume we've got an encapsulated ASN.1 object
         const tc = composed.tagClass;
-        if(used === length &&
-          (tc === Asn1Codec.Class.UNIVERSAL || tc === Asn1Codec.Class.CONTEXT_SPECIFIC)) {
+        if (used === length && (tc === Asn1Codec.Class.UNIVERSAL || tc === Asn1Codec.Class.CONTEXT_SPECIFIC)) {
           value = [composed];
         }
-      } catch {
-      }
+      } catch {}
     }
-    if(value === undefined) {
+    if (value === undefined) {
       // restore read position
       bytes.read = savedRead;
       remaining = savedRemaining;
     }
   }
 
-  if(value === undefined) {
+  if (value === undefined) {
     // asn1 not constructed or composed, get raw value
     // TODO: do DER to OID conversion and vice-versa in .toDer?
 
-    if(length === undefined) {
-      if(options.strict) {
+    if (length === undefined) {
+      if (options.strict) {
         throw new Error('Non-constructed ASN.1 object of indefinite length.');
       }
       // be lenient and use remaining state bytes
       length = remaining;
     }
 
-    if(type === Asn1Codec.Type.BMPSTRING) {
+    if (type === Asn1Codec.Type.BMPSTRING) {
       value = '';
-      for(; length > 0; length -= 2) {
+      for (; length > 0; length -= 2) {
         checkBufferLength(bytes, remaining, 2);
         value += String.fromCharCode(bytes.getInt16());
         remaining -= 2;
@@ -229,9 +229,12 @@ export function fromDerInternal(
   }
 
   // add BIT STRING contents if available
-  const asn1Options = bitStringContents === undefined ? null : {
-    bitStringContents: bitStringContents
-  };
+  const asn1Options =
+    bitStringContents === undefined
+      ? null
+      : {
+          bitStringContents: bitStringContents
+        };
 
   // create and return asn1 object
   return Asn1Codec.create(tagClass, type, constructed, value, asn1Options);

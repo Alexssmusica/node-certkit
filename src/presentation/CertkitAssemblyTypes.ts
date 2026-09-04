@@ -1,13 +1,13 @@
-import type {Asn1NamespaceObject} from '../domain/asn1/Asn1Types.js';
-import type {RsaService} from '../domain/pki/RsaService.js';
+import type { Asn1NamespaceObject } from '../domain/asn1/Asn1Types.js';
+import type { RsaService } from '../domain/pki/RsaService.js';
 
-type DigestCreate = {create: () => unknown};
-type Sha512Variant = {create: () => unknown};
+type DigestCreate = { create: () => unknown };
+type Sha512Variant = { create: () => unknown };
 type Pbkdf2Fn = (...args: never[]) => unknown;
-type HmacNamespace = {create: () => unknown};
+type HmacNamespace = { create: () => unknown };
 
 export interface MutableCertkit {
-  options: {usePureJavaScript: boolean};
+  options: { usePureJavaScript: boolean };
   cipher?: Record<string, unknown>;
   aes?: Record<string, unknown>;
   des?: Record<string, unknown>;
@@ -27,7 +27,7 @@ export interface MutableCertkit {
   sha384?: Sha512Variant;
   hmac?: HmacNamespace;
   pbkdf2?: Pbkdf2Fn;
-  pkcs5?: {pbkdf2?: Pbkdf2Fn};
+  pkcs5?: { pbkdf2?: Pbkdf2Fn };
   pem?: Record<string, unknown>;
   util?: Record<string, unknown>;
   prng?: Record<string, unknown>;
@@ -38,10 +38,10 @@ export interface MutableCertkit {
   pkcs1?: Record<string, unknown>;
   oids?: Record<string, string>;
   pkcs7asn1?: Record<string, unknown>;
-  pkcs7?: {asn1?: Record<string, unknown>};
-  mgf?: Record<string, unknown> & {mgf1?: Record<string, unknown>};
+  pkcs7?: { asn1?: Record<string, unknown> };
+  mgf?: Record<string, unknown> & { mgf1?: Record<string, unknown> };
   mgf1?: Record<string, unknown>;
-  jsbn?: {BigInteger: unknown};
+  jsbn?: { BigInteger: unknown };
   prime?: Record<string, unknown>;
   pki?: Record<string, unknown> & {
     oids?: Record<string, string>;
@@ -55,4 +55,4 @@ export interface MutableCertkit {
   [key: string]: unknown;
 }
 
-export type {RsaService};
+export type { RsaService };

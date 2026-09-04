@@ -1,11 +1,11 @@
-import {checkBitsParam} from './checkBitsParam.js';
-import {ByteStringBuffer} from './ByteStringBuffer.js';
-import {isArrayBuffer, isArrayBufferView} from '../util/typeChecks.js';
-import {Base64Codec} from '../encoding/Base64Codec.js';
-import {HexCodec} from '../encoding/HexCodec.js';
-import {RawCodec} from '../encoding/RawCodec.js';
-import {Utf16Codec, Utf8TextCodec} from '../encoding/Utf16Codec.js';
-import {encodeUtf8} from '../encoding/Utf8Codec.js';
+import { checkBitsParam } from './checkBitsParam.js';
+import { ByteStringBuffer } from './ByteStringBuffer.js';
+import { isArrayBuffer, isArrayBufferView } from '../util/typeChecks.js';
+import { Base64Codec } from '../encoding/Base64Codec.js';
+import { HexCodec } from '../encoding/HexCodec.js';
+import { RawCodec } from '../encoding/RawCodec.js';
+import { Utf16Codec, Utf8TextCodec } from '../encoding/Utf16Codec.js';
+import { encodeUtf8 } from '../encoding/Utf8Codec.js';
 
 export interface DataBufferOptions {
   readOffset?: number;
@@ -20,7 +20,7 @@ type DataBufferInput =
   | ArrayBufferView
   | ByteStringBuffer
   | DataBuffer
-  | {read: number; write: number; data: DataView}
+  | { read: number; write: number; data: DataView }
   | null
   | undefined;
 
@@ -54,8 +54,7 @@ export class DataBuffer {
         const view = b as ArrayBufferView;
         this.data = new DataView(view.buffer, view.byteOffset, view.byteLength);
       }
-      this.write = ('writeOffset' in opts ?
-        opts.writeOffset! : this.data.byteLength);
+      this.write = 'writeOffset' in opts ? opts.writeOffset! : this.data.byteLength;
       return;
     }
 
@@ -85,8 +84,7 @@ export class DataBuffer {
     }
     const grow = Math.max(growSize || this.growSize, amount);
 
-    const src = new Uint8Array(
-      this.data.buffer, this.data.byteOffset, this.data.byteLength);
+    const src = new Uint8Array(this.data.buffer, this.data.byteOffset, this.data.byteLength);
     const dst = new Uint8Array(this.length() + grow);
     dst.set(src);
     this.data = new DataView(dst.buffer);
@@ -103,7 +101,7 @@ export class DataBuffer {
   fillWithByte(b: number, n: number): this {
     this.accommodate(n);
     for (let i = 0; i < n; ++i) {
-      (this.data as unknown as {setUint8(byte: number): void}).setUint8(b);
+      (this.data as unknown as { setUint8(byte: number): void }).setUint8(b);
     }
     return this;
   }
@@ -129,19 +127,26 @@ export class DataBuffer {
       return this;
     }
 
-    if (bytes instanceof DataBuffer ||
-      (typeof bytes === 'object' && bytes !== null &&
+    if (
+      bytes instanceof DataBuffer ||
+      (typeof bytes === 'object' &&
+        bytes !== null &&
         typeof (bytes as DataBuffer).read === 'number' &&
         typeof (bytes as DataBuffer).write === 'number' &&
-        isArrayBufferView((bytes as DataBuffer).data))) {
+        isArrayBufferView((bytes as DataBuffer).data))
+    ) {
       const buf = bytes as DataBuffer;
-      const src = new (Uint8Array as unknown as {
-        new (length: number, offset: number, len: number): Uint8Array;
-      })(buf.data.byteLength, buf.read, buf.length());
+      const src = new (
+        Uint8Array as unknown as {
+          new (length: number, offset: number, len: number): Uint8Array;
+        }
+      )(buf.data.byteLength, buf.read, buf.length());
       this.accommodate(src.byteLength);
-      const dst = new (Uint8Array as unknown as {
-        new (length: number, offset: number): Uint8Array;
-      })(buf.data.byteLength, this.write);
+      const dst = new (
+        Uint8Array as unknown as {
+          new (length: number, offset: number): Uint8Array;
+        }
+      )(buf.data.byteLength, this.write);
       dst.set(src);
       this.write += src.byteLength;
       return this;
@@ -213,8 +218,8 @@ export class DataBuffer {
 
   putInt24(i: number): this {
     this.accommodate(3);
-    this.data.setInt16(this.write, i >> 8 & 0xFFFF);
-    this.data.setInt8(this.write, i >> 16 & 0xFF);
+    this.data.setInt16(this.write, (i >> 8) & 0xffff);
+    this.data.setInt8(this.write, (i >> 16) & 0xff);
     this.write += 3;
     return this;
   }
@@ -235,8 +240,8 @@ export class DataBuffer {
 
   putInt24Le(i: number): this {
     this.accommodate(3);
-    this.data.setInt8(this.write, i >> 16 & 0xFF);
-    this.data.setInt16(this.write, i >> 8 & 0xFFFF, true);
+    this.data.setInt8(this.write, (i >> 16) & 0xff);
+    this.data.setInt16(this.write, (i >> 8) & 0xffff, true);
     this.write += 3;
     return this;
   }
@@ -253,7 +258,7 @@ export class DataBuffer {
     this.accommodate(n / 8);
     do {
       n -= 8;
-      this.data.setInt8(this.write++, (i >> n) & 0xFF);
+      this.data.setInt8(this.write++, (i >> n) & 0xff);
     } while (n > 0);
     return this;
   }
@@ -278,9 +283,7 @@ export class DataBuffer {
   }
 
   getInt24(): number {
-    const rval = (
-      this.data.getInt16(this.read) << 8 ^
-      this.data.getInt8(this.read + 2));
+    const rval = (this.data.getInt16(this.read) << 8) ^ this.data.getInt8(this.read + 2);
     this.read += 3;
     return rval;
   }
@@ -298,9 +301,7 @@ export class DataBuffer {
   }
 
   getInt24Le(): number {
-    const rval = (
-      this.data.getInt8(this.read) ^
-      this.data.getInt16(this.read + 1, true) << 8);
+    const rval = this.data.getInt8(this.read) ^ (this.data.getInt16(this.read + 1, true) << 8);
     this.read += 3;
     return rval;
   }
@@ -340,7 +341,7 @@ export class DataBuffer {
     } else if (count === 0) {
       rval = '';
     } else {
-      rval = (this.read === 0) ? data : data.slice(this.read);
+      rval = this.read === 0 ? data : data.slice(this.read);
       this.clear();
     }
     return rval;
@@ -348,9 +349,7 @@ export class DataBuffer {
 
   bytes(count?: number): DataView {
     const data = this.data as DataViewWithSlice;
-    return (typeof count === 'undefined' ?
-      data.slice(this.read) :
-      data.slice(this.read, this.read + count));
+    return typeof count === 'undefined' ? data.slice(this.read) : data.slice(this.read, this.read + count);
   }
 
   at(i: number): number {

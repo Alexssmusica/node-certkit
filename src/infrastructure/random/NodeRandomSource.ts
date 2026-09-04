@@ -1,4 +1,4 @@
-import type {RandomSource, NativeCryptoProvider} from '../../domain/ports/index.js';
+import type { RandomSource, NativeCryptoProvider } from '../../domain/ports/index.js';
 
 export class NodeRandomSource implements RandomSource {
   constructor(private readonly nativeCrypto: NativeCryptoProvider) {}

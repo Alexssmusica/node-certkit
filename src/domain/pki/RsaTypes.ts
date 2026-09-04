@@ -1,6 +1,6 @@
-import type {Asn1NamespaceObject} from '../asn1/Asn1Types.js';
-import type {BigInteger} from '../math/BigInteger.js';
-import type {NativeCryptoProvider, PemKeyCodec, PrimeGenerator} from '../ports/index.js';
+import type { Asn1NamespaceObject } from '../asn1/Asn1Types.js';
+import type { BigInteger } from '../math/BigInteger.js';
+import type { NativeCryptoProvider, PemKeyCodec, PrimeGenerator } from '../ports/index.js';
 
 export type RsaKeyMaterial = {
   n: BigInteger;
@@ -34,7 +34,7 @@ export type KeyPairGenerationState = Record<string, unknown>;
 export type RsaServiceDeps = {
   oids: Record<string, string>;
   asn1: Asn1NamespaceObject;
-  random: {getBytesSync(count: number): string; getBytes(count: number): string};
+  random: { getBytesSync(count: number): string; getBytes(count: number): string };
   primeGenerator: PrimeGenerator;
   nativeCrypto?: NativeCryptoProvider | null;
   pemKeyCodec?: PemKeyCodec | null;

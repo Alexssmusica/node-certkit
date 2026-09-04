@@ -1,22 +1,10 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import {isArray} from '../util/typeChecks.js';
-import {fromDerInternal} from './asn1DerReader.js';
-import {prettyPrintAsn1, setPrettyPrintPkiOids} from './asn1PrettyPrint.js';
-import type {
-  Asn1FromDerOptions,
-  Asn1NamespaceObject,
-  Asn1Object,
-  Asn1Validator,
-  DerError
-} from './Asn1Types.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { isArray } from '../util/typeChecks.js';
+import { fromDerInternal } from './asn1DerReader.js';
+import { prettyPrintAsn1, setPrettyPrintPkiOids } from './asn1PrettyPrint.js';
+import type { Asn1FromDerOptions, Asn1NamespaceObject, Asn1Object, Asn1Validator, DerError } from './Asn1Types.js';
 
-export type {
-  Asn1FromDerOptions,
-  Asn1NamespaceObject,
-  Asn1Object,
-  Asn1Validator,
-  DerError
-} from './Asn1Types.js';
+export type { Asn1FromDerOptions, Asn1NamespaceObject, Asn1Object, Asn1Validator, DerError } from './Asn1Types.js';
 
 /* Migrated from lib/Asn1Codec.js */
 /**
@@ -155,468 +143,477 @@ export type {
  * 0x06062A864886F70D
  */
 
-
-
-
 export class Asn1Codec {
-/* ASN.1 API */
-/**
- * ASN.1 classes.
- */
-static readonly Class = {
-  UNIVERSAL:        0x00,
-  APPLICATION:      0x40,
-  CONTEXT_SPECIFIC: 0x80,
-  PRIVATE:          0xC0
-};
+  /* ASN.1 API */
+  /**
+   * ASN.1 classes.
+   */
+  static readonly Class = {
+    UNIVERSAL: 0x00,
+    APPLICATION: 0x40,
+    CONTEXT_SPECIFIC: 0x80,
+    PRIVATE: 0xc0
+  };
 
-/**
- * ASN.1 types. Not all types are supported by this implementation, only
- * those necessary to implement a simple PKI are implemented.
- */
-static readonly Type = {
-  NONE:             0,
-  BOOLEAN:          1,
-  INTEGER:          2,
-  BITSTRING:        3,
-  OCTETSTRING:      4,
-  NULL:             5,
-  OID:              6,
-  ODESC:            7,
-  EXTERNAL:         8,
-  REAL:             9,
-  ENUMERATED:      10,
-  EMBEDDED:        11,
-  UTF8:            12,
-  ROID:            13,
-  SEQUENCE:        16,
-  SET:             17,
-  PRINTABLESTRING: 19,
-  IA5STRING:       22,
-  UTCTIME:         23,
-  GENERALIZEDTIME: 24,
-  BMPSTRING:       30
-};
+  /**
+   * ASN.1 types. Not all types are supported by this implementation, only
+   * those necessary to implement a simple PKI are implemented.
+   */
+  static readonly Type = {
+    NONE: 0,
+    BOOLEAN: 1,
+    INTEGER: 2,
+    BITSTRING: 3,
+    OCTETSTRING: 4,
+    NULL: 5,
+    OID: 6,
+    ODESC: 7,
+    EXTERNAL: 8,
+    REAL: 9,
+    ENUMERATED: 10,
+    EMBEDDED: 11,
+    UTF8: 12,
+    ROID: 13,
+    SEQUENCE: 16,
+    SET: 17,
+    PRINTABLESTRING: 19,
+    IA5STRING: 22,
+    UTCTIME: 23,
+    GENERALIZEDTIME: 24,
+    BMPSTRING: 30
+  };
 
-/**
- * Sets the default maximum recursion depth when parsing ASN.1 structures.
- */
-static maxDepth = 256;
+  /**
+   * Sets the default maximum recursion depth when parsing ASN.1 structures.
+   */
+  static maxDepth = 256;
 
-/**
- * Creates a new asn1 object.
- *
- * @param tagClass the tag class for the object.
- * @param type the data type (tag number) for the object.
- * @param constructed true if the asn1 object is in constructed form.
- * @param value the value for the object, if it is not constructed.
- * @param [options] the options to use:
- *          [bitStringContents] the plain BIT STRING content including padding
- *            byte.
- *
- * @return the asn1 object.
- */
-static create(tagClass: number, type: number, constructed: boolean, value: any, options?: {bitStringContents?: string} | null): Asn1Object {
-  /* An asn1 object has a tagClass, a type, a constructed flag, and a
+  /**
+   * Creates a new asn1 object.
+   *
+   * @param tagClass the tag class for the object.
+   * @param type the data type (tag number) for the object.
+   * @param constructed true if the asn1 object is in constructed form.
+   * @param value the value for the object, if it is not constructed.
+   * @param [options] the options to use:
+   *          [bitStringContents] the plain BIT STRING content including padding
+   *            byte.
+   *
+   * @return the asn1 object.
+   */
+  static create(
+    tagClass: number,
+    type: number,
+    constructed: boolean,
+    value: any,
+    options?: { bitStringContents?: string } | null
+  ): Asn1Object {
+    /* An asn1 object has a tagClass, a type, a constructed flag, and a
     value. The value's type depends on the constructed flag. If
     constructed, it will contain a list of other asn1 objects. If not,
     it will contain the ASN.1 value as an array of bytes formatted
     according to the ASN.1 data type. */
 
-  // remove undefined values
-  if(isArray(value)) {
-    const tmp = [];
-    for(let i = 0; i < value.length; ++i) {
-      if(value[i] !== undefined) {
-        tmp.push(value[i]);
+    // remove undefined values
+    if (isArray(value)) {
+      const tmp = [];
+      for (let i = 0; i < value.length; ++i) {
+        if (value[i] !== undefined) {
+          tmp.push(value[i]);
+        }
       }
+      value = tmp;
     }
-    value = tmp;
+
+    const obj: Asn1Object = {
+      tagClass: tagClass,
+      type: type,
+      constructed: constructed,
+      composed: constructed || isArray(value),
+      value: value
+    };
+    if (options && 'bitStringContents' in options) {
+      // TODO: copy byte buffer if it's a buffer not a string
+      obj.bitStringContents = options.bitStringContents;
+      // TODO: add readonly flag to avoid this overhead
+      // save copy to detect changes
+      obj.original = Asn1Codec.copy(obj);
+    }
+    return obj;
   }
 
-  const obj: Asn1Object = {
-    tagClass: tagClass,
-    type: type,
-    constructed: constructed,
-    composed: constructed || isArray(value),
-    value: value
-  };
-  if(options && 'bitStringContents' in options) {
-    // TODO: copy byte buffer if it's a buffer not a string
-    obj.bitStringContents = options.bitStringContents;
-    // TODO: add readonly flag to avoid this overhead
-    // save copy to detect changes
-    obj.original = Asn1Codec.copy(obj);
-  }
-  return obj;
-};
+  /**
+   * Copies an asn1 object.
+   *
+   * @param obj the asn1 object.
+   * @param [options] copy options:
+   *          [excludeBitStringContents] true to not copy bitStringContents
+   *
+   * @return the a copy of the asn1 object.
+   */
+  static copy(obj: any, options?: { excludeBitStringContents?: boolean }): any {
+    let copy: any;
 
-/**
- * Copies an asn1 object.
- *
- * @param obj the asn1 object.
- * @param [options] copy options:
- *          [excludeBitStringContents] true to not copy bitStringContents
- *
- * @return the a copy of the asn1 object.
- */
-static copy(obj: any, options?: {excludeBitStringContents?: boolean}): any {
-  let copy: any;
+    if (isArray(obj)) {
+      copy = [];
+      for (let i = 0; i < obj.length; ++i) {
+        copy.push(Asn1Codec.copy(obj[i], options));
+      }
+      return copy;
+    }
 
-  if(isArray(obj)) {
-    copy = [];
-    for(let i = 0; i < obj.length; ++i) {
-      copy.push(Asn1Codec.copy(obj[i], options));
+    if (typeof obj === 'string') {
+      // TODO: copy byte buffer if it's a buffer not a string
+      return obj;
+    }
+
+    copy = {
+      tagClass: obj.tagClass,
+      type: obj.type,
+      constructed: obj.constructed,
+      composed: obj.composed,
+      value: Asn1Codec.copy(obj.value, options)
+    };
+    if (options && !options.excludeBitStringContents) {
+      // TODO: copy byte buffer if it's a buffer not a string
+      copy.bitStringContents = obj.bitStringContents;
     }
     return copy;
   }
 
-  if(typeof obj === 'string') {
-    // TODO: copy byte buffer if it's a buffer not a string
-    return obj;
-  }
-
-  copy = {
-    tagClass: obj.tagClass,
-    type: obj.type,
-    constructed: obj.constructed,
-    composed: obj.composed,
-    value: Asn1Codec.copy(obj.value, options)
-  };
-  if(options && !options.excludeBitStringContents) {
-    // TODO: copy byte buffer if it's a buffer not a string
-    copy.bitStringContents = obj.bitStringContents;
-  }
-  return copy;
-};
-
-/**
- * Compares asn1 objects for equality.
- *
- * Note this function does not run in constant time.
- *
- * @param obj1 the first asn1 object.
- * @param obj2 the second asn1 object.
- * @param [options] compare options:
- *          [includeBitStringContents] true to compare bitStringContents
- *
- * @return true if the asn1 objects are equal.
- */
-static equals(obj1: any, obj2: any, options?: {includeBitStringContents?: boolean}): boolean {
-  if(isArray(obj1)) {
-    if(!isArray(obj2)) {
-      return false;
-    }
-    if(obj1.length !== obj2.length) {
-      return false;
-    }
-    for(let i = 0; i < obj1.length; ++i) {
-      if(!Asn1Codec.equals(obj1[i], obj2[i])) {
+  /**
+   * Compares asn1 objects for equality.
+   *
+   * Note this function does not run in constant time.
+   *
+   * @param obj1 the first asn1 object.
+   * @param obj2 the second asn1 object.
+   * @param [options] compare options:
+   *          [includeBitStringContents] true to compare bitStringContents
+   *
+   * @return true if the asn1 objects are equal.
+   */
+  static equals(obj1: any, obj2: any, options?: { includeBitStringContents?: boolean }): boolean {
+    if (isArray(obj1)) {
+      if (!isArray(obj2)) {
         return false;
       }
+      if (obj1.length !== obj2.length) {
+        return false;
+      }
+      for (let i = 0; i < obj1.length; ++i) {
+        if (!Asn1Codec.equals(obj1[i], obj2[i])) {
+          return false;
+        }
+      }
+      return true;
     }
-    return true;
+
+    if (typeof obj1 !== typeof obj2) {
+      return false;
+    }
+
+    if (typeof obj1 === 'string') {
+      return obj1 === obj2;
+    }
+
+    let equal =
+      obj1.tagClass === obj2.tagClass &&
+      obj1.type === obj2.type &&
+      obj1.constructed === obj2.constructed &&
+      obj1.composed === obj2.composed &&
+      Asn1Codec.equals(obj1.value, obj2.value);
+    if (options && options.includeBitStringContents) {
+      equal = equal && obj1.bitStringContents === obj2.bitStringContents;
+    }
+
+    return equal;
   }
 
-  if(typeof obj1 !== typeof obj2) {
-    return false;
-  }
+  /**
+   * Gets the length of a BER-encoded ASN.1 value.
+   *
+   * In case the length is not specified, undefined is returned.
+   *
+   * @param b the BER-encoded ASN.1 byte buffer, starting with the first
+   *          length byte.
+   *
+   * @return the length of the BER-encoded ASN.1 value or undefined.
+   */
+  static getBerValueLength(b: ByteStringBuffer) {
+    // TODO: move this function and related DER/BER functions to a der.js
+    // file; better abstract ASN.1 away from der/ber.
+    const b2 = b.getByte();
+    if (b2 === 0x80) {
+      return undefined;
+    }
 
-  if(typeof obj1 === 'string') {
-    return obj1 === obj2;
+    // see if the length is "short form" or "long form" (bit 8 set)
+    let length;
+    const longForm = b2 & 0x80;
+    if (!longForm) {
+      // length is just the first byte
+      length = b2;
+    } else {
+      // the number of bytes the length is specified in bits 7 through 1
+      // and each length byte is in big-endian base-256
+      length = b.getInt((b2 & 0x7f) << 3);
+    }
+    return length;
   }
-
-  let equal = obj1.tagClass === obj2.tagClass &&
-    obj1.type === obj2.type &&
-    obj1.constructed === obj2.constructed &&
-    obj1.composed === obj2.composed &&
-    Asn1Codec.equals(obj1.value, obj2.value);
-  if(options && options.includeBitStringContents) {
-    equal = equal && (obj1.bitStringContents === obj2.bitStringContents);
-  }
-
-  return equal;
-};
-
-/**
- * Gets the length of a BER-encoded ASN.1 value.
- *
- * In case the length is not specified, undefined is returned.
- *
- * @param b the BER-encoded ASN.1 byte buffer, starting with the first
- *          length byte.
- *
- * @return the length of the BER-encoded ASN.1 value or undefined.
- */
-static getBerValueLength(b: ByteStringBuffer) {
-  // TODO: move this function and related DER/BER functions to a der.js
-  // file; better abstract ASN.1 away from der/ber.
-  const b2 = b.getByte();
-  if(b2 === 0x80) {
-    return undefined;
-  }
-
-  // see if the length is "short form" or "long form" (bit 8 set)
-  let length;
-  const longForm = b2 & 0x80;
-  if(!longForm) {
-    // length is just the first byte
-    length = b2;
-  } else {
-    // the number of bytes the length is specified in bits 7 through 1
-    // and each length byte is in big-endian base-256
-    length = b.getInt((b2 & 0x7F) << 3);
-  }
-  return length;
-}
 
   static fromDer(bytes: string | ByteStringBuffer, options?: boolean | Asn1FromDerOptions) {
-  if(options === undefined) {
-    options = {
-      strict: true,
-      parseAllBytes: true,
-      decodeBitStrings: true
-    };
-  }
-  if(typeof options === 'boolean') {
-    options = {
-      strict: options,
-      parseAllBytes: true,
-      decodeBitStrings: true
-    };
-  }
-  if(!('strict' in options)) {
-    options.strict = true;
-  }
-  if(!('parseAllBytes' in options)) {
-    options.parseAllBytes = true;
-  }
-  if(!('decodeBitStrings' in options)) {
-    options.decodeBitStrings = true;
-  }
-  if(!('maxDepth' in options)) {
-    options.maxDepth = Asn1Codec.maxDepth;
-  }
-
-  // wrap in buffer if needed
-  if(typeof bytes === 'string') {
-    bytes = new ByteStringBuffer(bytes);
-  }
-
-  const byteCount = bytes.length();
-  const value = fromDerInternal(bytes, bytes.length(), 0, options as Asn1FromDerOptions & {maxDepth: number; strict: boolean; parseAllBytes: boolean; decodeBitStrings: boolean});
-  if(options.parseAllBytes && bytes.length() !== 0) {
-    const error = new Error('Unparsed DER bytes remain after ASN.1 parsing.') as DerError;
-    error.byteCount = byteCount;
-    error.remaining = bytes.length();
-    throw error;
-  }
-  return value;
-};
-
-static toDer(obj: any) {
-  const bytes = new ByteStringBuffer();
-
-  // build the first byte
-  let b1 = obj.tagClass | obj.type;
-
-  // for storing the ASN.1 value
-  const value = new ByteStringBuffer();
-
-  // use BIT STRING contents if available and data not changed
-  let useBitStringContents = false;
-  if('bitStringContents' in obj) {
-    useBitStringContents = true;
-    if(obj.original) {
-      useBitStringContents = Asn1Codec.equals(obj, obj.original);
+    if (options === undefined) {
+      options = {
+        strict: true,
+        parseAllBytes: true,
+        decodeBitStrings: true
+      };
     }
-  }
-
-  if(useBitStringContents) {
-    value.putBytes(obj.bitStringContents);
-  } else if(obj.composed) {
-    // if composed, use each child asn1 object's DER bytes as value
-    // turn on 6th bit (0x20 = 32) to indicate asn1 is constructed
-    // from other asn1 objects
-    if(obj.constructed) {
-      b1 |= 0x20;
-    } else {
-      // type is a bit string, add unused bits of 0x00
-      value.putByte(0x00);
+    if (typeof options === 'boolean') {
+      options = {
+        strict: options,
+        parseAllBytes: true,
+        decodeBitStrings: true
+      };
+    }
+    if (!('strict' in options)) {
+      options.strict = true;
+    }
+    if (!('parseAllBytes' in options)) {
+      options.parseAllBytes = true;
+    }
+    if (!('decodeBitStrings' in options)) {
+      options.decodeBitStrings = true;
+    }
+    if (!('maxDepth' in options)) {
+      options.maxDepth = Asn1Codec.maxDepth;
     }
 
-    // add all of the child DER bytes together
-    for(let i = 0; i < obj.value.length; ++i) {
-      if(obj.value[i] !== undefined) {
-        value.putBuffer(Asn1Codec.toDer(obj.value[i]));
+    // wrap in buffer if needed
+    if (typeof bytes === 'string') {
+      bytes = new ByteStringBuffer(bytes);
+    }
+
+    const byteCount = bytes.length();
+    const value = fromDerInternal(
+      bytes,
+      bytes.length(),
+      0,
+      options as Asn1FromDerOptions & { maxDepth: number; strict: boolean; parseAllBytes: boolean; decodeBitStrings: boolean }
+    );
+    if (options.parseAllBytes && bytes.length() !== 0) {
+      const error = new Error('Unparsed DER bytes remain after ASN.1 parsing.') as DerError;
+      error.byteCount = byteCount;
+      error.remaining = bytes.length();
+      throw error;
+    }
+    return value;
+  }
+
+  static toDer(obj: any) {
+    const bytes = new ByteStringBuffer();
+
+    // build the first byte
+    let b1 = obj.tagClass | obj.type;
+
+    // for storing the ASN.1 value
+    const value = new ByteStringBuffer();
+
+    // use BIT STRING contents if available and data not changed
+    let useBitStringContents = false;
+    if ('bitStringContents' in obj) {
+      useBitStringContents = true;
+      if (obj.original) {
+        useBitStringContents = Asn1Codec.equals(obj, obj.original);
       }
     }
-  } else {
-    // use Asn1Codec.value directly
-    if(obj.type === Asn1Codec.Type.BMPSTRING) {
-      for(let i = 0; i < obj.value.length; ++i) {
-        value.putInt16(obj.value.charCodeAt(i));
-      }
-    } else {
-      // ensure integer is minimally-encoded
-      // TODO: should all leading bytes be stripped vs just one?
-      // .. ex '00 00 01' => '01'?
-      if(obj.type === Asn1Codec.Type.INTEGER &&
-        obj.value.length > 1 &&
-        // leading 0x00 for positive integer
-        ((obj.value.charCodeAt(0) === 0 &&
-        (obj.value.charCodeAt(1) & 0x80) === 0) ||
-        // leading 0xFF for negative integer
-        (obj.value.charCodeAt(0) === 0xFF &&
-        (obj.value.charCodeAt(1) & 0x80) === 0x80))) {
-        value.putBytes(obj.value.substr(1));
+
+    if (useBitStringContents) {
+      value.putBytes(obj.bitStringContents);
+    } else if (obj.composed) {
+      // if composed, use each child asn1 object's DER bytes as value
+      // turn on 6th bit (0x20 = 32) to indicate asn1 is constructed
+      // from other asn1 objects
+      if (obj.constructed) {
+        b1 |= 0x20;
       } else {
-        value.putBytes(obj.value);
+        // type is a bit string, add unused bits of 0x00
+        value.putByte(0x00);
       }
-    }
-  }
 
-  // add tag byte
-  bytes.putByte(b1);
-
-  // use "short form" encoding
-  if(value.length() <= 127) {
-    // one byte describes the length
-    // bit 8 = 0 and bits 7-1 = length
-    bytes.putByte(value.length() & 0x7F);
-  } else {
-    // use "long form" encoding
-    // 2 to 127 bytes describe the length
-    // first byte: bit 8 = 1 and bits 7-1 = # of additional bytes
-    // other bytes: length in base 256, big-endian
-    let len = value.length();
-    let lenBytes = '';
-    do {
-      lenBytes += String.fromCharCode(len & 0xFF);
-      len = len >>> 8;
-    } while(len > 0);
-
-    // set first byte to # bytes used to store the length and turn on
-    // bit 8 to indicate long-form length is used
-    bytes.putByte(lenBytes.length | 0x80);
-
-    // concatenate length bytes in reverse since they were generated
-    // little endian and we need big endian
-    for(let i = lenBytes.length - 1; i >= 0; --i) {
-      bytes.putByte(lenBytes.charCodeAt(i));
-    }
-  }
-
-  // concatenate value bytes
-  bytes.putBuffer(value);
-  return bytes;
-};
-
-/**
- * Converts an OID dot-separated string to a byte buffer. The byte buffer
- * contains only the DER-encoded value, not any tag or length bytes.
- *
- * @param oid the OID dot-separated string.
- *
- * @return the byte buffer.
- */
-static oidToDer(oid: string) {
-  // split OID into individual values
-  const values = oid.split('.');
-  const bytes = new ByteStringBuffer();
-
-  // first byte is 40 * value1 + value2
-  bytes.putByte(40 * parseInt(values[0], 10) + parseInt(values[1], 10));
-  // other bytes are each value in base 128 with 8th bit set except for
-  // the last byte for each value
-  let last, valueBytes, value, b;
-  for(let i = 2; i < values.length; ++i) {
-    // produce value bytes in reverse because we don't know how many
-    // bytes it will take to store the value
-    last = true;
-    valueBytes = [];
-    value = parseInt(values[i], 10);
-    // TODO: Change bitwise logic to allow larger values.
-    if(value > 0xffffffff) {
-      throw new Error('OID value too large; max is 32-bits.');
-    }
-    do {
-      b = value & 0x7F;
-      value = value >>> 7;
-      // if value is not last, then turn on 8th bit
-      if(!last) {
-        b |= 0x80;
+      // add all of the child DER bytes together
+      for (let i = 0; i < obj.value.length; ++i) {
+        if (obj.value[i] !== undefined) {
+          value.putBuffer(Asn1Codec.toDer(obj.value[i]));
+        }
       }
-      valueBytes.push(b);
-      last = false;
-    } while(value > 0);
-
-    // add value bytes in reverse (needs to be in big endian)
-    for(let n = valueBytes.length - 1; n >= 0; --n) {
-      bytes.putByte(valueBytes[n]);
-    }
-  }
-
-  return bytes;
-};
-
-/**
- * Converts a DER-encoded byte buffer to an OID dot-separated string. The
- * byte buffer should contain only the DER-encoded value, not any tag or
- * length bytes.
- *
- * @param bytes the byte buffer.
- *
- * @return the OID dot-separated string.
- */
-static derToOid(bytes: string | ByteStringBuffer) {
-  let oid;
-
-  // wrap in buffer if needed
-  if(typeof bytes === 'string') {
-    bytes = new ByteStringBuffer(bytes);
-  }
-
-  // first byte is 40 * value1 + value2
-  let b = bytes.getByte();
-  oid = Math.floor(b / 40) + '.' + (b % 40);
-
-  // other bytes are each value in base 128 with 8th bit set except for
-  // the last byte for each value
-  let value = 0;
-  while(bytes.length() > 0) {
-    // error if 7b shift would exceed Number.MAX_SAFE_INTEGER
-    // (Number.MAX_SAFE_INTEGER / 128)
-    if(value > 0x3fffffffffff) {
-      throw new Error('OID value too large; max is 53-bits.');
-    }
-    b = bytes.getByte();
-    value = value * 128;
-    // not the last byte for the value
-    if(b & 0x80) {
-      value += b & 0x7F;
     } else {
-      // last byte
-      oid += '.' + (value + b);
-      value = 0;
+      // use Asn1Codec.value directly
+      if (obj.type === Asn1Codec.Type.BMPSTRING) {
+        for (let i = 0; i < obj.value.length; ++i) {
+          value.putInt16(obj.value.charCodeAt(i));
+        }
+      } else {
+        // ensure integer is minimally-encoded
+        // TODO: should all leading bytes be stripped vs just one?
+        // .. ex '00 00 01' => '01'?
+        if (
+          obj.type === Asn1Codec.Type.INTEGER &&
+          obj.value.length > 1 &&
+          // leading 0x00 for positive integer
+          ((obj.value.charCodeAt(0) === 0 && (obj.value.charCodeAt(1) & 0x80) === 0) ||
+            // leading 0xFF for negative integer
+            (obj.value.charCodeAt(0) === 0xff && (obj.value.charCodeAt(1) & 0x80) === 0x80))
+        ) {
+          value.putBytes(obj.value.substr(1));
+        } else {
+          value.putBytes(obj.value);
+        }
+      }
     }
+
+    // add tag byte
+    bytes.putByte(b1);
+
+    // use "short form" encoding
+    if (value.length() <= 127) {
+      // one byte describes the length
+      // bit 8 = 0 and bits 7-1 = length
+      bytes.putByte(value.length() & 0x7f);
+    } else {
+      // use "long form" encoding
+      // 2 to 127 bytes describe the length
+      // first byte: bit 8 = 1 and bits 7-1 = # of additional bytes
+      // other bytes: length in base 256, big-endian
+      let len = value.length();
+      let lenBytes = '';
+      do {
+        lenBytes += String.fromCharCode(len & 0xff);
+        len = len >>> 8;
+      } while (len > 0);
+
+      // set first byte to # bytes used to store the length and turn on
+      // bit 8 to indicate long-form length is used
+      bytes.putByte(lenBytes.length | 0x80);
+
+      // concatenate length bytes in reverse since they were generated
+      // little endian and we need big endian
+      for (let i = lenBytes.length - 1; i >= 0; --i) {
+        bytes.putByte(lenBytes.charCodeAt(i));
+      }
+    }
+
+    // concatenate value bytes
+    bytes.putBuffer(value);
+    return bytes;
   }
 
-  return oid;
-};
+  /**
+   * Converts an OID dot-separated string to a byte buffer. The byte buffer
+   * contains only the DER-encoded value, not any tag or length bytes.
+   *
+   * @param oid the OID dot-separated string.
+   *
+   * @return the byte buffer.
+   */
+  static oidToDer(oid: string) {
+    // split OID into individual values
+    const values = oid.split('.');
+    const bytes = new ByteStringBuffer();
 
-/**
- * Converts a UTCTime value to a date.
- *
- * Note: GeneralizedTime has 4 digits for the year and is used for X.509
- * dates past 2049. Parsing that structure hasn't been implemented yet.
- *
- * @param utc the UTCTime value to convert.
- *
- * @return the date.
- */
-static utcTimeToDate(utc: string) {
-  /* The following formats can be used:
+    // first byte is 40 * value1 + value2
+    bytes.putByte(40 * parseInt(values[0], 10) + parseInt(values[1], 10));
+    // other bytes are each value in base 128 with 8th bit set except for
+    // the last byte for each value
+    let last, valueBytes, value, b;
+    for (let i = 2; i < values.length; ++i) {
+      // produce value bytes in reverse because we don't know how many
+      // bytes it will take to store the value
+      last = true;
+      valueBytes = [];
+      value = parseInt(values[i], 10);
+      // TODO: Change bitwise logic to allow larger values.
+      if (value > 0xffffffff) {
+        throw new Error('OID value too large; max is 32-bits.');
+      }
+      do {
+        b = value & 0x7f;
+        value = value >>> 7;
+        // if value is not last, then turn on 8th bit
+        if (!last) {
+          b |= 0x80;
+        }
+        valueBytes.push(b);
+        last = false;
+      } while (value > 0);
+
+      // add value bytes in reverse (needs to be in big endian)
+      for (let n = valueBytes.length - 1; n >= 0; --n) {
+        bytes.putByte(valueBytes[n]);
+      }
+    }
+
+    return bytes;
+  }
+
+  /**
+   * Converts a DER-encoded byte buffer to an OID dot-separated string. The
+   * byte buffer should contain only the DER-encoded value, not any tag or
+   * length bytes.
+   *
+   * @param bytes the byte buffer.
+   *
+   * @return the OID dot-separated string.
+   */
+  static derToOid(bytes: string | ByteStringBuffer) {
+    let oid;
+
+    // wrap in buffer if needed
+    if (typeof bytes === 'string') {
+      bytes = new ByteStringBuffer(bytes);
+    }
+
+    // first byte is 40 * value1 + value2
+    let b = bytes.getByte();
+    oid = Math.floor(b / 40) + '.' + (b % 40);
+
+    // other bytes are each value in base 128 with 8th bit set except for
+    // the last byte for each value
+    let value = 0;
+    while (bytes.length() > 0) {
+      // error if 7b shift would exceed Number.MAX_SAFE_INTEGER
+      // (Number.MAX_SAFE_INTEGER / 128)
+      if (value > 0x3fffffffffff) {
+        throw new Error('OID value too large; max is 53-bits.');
+      }
+      b = bytes.getByte();
+      value = value * 128;
+      // not the last byte for the value
+      if (b & 0x80) {
+        value += b & 0x7f;
+      } else {
+        // last byte
+        oid += '.' + (value + b);
+        value = 0;
+      }
+    }
+
+    return oid;
+  }
+
+  /**
+   * Converts a UTCTime value to a date.
+   *
+   * Note: GeneralizedTime has 4 digits for the year and is used for X.509
+   * dates past 2049. Parsing that structure hasn't been implemented yet.
+   *
+   * @param utc the UTCTime value to convert.
+   *
+   * @return the date.
+   */
+  static utcTimeToDate(utc: string) {
+    /* The following formats can be used:
 
     YYMMDDhhmmZ
     YYMMDDhhmm+hh'mm'
@@ -637,70 +634,70 @@ static utcTimeToDate(utc: string) {
     later than GMT, and - indicates that local time is earlier than GMT
     hh' is the absolute value of the offset from GMT in hours
     mm' is the absolute value of the offset from GMT in minutes */
-  const date = new Date();
+    const date = new Date();
 
-  // if YY >= 50 use 19xx, if YY < 50 use 20xx
-  let year = parseInt(utc.substr(0, 2), 10);
-  year = (year >= 50) ? 1900 + year : 2000 + year;
-  const MM = parseInt(utc.substr(2, 2), 10) - 1; // use 0-11 for month
-  const DD = parseInt(utc.substr(4, 2), 10);
-  const hh = parseInt(utc.substr(6, 2), 10);
-  const mm = parseInt(utc.substr(8, 2), 10);
-  let ss = 0;
-  let end = 0;
-  let c = '';
+    // if YY >= 50 use 19xx, if YY < 50 use 20xx
+    let year = parseInt(utc.substr(0, 2), 10);
+    year = year >= 50 ? 1900 + year : 2000 + year;
+    const MM = parseInt(utc.substr(2, 2), 10) - 1; // use 0-11 for month
+    const DD = parseInt(utc.substr(4, 2), 10);
+    const hh = parseInt(utc.substr(6, 2), 10);
+    const mm = parseInt(utc.substr(8, 2), 10);
+    let ss = 0;
+    let end = 0;
+    let c = '';
 
-  // not just YYMMDDhhmmZ
-  if(utc.length > 11) {
-    // get character after minutes
-    c = utc.charAt(10);
-    end = 10;
+    // not just YYMMDDhhmmZ
+    if (utc.length > 11) {
+      // get character after minutes
+      c = utc.charAt(10);
+      end = 10;
 
-    // see if seconds are present
-    if(c !== '+' && c !== '-') {
-      // get seconds
-      ss = parseInt(utc.substr(10, 2), 10);
-      end += 2;
-    }
-  }
-
-  // update date
-  date.setUTCFullYear(year, MM, DD);
-  date.setUTCHours(hh, mm, ss, 0);
-
-  if(end) {
-    // get +/- after end of time
-    c = utc.charAt(end);
-    if(c === '+' || c === '-') {
-      // get hours+minutes offset
-      const hhoffset = parseInt(utc.substr(end + 1, 2), 10);
-      const mmoffset = parseInt(utc.substr(end + 4, 2), 10);
-
-      // calculate offset in milliseconds
-      let offset = hhoffset * 60 + mmoffset;
-      offset *= 60000;
-
-      // apply offset
-      if(c === '+') {
-        date.setTime(+date - offset);
-      } else {
-        date.setTime(+date + offset);
+      // see if seconds are present
+      if (c !== '+' && c !== '-') {
+        // get seconds
+        ss = parseInt(utc.substr(10, 2), 10);
+        end += 2;
       }
     }
+
+    // update date
+    date.setUTCFullYear(year, MM, DD);
+    date.setUTCHours(hh, mm, ss, 0);
+
+    if (end) {
+      // get +/- after end of time
+      c = utc.charAt(end);
+      if (c === '+' || c === '-') {
+        // get hours+minutes offset
+        const hhoffset = parseInt(utc.substr(end + 1, 2), 10);
+        const mmoffset = parseInt(utc.substr(end + 4, 2), 10);
+
+        // calculate offset in milliseconds
+        let offset = hhoffset * 60 + mmoffset;
+        offset *= 60000;
+
+        // apply offset
+        if (c === '+') {
+          date.setTime(+date - offset);
+        } else {
+          date.setTime(+date + offset);
+        }
+      }
+    }
+
+    return date;
   }
 
-  return date;
-};
-
-/**
- * Converts a GeneralizedTime value to a date.
- *
- * @param gentime the GeneralizedTime value to convert.
- *
- * @return the date.
- */
-static generalizedTimeToDate(gentime: string) {
-  /* The following formats can be used:
+  /**
+   * Converts a GeneralizedTime value to a date.
+   *
+   * @param gentime the GeneralizedTime value to convert.
+   *
+   * @return the date.
+   */
+  static generalizedTimeToDate(gentime: string) {
+    /* The following formats can be used:
 
     YYYYMMDDHHMMSS
     YYYYMMDDHHMMSS.fff
@@ -724,344 +721,347 @@ static generalizedTimeToDate(gentime: string) {
     later than GMT, and - indicates that local time is earlier than GMT
     hh' is the absolute value of the offset from GMT in hours
     mm' is the absolute value of the offset from GMT in minutes */
-  const date = new Date();
+    const date = new Date();
 
-  const YYYY = parseInt(gentime.substr(0, 4), 10);
-  const MM = parseInt(gentime.substr(4, 2), 10) - 1; // use 0-11 for month
-  const DD = parseInt(gentime.substr(6, 2), 10);
-  const hh = parseInt(gentime.substr(8, 2), 10);
-  const mm = parseInt(gentime.substr(10, 2), 10);
-  const ss = parseInt(gentime.substr(12, 2), 10);
-  let fff = 0;
-  let offset = 0;
-  let isUTC = false;
+    const YYYY = parseInt(gentime.substr(0, 4), 10);
+    const MM = parseInt(gentime.substr(4, 2), 10) - 1; // use 0-11 for month
+    const DD = parseInt(gentime.substr(6, 2), 10);
+    const hh = parseInt(gentime.substr(8, 2), 10);
+    const mm = parseInt(gentime.substr(10, 2), 10);
+    const ss = parseInt(gentime.substr(12, 2), 10);
+    let fff = 0;
+    let offset = 0;
+    let isUTC = false;
 
-  if(gentime.charAt(gentime.length - 1) === 'Z') {
-    isUTC = true;
-  }
-
-  const end = gentime.length - 5, c = gentime.charAt(end);
-  if(c === '+' || c === '-') {
-    // get hours+minutes offset
-    const hhoffset = parseInt(gentime.substr(end + 1, 2), 10);
-    const mmoffset = parseInt(gentime.substr(end + 4, 2), 10);
-
-    // calculate offset in milliseconds
-    offset = hhoffset * 60 + mmoffset;
-    offset *= 60000;
-
-    // apply offset
-    if(c === '+') {
-      offset *= -1;
+    if (gentime.charAt(gentime.length - 1) === 'Z') {
+      isUTC = true;
     }
 
-    isUTC = true;
-  }
+    const end = gentime.length - 5,
+      c = gentime.charAt(end);
+    if (c === '+' || c === '-') {
+      // get hours+minutes offset
+      const hhoffset = parseInt(gentime.substr(end + 1, 2), 10);
+      const mmoffset = parseInt(gentime.substr(end + 4, 2), 10);
 
-  // check for second fraction
-  if(gentime.charAt(14) === '.') {
-    fff = parseFloat(gentime.substr(14)) * 1000;
-  }
+      // calculate offset in milliseconds
+      offset = hhoffset * 60 + mmoffset;
+      offset *= 60000;
 
-  if(isUTC) {
-    date.setUTCFullYear(YYYY, MM, DD);
-    date.setUTCHours(hh, mm, ss, fff);
+      // apply offset
+      if (c === '+') {
+        offset *= -1;
+      }
 
-    // apply offset
-    date.setTime(+date + offset);
-  } else {
-    date.setFullYear(YYYY, MM, DD);
-    date.setHours(hh, mm, ss, fff);
-  }
+      isUTC = true;
+    }
 
-  return date;
-};
+    // check for second fraction
+    if (gentime.charAt(14) === '.') {
+      fff = parseFloat(gentime.substr(14)) * 1000;
+    }
 
-/**
- * Converts a date to a UTCTime value.
- *
- * Note: GeneralizedTime has 4 digits for the year and is used for X.509
- * dates past 2049. Converting to a GeneralizedTime hasn't been
- * implemented yet.
- *
- * @param date the date to convert.
- *
- * @return the UTCTime value.
- */
-static dateToUtcTime(date: Date) {
-  // TODO: validate; currently assumes proper format
-  if(typeof date === 'string') {
+    if (isUTC) {
+      date.setUTCFullYear(YYYY, MM, DD);
+      date.setUTCHours(hh, mm, ss, fff);
+
+      // apply offset
+      date.setTime(+date + offset);
+    } else {
+      date.setFullYear(YYYY, MM, DD);
+      date.setHours(hh, mm, ss, fff);
+    }
+
     return date;
   }
 
-  let rval = '';
-
-  // create format YYMMDDhhmmssZ
-  const format = [];
-  format.push(('' + date.getUTCFullYear()).substr(2));
-  format.push('' + (date.getUTCMonth() + 1));
-  format.push('' + date.getUTCDate());
-  format.push('' + date.getUTCHours());
-  format.push('' + date.getUTCMinutes());
-  format.push('' + date.getUTCSeconds());
-
-  // ensure 2 digits are used for each format entry
-  for(let i = 0; i < format.length; ++i) {
-    if(format[i].length < 2) {
-      rval += '0';
+  /**
+   * Converts a date to a UTCTime value.
+   *
+   * Note: GeneralizedTime has 4 digits for the year and is used for X.509
+   * dates past 2049. Converting to a GeneralizedTime hasn't been
+   * implemented yet.
+   *
+   * @param date the date to convert.
+   *
+   * @return the UTCTime value.
+   */
+  static dateToUtcTime(date: Date) {
+    // TODO: validate; currently assumes proper format
+    if (typeof date === 'string') {
+      return date;
     }
-    rval += format[i];
-  }
-  rval += 'Z';
 
-  return rval;
-};
+    let rval = '';
 
-/**
- * Converts a date to a GeneralizedTime value.
- *
- * @param date the date to convert.
- *
- * @return the GeneralizedTime value as a string.
- */
-static dateToGeneralizedTime(date: Date) {
-  // TODO: validate; currently assumes proper format
-  if(typeof date === 'string') {
-    return date;
-  }
+    // create format YYMMDDhhmmssZ
+    const format = [];
+    format.push(('' + date.getUTCFullYear()).substr(2));
+    format.push('' + (date.getUTCMonth() + 1));
+    format.push('' + date.getUTCDate());
+    format.push('' + date.getUTCHours());
+    format.push('' + date.getUTCMinutes());
+    format.push('' + date.getUTCSeconds());
 
-  let rval = '';
-
-  // create format YYYYMMDDHHMMSSZ
-  const format = [];
-  format.push('' + date.getUTCFullYear());
-  format.push('' + (date.getUTCMonth() + 1));
-  format.push('' + date.getUTCDate());
-  format.push('' + date.getUTCHours());
-  format.push('' + date.getUTCMinutes());
-  format.push('' + date.getUTCSeconds());
-
-  // ensure 2 digits are used for each format entry
-  for(let i = 0; i < format.length; ++i) {
-    if(format[i].length < 2) {
-      rval += '0';
+    // ensure 2 digits are used for each format entry
+    for (let i = 0; i < format.length; ++i) {
+      if (format[i].length < 2) {
+        rval += '0';
+      }
+      rval += format[i];
     }
-    rval += format[i];
-  }
-  rval += 'Z';
+    rval += 'Z';
 
-  return rval;
-};
-
-/**
- * Converts a javascript integer to a DER-encoded byte buffer to be used
- * as the value for an INTEGER type.
- *
- * @param x the integer.
- *
- * @return the byte buffer.
- */
-static integerToDer(x: any) {
-  const rval = new ByteStringBuffer();
-  if(x >= -0x80 && x < 0x80) {
-    return rval.putSignedInt(x, 8);
-  }
-  if(x >= -0x8000 && x < 0x8000) {
-    return rval.putSignedInt(x, 16);
-  }
-  if(x >= -0x800000 && x < 0x800000) {
-    return rval.putSignedInt(x, 24);
-  }
-  if(x >= -0x80000000 && x < 0x80000000) {
-    return rval.putSignedInt(x, 32);
-  }
-  const error = new Error('Integer too large; max is 32-bits.') as DerError;
-  error.integer = x;
-  throw error;
-};
-
-/**
- * Converts a DER-encoded byte buffer to a javascript integer. This is
- * typically used to decode the value of an INTEGER type.
- *
- * @param bytes the byte buffer.
- *
- * @return the integer.
- */
-static derToInteger(bytes: string | ByteStringBuffer) {
-  // wrap in buffer if needed
-  if(typeof bytes === 'string') {
-    bytes = new ByteStringBuffer(bytes);
+    return rval;
   }
 
-  const n = bytes.length() * 8;
-  if(n > 32) {
-    throw new Error('Integer too large; max is 32-bits.');
+  /**
+   * Converts a date to a GeneralizedTime value.
+   *
+   * @param date the date to convert.
+   *
+   * @return the GeneralizedTime value as a string.
+   */
+  static dateToGeneralizedTime(date: Date) {
+    // TODO: validate; currently assumes proper format
+    if (typeof date === 'string') {
+      return date;
+    }
+
+    let rval = '';
+
+    // create format YYYYMMDDHHMMSSZ
+    const format = [];
+    format.push('' + date.getUTCFullYear());
+    format.push('' + (date.getUTCMonth() + 1));
+    format.push('' + date.getUTCDate());
+    format.push('' + date.getUTCHours());
+    format.push('' + date.getUTCMinutes());
+    format.push('' + date.getUTCSeconds());
+
+    // ensure 2 digits are used for each format entry
+    for (let i = 0; i < format.length; ++i) {
+      if (format[i].length < 2) {
+        rval += '0';
+      }
+      rval += format[i];
+    }
+    rval += 'Z';
+
+    return rval;
   }
-  return bytes.getSignedInt(n);
-};
 
-/**
- * Validates that the given ASN.1 object is at least a super set of the
- * given ASN.1 structure. Only tag classes and types are checked. An
- * optional map may also be provided to capture ASN.1 values while the
- * structure is checked.
- *
- * To capture an ASN.1 value, set an object in the validator's 'capture'
- * parameter to the key to use in the capture map. To capture the full
- * ASN.1 object, specify 'captureAsn1'. To capture BIT STRING bytes, including
- * the leading unused bits counter byte, specify 'captureBitStringContents'.
- * To capture BIT STRING bytes, without the leading unused bits counter byte,
- * specify 'captureBitStringValue'.
- *
- * Objects in the validator may set a field 'optional' to true to indicate
- * that it isn't necessary to pass validation.
- *
- * @param obj the ASN.1 object to validate.
- * @param v the ASN.1 structure validator.
- * @param capture an optional map to capture values in.
- * @param errors an optional array for storing validation errors.
- *
- * @return true on success, false on failure.
- */
-static validate(obj: any, v: Asn1Validator, capture?: Record<string, unknown>, errors?: any[]) {
-  let rval = false;
+  /**
+   * Converts a javascript integer to a DER-encoded byte buffer to be used
+   * as the value for an INTEGER type.
+   *
+   * @param x the integer.
+   *
+   * @return the byte buffer.
+   */
+  static integerToDer(x: any) {
+    const rval = new ByteStringBuffer();
+    if (x >= -0x80 && x < 0x80) {
+      return rval.putSignedInt(x, 8);
+    }
+    if (x >= -0x8000 && x < 0x8000) {
+      return rval.putSignedInt(x, 16);
+    }
+    if (x >= -0x800000 && x < 0x800000) {
+      return rval.putSignedInt(x, 24);
+    }
+    if (x >= -0x80000000 && x < 0x80000000) {
+      return rval.putSignedInt(x, 32);
+    }
+    const error = new Error('Integer too large; max is 32-bits.') as DerError;
+    error.integer = x;
+    throw error;
+  }
 
-  // ensure tag class and type are the same if specified
-  if((obj.tagClass === v.tagClass || typeof(v.tagClass) === 'undefined') &&
-    (obj.type === v.type || typeof(v.type) === 'undefined')) {
-    // ensure constructed flag is the same if specified
-    if(obj.constructed === v.constructed ||
-      typeof(v.constructed) === 'undefined') {
-      rval = true;
+  /**
+   * Converts a DER-encoded byte buffer to a javascript integer. This is
+   * typically used to decode the value of an INTEGER type.
+   *
+   * @param bytes the byte buffer.
+   *
+   * @return the integer.
+   */
+  static derToInteger(bytes: string | ByteStringBuffer) {
+    // wrap in buffer if needed
+    if (typeof bytes === 'string') {
+      bytes = new ByteStringBuffer(bytes);
+    }
 
-      // handle sub values
-      if(v.value && isArray(v.value)) {
-        let j = 0;
-        for(let i = 0; rval && i < v.value.length; ++i) {
-          const schemaItem = v.value[i];
-          rval = !!schemaItem.optional;
+    const n = bytes.length() * 8;
+    if (n > 32) {
+      throw new Error('Integer too large; max is 32-bits.');
+    }
+    return bytes.getSignedInt(n);
+  }
 
-          // current child in the object
-          const objChild = obj.value[j];
+  /**
+   * Validates that the given ASN.1 object is at least a super set of the
+   * given ASN.1 structure. Only tag classes and types are checked. An
+   * optional map may also be provided to capture ASN.1 values while the
+   * structure is checked.
+   *
+   * To capture an ASN.1 value, set an object in the validator's 'capture'
+   * parameter to the key to use in the capture map. To capture the full
+   * ASN.1 object, specify 'captureAsn1'. To capture BIT STRING bytes, including
+   * the leading unused bits counter byte, specify 'captureBitStringContents'.
+   * To capture BIT STRING bytes, without the leading unused bits counter byte,
+   * specify 'captureBitStringValue'.
+   *
+   * Objects in the validator may set a field 'optional' to true to indicate
+   * that it isn't necessary to pass validation.
+   *
+   * @param obj the ASN.1 object to validate.
+   * @param v the ASN.1 structure validator.
+   * @param capture an optional map to capture values in.
+   * @param errors an optional array for storing validation errors.
+   *
+   * @return true on success, false on failure.
+   */
+  static validate(obj: any, v: Asn1Validator, capture?: Record<string, unknown>, errors?: any[]) {
+    let rval = false;
 
-          // if there is no child left to match
-          if(!objChild) {
-            // if optional, ok (rval already true), else fail below
-            if(!schemaItem.optional) {
-              rval = false;
-              if(errors) {
-                errors.push('[' + v.name + '] ' +
-                  'Missing required element. Expected tag class "' +
-                  schemaItem.tagClass + '", type "' + schemaItem.type + '"');
+    // ensure tag class and type are the same if specified
+    if ((obj.tagClass === v.tagClass || typeof v.tagClass === 'undefined') && (obj.type === v.type || typeof v.type === 'undefined')) {
+      // ensure constructed flag is the same if specified
+      if (obj.constructed === v.constructed || typeof v.constructed === 'undefined') {
+        rval = true;
+
+        // handle sub values
+        if (v.value && isArray(v.value)) {
+          let j = 0;
+          for (let i = 0; rval && i < v.value.length; ++i) {
+            const schemaItem = v.value[i];
+            rval = !!schemaItem.optional;
+
+            // current child in the object
+            const objChild = obj.value[j];
+
+            // if there is no child left to match
+            if (!objChild) {
+              // if optional, ok (rval already true), else fail below
+              if (!schemaItem.optional) {
+                rval = false;
+                if (errors) {
+                  errors.push(
+                    '[' +
+                      v.name +
+                      '] ' +
+                      'Missing required element. Expected tag class "' +
+                      schemaItem.tagClass +
+                      '", type "' +
+                      schemaItem.type +
+                      '"'
+                  );
+                }
+              }
+              continue;
+            }
+
+            // If schema explicitly specifies tagClass/type, do a quick structural check
+            // to avoid unnecessary recursion/side-effects when tags clearly don't match.
+            const schemaHasTag = typeof schemaItem.tagClass !== 'undefined' && typeof schemaItem.type !== 'undefined';
+
+            if (schemaHasTag && (objChild.tagClass !== schemaItem.tagClass || objChild.type !== schemaItem.type)) {
+              // Tags do not match.
+              if (schemaItem.optional) {
+                // Skip this schema element (don't consume objChild; don't call recursive validate).
+                rval = true;
+                continue;
+              } else {
+                // Required schema item mismatched - fail.
+                rval = false;
+                if (errors) {
+                  errors.push(
+                    '[' +
+                      v.name +
+                      '] ' +
+                      'Tag mismatch. Expected (' +
+                      schemaItem.tagClass +
+                      ',' +
+                      schemaItem.type +
+                      '), got (' +
+                      objChild.tagClass +
+                      ',' +
+                      objChild.type +
+                      ')'
+                  );
+                }
+                break;
               }
             }
-            continue;
-          }
 
-          // If schema explicitly specifies tagClass/type, do a quick structural check
-          // to avoid unnecessary recursion/side-effects when tags clearly don't match.
-          const schemaHasTag = (typeof schemaItem.tagClass !== 'undefined' &&
-            typeof schemaItem.type !== 'undefined');
-
-          if(schemaHasTag &&
-            (objChild.tagClass !== schemaItem.tagClass || objChild.type !== schemaItem.type)) {
-            // Tags do not match.
-            if(schemaItem.optional) {
-              // Skip this schema element (don't consume objChild; don't call recursive validate).
+            // Tags are compatible (or schema did not declare tags) - dive into recursive validate.
+            const childRval = Asn1Codec.validate(objChild, schemaItem, capture, errors);
+            if (childRval) {
+              // consume this child
+              ++j;
               rval = true;
-              continue;
+            } else if (schemaItem.optional) {
+              // validation failed but element is optional => skip schema item (don't consume child)
+              rval = true;
             } else {
-              // Required schema item mismatched - fail.
+              // required item failed
               rval = false;
-              if(errors) {
-                errors.push('[' + v.name + '] ' +
-                  'Tag mismatch. Expected (' +
-                  schemaItem.tagClass + ',' + schemaItem.type + '), got (' +
-                  objChild.tagClass + ',' + objChild.type + ')');
-              }
+              // errors should already be populated by recursive call; keep failing
               break;
             }
           }
+        }
 
-          // Tags are compatible (or schema did not declare tags) - dive into recursive validate.
-          const childRval = Asn1Codec.validate(objChild, schemaItem, capture, errors);
-          if(childRval) {
-            // consume this child
-            ++j;
-            rval = true;
-          } else if(schemaItem.optional) {
-            // validation failed but element is optional => skip schema item (don't consume child)
-            rval = true;
-          } else {
-            // required item failed
-            rval = false;
-            // errors should already be populated by recursive call; keep failing
-            break;
+        if (rval && capture) {
+          if (v.capture) {
+            capture[v.capture] = obj.value;
           }
-        }
-      }
-
-      if(rval && capture) {
-        if(v.capture) {
-          capture[v.capture] = obj.value;
-        }
-        if(v.captureAsn1) {
-          capture[v.captureAsn1] = obj;
-        }
-        if(v.captureBitStringContents && 'bitStringContents' in obj) {
-          capture[v.captureBitStringContents] = obj.bitStringContents;
-        }
-        if(v.captureBitStringValue && 'bitStringContents' in obj) {
-          if(obj.bitStringContents.length < 2) {
-            capture[v.captureBitStringValue] = '';
-          } else {
-            // FIXME: support unused bits with data shifting
-            const unused = obj.bitStringContents.charCodeAt(0);
-            if(unused !== 0) {
-              throw new Error(
-                'captureBitStringValue only supported for zero unused bits');
+          if (v.captureAsn1) {
+            capture[v.captureAsn1] = obj;
+          }
+          if (v.captureBitStringContents && 'bitStringContents' in obj) {
+            capture[v.captureBitStringContents] = obj.bitStringContents;
+          }
+          if (v.captureBitStringValue && 'bitStringContents' in obj) {
+            if (obj.bitStringContents.length < 2) {
+              capture[v.captureBitStringValue] = '';
+            } else {
+              // FIXME: support unused bits with data shifting
+              const unused = obj.bitStringContents.charCodeAt(0);
+              if (unused !== 0) {
+                throw new Error('captureBitStringValue only supported for zero unused bits');
+              }
+              capture[v.captureBitStringValue] = obj.bitStringContents.slice(1);
             }
-            capture[v.captureBitStringValue] = obj.bitStringContents.slice(1);
           }
         }
+      } else if (errors) {
+        errors.push('[' + v.name + '] ' + 'Expected constructed "' + v.constructed + '", got "' + obj.constructed + '"');
       }
-    } else if(errors) {
-      errors.push(
-        '[' + v.name + '] ' +
-        'Expected constructed "' + v.constructed + '", got "' +
-        obj.constructed + '"');
+    } else if (errors) {
+      if (obj.tagClass !== v.tagClass) {
+        errors.push('[' + v.name + '] ' + 'Expected tag class "' + v.tagClass + '", got "' + obj.tagClass + '"');
+      }
+      if (obj.type !== v.type) {
+        errors.push('[' + v.name + '] ' + 'Expected type "' + v.type + '", got "' + obj.type + '"');
+      }
     }
-  } else if(errors) {
-    if(obj.tagClass !== v.tagClass) {
-      errors.push(
-        '[' + v.name + '] ' +
-        'Expected tag class "' + v.tagClass + '", got "' +
-        obj.tagClass + '"');
-    }
-    if(obj.type !== v.type) {
-      errors.push(
-        '[' + v.name + '] ' +
-        'Expected type "' + v.type + '", got "' +
-        obj.type + '"');
-    }
+    return rval;
   }
-  return rval;
-};
 
-
-/**
- * Pretty prints an ASN.1 object to a string.
- *
- * @param obj the object to write out.
- * @param level the level in the tree.
- * @param indentation the indentation to use.
- *
- * @return the string.
- */
-static prettyPrint(obj: any, level?: number, indentation?: number): string {
-  return prettyPrintAsn1(obj, level, indentation);
-}
+  /**
+   * Pretty prints an ASN.1 object to a string.
+   *
+   * @param obj the object to write out.
+   * @param level the level in the tree.
+   * @param indentation the indentation to use.
+   *
+   * @return the string.
+   */
+  static prettyPrint(obj: any, level?: number, indentation?: number): string {
+    return prettyPrintAsn1(obj, level, indentation);
+  }
 
   static createCertkitNamespace(oids?: Record<string, string>): Asn1NamespaceObject {
     setPrettyPrintPkiOids(oids);

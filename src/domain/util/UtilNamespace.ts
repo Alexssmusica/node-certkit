@@ -1,16 +1,16 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import {DataBuffer} from '../buffer/DataBuffer.js';
-import {Base58Codec} from '../encoding/Base58Codec.js';
-import {Base64Codec} from '../encoding/Base64Codec.js';
-import {HexCodec} from '../encoding/HexCodec.js';
-import {RawCodec} from '../encoding/RawCodec.js';
-import {Utf16Codec, Utf8TextCodec} from '../encoding/Utf16Codec.js';
-import {encodeUtf8, decodeUtf8} from '../encoding/Utf8Codec.js';
-import {EnvInfo} from '../../infrastructure/env/EnvInfo.js';
-import {isArray, isArrayBuffer, isArrayBufferView} from './typeChecks.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { DataBuffer } from '../buffer/DataBuffer.js';
+import { Base58Codec } from '../encoding/Base58Codec.js';
+import { Base64Codec } from '../encoding/Base64Codec.js';
+import { HexCodec } from '../encoding/HexCodec.js';
+import { RawCodec } from '../encoding/RawCodec.js';
+import { Utf16Codec, Utf8TextCodec } from '../encoding/Utf16Codec.js';
+import { encodeUtf8, decodeUtf8 } from '../encoding/Utf8Codec.js';
+import { EnvInfo } from '../../infrastructure/env/EnvInfo.js';
+import { isArray, isArrayBuffer, isArrayBufferView } from './typeChecks.js';
 
 type BaseNModule = {
-  encode: (input: Uint8Array | {length(): number; at(i: number): number}, alphabet: string, maxline?: number) => string;
+  encode: (input: Uint8Array | { length(): number; at(i: number): number }, alphabet: string, maxline?: number) => string;
   decode: (input: string, alphabet: string) => Buffer | Uint8Array | undefined;
 };
 
@@ -20,15 +20,15 @@ export type UtilNamespaceObject = Record<string, unknown> & {
   ByteStringBuffer: typeof ByteStringBuffer;
   DataBuffer: typeof DataBuffer;
   binary: {
-    raw: {encode: typeof RawCodec.encode; decode: typeof RawCodec.decode};
-    hex: {encode: (bytes: Uint8Array | string) => string; decode: typeof HexCodec.decode};
-    base64: {encode: typeof Base64Codec.encode; decode: typeof Base64Codec.decode};
-    base58: {encode: typeof Base58Codec.encode; decode: typeof Base58Codec.decode};
+    raw: { encode: typeof RawCodec.encode; decode: typeof RawCodec.decode };
+    hex: { encode: (bytes: Uint8Array | string) => string; decode: typeof HexCodec.decode };
+    base64: { encode: typeof Base64Codec.encode; decode: typeof Base64Codec.decode };
+    base58: { encode: typeof Base58Codec.encode; decode: typeof Base58Codec.decode };
     baseN: BaseNModule;
   };
   text: {
-    utf8: {encode: typeof Utf8TextCodec.encode; decode: typeof Utf8TextCodec.decode};
-    utf16: {encode: typeof Utf16Codec.encode; decode: typeof Utf16Codec.decode};
+    utf8: { encode: typeof Utf8TextCodec.encode; decode: typeof Utf8TextCodec.decode };
+    utf16: { encode: typeof Utf16Codec.encode; decode: typeof Utf16Codec.decode };
   };
   createBuffer: (input?: unknown, encoding?: string) => ByteStringBuffer;
   bytesToHex: (bytes: string) => string;
@@ -40,7 +40,7 @@ export type UtilNamespaceObject = Record<string, unknown> & {
   isNodejs: boolean;
   globalScope: typeof globalThis;
   estimateCores: (
-    options: {update?: boolean} | ((err: null, cores: number) => void),
+    options: { update?: boolean } | ((err: null, cores: number) => void),
     callback?: (err: null, cores: number) => void
   ) => void;
   cores?: number;
@@ -105,10 +105,11 @@ export class UtilNamespace {
 
   static int32ToBytes(i: number): string {
     return (
-      String.fromCharCode(i >> 24 & 0xFF) +
-      String.fromCharCode(i >> 16 & 0xFF) +
-      String.fromCharCode(i >> 8 & 0xFF) +
-      String.fromCharCode(i & 0xFF));
+      String.fromCharCode((i >> 24) & 0xff) +
+      String.fromCharCode((i >> 16) & 0xff) +
+      String.fromCharCode((i >> 8) & 0xff) +
+      String.fromCharCode(i & 0xff)
+    );
   }
 
   static encode64(input: string, maxline?: number): string {
@@ -147,19 +148,19 @@ export class UtilNamespace {
       last = re.lastIndex;
       const code = match[0][1]!;
       switch (code) {
-      case 's':
-      case 'o':
-        if (argi < args.length) {
-          parts.push(String(args[argi++]));
-        } else {
-          parts.push('<?>');
-        }
-        break;
-      case '%':
-        parts.push('%');
-        break;
-      default:
-        parts.push('<%' + code + '?>');
+        case 's':
+        case 'o':
+          if (argi < args.length) {
+            parts.push(String(args[argi++]));
+          } else {
+            parts.push('<?>');
+          }
+          break;
+        case '%':
+          parts.push('%');
+          break;
+        default:
+          parts.push('<%' + code + '?>');
       }
     }
     parts.push(format.substring(last));
@@ -168,15 +169,23 @@ export class UtilNamespace {
 
   static formatNumber(number: number, decimals?: number, dec_point?: string, thousands_sep?: string): string {
     const n = number;
-    const c = isNaN(decimals = Math.abs(decimals!)) ? 2 : decimals!;
+    const c = isNaN((decimals = Math.abs(decimals!))) ? 2 : decimals!;
     const d = dec_point === undefined ? ',' : dec_point;
     const t = thousands_sep === undefined ? '.' : thousands_sep;
     const s = n < 0 ? '-' : '';
     const i = parseInt(String(Math.abs(+n || 0).toFixed(c)), 10) + '';
-    const j = (i.length > 3) ? i.length % 3 : 0;
-    return s + (j ? i.substr(0, j) + t : '') +
+    const j = i.length > 3 ? i.length % 3 : 0;
+    return (
+      s +
+      (j ? i.substr(0, j) + t : '') +
       i.substr(j).replace(/(\d{3})(?=\d)/g, '$1' + t) +
-      (c ? d + Math.abs(n - parseInt(i, 10)).toFixed(c).slice(2) : '');
+      (c
+        ? d +
+          Math.abs(n - parseInt(i, 10))
+            .toFixed(c)
+            .slice(2)
+        : '')
+    );
   }
 
   static formatSize(size: number): string {
@@ -219,7 +228,7 @@ export class UtilNamespace {
 
   static bytesFromIPv6(ip: string): string | null {
     let blanks = 0;
-    const segments = ip.split(':').filter(function(e) {
+    const segments = ip.split(':').filter(function (e) {
       if (e.length === 0) {
         ++blanks;
       }
@@ -268,7 +277,7 @@ export class UtilNamespace {
       return null;
     }
     const ip: string[] = [];
-    const zeroGroups: {start: number; end: number}[] = [];
+    const zeroGroups: { start: number; end: number }[] = [];
     let zeroMaxGroup = 0;
     for (let i = 0; i < bytes.length; i += 2) {
       let hex = UtilNamespace.bytesToHex(bytes[i]! + bytes[i + 1]!);
@@ -279,11 +288,10 @@ export class UtilNamespace {
         const last = zeroGroups[zeroGroups.length - 1];
         const idx = ip.length;
         if (!last || idx !== last.end + 1) {
-          zeroGroups.push({start: idx, end: idx});
+          zeroGroups.push({ start: idx, end: idx });
         } else {
           last.end = idx;
-          if ((last.end - last.start) >
-            (zeroGroups[zeroMaxGroup]!.end - zeroGroups[zeroMaxGroup]!.start)) {
+          if (last.end - last.start > zeroGroups[zeroMaxGroup]!.end - zeroGroups[zeroMaxGroup]!.start) {
             zeroMaxGroup = zeroGroups.length - 1;
           }
         }
@@ -315,7 +323,7 @@ export function createUtilNamespace(baseN: BaseNModule): UtilNamespaceObject {
   ns.isArray = UtilNamespace.isArray;
   ns.isArrayBuffer = UtilNamespace.isArrayBuffer;
   ns.isArrayBufferView = UtilNamespace.isArrayBufferView;
-  ns.createBuffer = function(input?: unknown, encoding?: string) {
+  ns.createBuffer = function (input?: unknown, encoding?: string) {
     return UtilNamespace.createBuffer(input, encoding);
   };
   ns.fillString = UtilNamespace.fillString.bind(UtilNamespace);
@@ -342,7 +350,7 @@ export function createUtilNamespace(baseN: BaseNModule): UtilNamespaceObject {
   ns.setImmediate = EnvInfo.setImmediate;
   ns.isNodejs = EnvInfo.isNodejs;
   ns.globalScope = EnvInfo.globalScope;
-  ns.estimateCores = function(
+  ns.estimateCores = function (
     options: Parameters<typeof EnvInfo.estimateCores>[1],
     callback?: Parameters<typeof EnvInfo.estimateCores>[2]
   ) {

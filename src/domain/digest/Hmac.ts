@@ -1,5 +1,5 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import {isArray} from '../util/typeChecks.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { isArray } from '../util/typeChecks.js';
 
 interface BlockDigest {
   blockLength: number;
@@ -8,7 +8,7 @@ interface BlockDigest {
   digest: () => ByteStringBuffer;
 }
 
-export type DigestAlgorithmRegistry = Record<string, {create: () => BlockDigest}>;
+export type DigestAlgorithmRegistry = Record<string, { create: () => BlockDigest }>;
 
 export interface HmacContext {
   start: (md: string | BlockDigest | null, key: unknown) => void;
@@ -26,11 +26,7 @@ class HmacEngine {
   #ipadding: string | null = null;
   #opadding: string | null = null;
 
-  start(
-    md: string | BlockDigest | null,
-    key: unknown,
-    algorithms: DigestAlgorithmRegistry
-  ): void {
+  start(md: string | BlockDigest | null, key: unknown, algorithms: DigestAlgorithmRegistry): void {
     if (md !== null) {
       if (typeof md === 'string') {
         const name = md.toLowerCase();
@@ -71,14 +67,14 @@ class HmacEngine {
     for (let i = 0; i < keylen; ++i) {
       const tmp = keyBuffer.at(i);
       ipadding.putByte(0x36 ^ tmp);
-      opadding.putByte(0x5C ^ tmp);
+      opadding.putByte(0x5c ^ tmp);
     }
 
     if (keylen < this.#md!.blockLength) {
       const pad = this.#md!.blockLength - keylen;
       for (let i = 0; i < pad; ++i) {
         ipadding.putByte(0x36);
-        opadding.putByte(0x5C);
+        opadding.putByte(0x5c);
       }
     }
     this.#key = keyBuffer;

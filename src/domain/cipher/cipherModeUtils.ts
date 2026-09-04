@@ -1,10 +1,7 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import {isArray} from '../util/typeChecks.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { isArray } from '../util/typeChecks.js';
 
-export function transformIV(
-  iv: string | ByteStringBuffer | number[] | unknown,
-  blockSize: number
-): number[] {
+export function transformIV(iv: string | ByteStringBuffer | number[] | unknown, blockSize: number): number[] {
   if (typeof iv === 'string') {
     iv = new ByteStringBuffer(iv);
   }
@@ -19,9 +16,7 @@ export function transformIV(
 
   const buf = iv as ByteStringBuffer;
   if (buf.length() < blockSize) {
-    throw new Error(
-      'Invalid IV length; got ' + buf.length() +
-      ' bytes and expected ' + blockSize + ' bytes.');
+    throw new Error('Invalid IV length; got ' + buf.length() + ' bytes and expected ' + blockSize + ' bytes.');
   }
 
   if (!isArray(iv)) {
@@ -37,11 +32,11 @@ export function transformIV(
 }
 
 export function inc32(block: number[]): void {
-  block[block.length - 1] = (block[block.length - 1]! + 1) & 0xFFFFFFFF;
+  block[block.length - 1] = (block[block.length - 1]! + 1) & 0xffffffff;
 }
 
 export function from64To32(num: number): [number, number] {
-  return [(num / 0x100000000) | 0, num & 0xFFFFFFFF];
+  return [(num / 0x100000000) | 0, num & 0xffffffff];
 }
 
 export type BlockCipherApi = {

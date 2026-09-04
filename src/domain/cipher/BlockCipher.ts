@@ -1,4 +1,4 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 
 export type CipherAlgorithm = {
   mode: {
@@ -28,11 +28,7 @@ export type BlockCipherStartOptions = {
   output?: ByteStringBuffer;
 };
 
-export type PaddingFunction = (
-  blockSize: number,
-  buffer: ByteStringBuffer,
-  decrypt: boolean
-) => boolean;
+export type PaddingFunction = (blockSize: number, buffer: ByteStringBuffer, decrypt: boolean) => boolean;
 
 export class BlockCipher {
   algorithm: CipherAlgorithm;
@@ -74,8 +70,7 @@ export class BlockCipher {
       this._input!.putBuffer(input);
     }
 
-    while (!this._op.call(this.mode, this._input!, this.output!, this._finish) &&
-      !this._finish) {}
+    while (!this._op.call(this.mode, this._input!, this.output!, this._finish) && !this._finish) {}
 
     this._input!.compact();
   }

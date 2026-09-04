@@ -1,6 +1,6 @@
-import {BigInteger} from '../math/BigInteger.js';
-import type {BigIntegerRandomSource} from '../math/BigInteger.js';
-import {EnvInfo} from '../../infrastructure/env/EnvInfo.js';
+import { BigInteger } from '../math/BigInteger.js';
+import type { BigIntegerRandomSource } from '../math/BigInteger.js';
+import { EnvInfo } from '../../infrastructure/env/EnvInfo.js';
 
 const GCD_30_DELTA = [6, 4, 2, 4, 2, 4, 6, 2];
 const THIRTY = new BigInteger(null);
@@ -8,8 +8,8 @@ THIRTY.fromInt(30);
 const op_or = (x: number, y: number) => x | y;
 
 export type PrimeGenerateOptions = Record<string, unknown> & {
-  algorithm?: string | {name: string; options?: Record<string, unknown>};
-  prng?: {getBytesSync(count: number): string};
+  algorithm?: string | { name: string; options?: Record<string, unknown> };
+  prng?: { getBytesSync(count: number): string };
 };
 
 function getMillerRabinTests(bits: number): number {
@@ -77,7 +77,7 @@ function primeinc(
       return callback(null, num);
     }
     num.dAddOffset(GCD_30_DELTA[deltaIdx++ % 8], 0);
-  } while (maxBlockTime < 0 || (+new Date() - start < maxBlockTime));
+  } while (maxBlockTime < 0 || +new Date() - start < maxBlockTime);
 
   EnvInfo.setImmediate(() => {
     primeinc(num, bits, rng, deltaIdx, mrTests, maxBlockTime, callback);
@@ -98,7 +98,7 @@ export class PrimeService {
 
     let algorithm = options.algorithm || 'PRIMEINC';
     if (typeof algorithm === 'string') {
-      algorithm = {name: algorithm};
+      algorithm = { name: algorithm };
     }
     const algorithmOptions = algorithm.options || {};
 
@@ -134,9 +134,9 @@ export class PrimeService {
         let cb: (err: Error | null, num?: BigInteger) => void;
         if (typeof options === 'function') {
           cb = options;
-          opts = {prng: {getBytesSync: getRandomBytes}};
+          opts = { prng: { getBytesSync: getRandomBytes } };
         } else {
-          opts = {...options, prng: options.prng || {getBytesSync: getRandomBytes}};
+          opts = { ...options, prng: options.prng || { getBytesSync: getRandomBytes } };
           cb = callback!;
         }
         PrimeService.generateProbablePrime(bits, opts, cb);

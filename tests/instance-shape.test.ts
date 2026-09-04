@@ -1,4 +1,4 @@
-import {describe, it, expect, beforeAll, beforeEach, afterEach, afterAll} from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import certkit from '../src/presentation/index.js';
 /**
  * Snapshot test for factory-created instance shapes.
@@ -15,22 +15,22 @@ const password = fs.readFileSync(path.join(fixtureDir, 'certificate.password.txt
 
 function describeValue(value) {
   if (value === null || value === undefined) {
-    return {type: String(value)};
+    return { type: String(value) };
   }
   const t = typeof value;
   if (t === 'function') {
-    return {type: 'function', length: value.length};
+    return { type: 'function', length: value.length };
   }
   if (t !== 'object') {
-    return {type: t};
+    return { type: t };
   }
   if (Array.isArray(value)) {
-    return {type: 'array', length: value.length};
+    return { type: 'array', length: value.length };
   }
   if (value instanceof Date) {
-    return {type: 'date'};
+    return { type: 'date' };
   }
-  return {type: 'object'};
+  return { type: 'object' };
 }
 
 function describeInstance(instance, label) {
@@ -90,28 +90,13 @@ function buildActual() {
   actual['hmac.create'] = describeInstance(certkit.hmac.create(), 'hmac.create');
 
   const aesKey = certkit.util.createBuffer(certkit.random.getBytesSync(16));
-  actual['cipher.createCipher(AES-CBC)'] = describeInstance(
-    certkit.cipher.createCipher('AES-CBC', aesKey),
-    'cipher.createCipher(AES-CBC)'
-  );
+  actual['cipher.createCipher(AES-CBC)'] = describeInstance(certkit.cipher.createCipher('AES-CBC', aesKey), 'cipher.createCipher(AES-CBC)');
 
-  actual['prng.create'] = describeInstance(
-    certkit.prng.create({md: certkit.md.sha256}),
-    'prng.create'
-  );
+  actual['prng.create'] = describeInstance(certkit.prng.create({ md: certkit.md.sha256 }), 'prng.create');
   actual['random'] = describeInstance(certkit.random, 'random');
-  actual['pki.createCertificate'] = describeInstance(
-    certkit.pki.createCertificate(),
-    'pki.createCertificate'
-  );
-  actual['pki.createCertificationRequest'] = describeInstance(
-    certkit.pki.createCertificationRequest(),
-    'pki.createCertificationRequest'
-  );
-  actual['pki.createCaStore'] = describeInstance(
-    certkit.pki.createCaStore(),
-    'pki.createCaStore'
-  );
+  actual['pki.createCertificate'] = describeInstance(certkit.pki.createCertificate(), 'pki.createCertificate');
+  actual['pki.createCertificationRequest'] = describeInstance(certkit.pki.createCertificationRequest(), 'pki.createCertificationRequest');
+  actual['pki.createCaStore'] = describeInstance(certkit.pki.createCaStore(), 'pki.createCaStore');
   actual['pkcs12.pkcs12FromAsn1'] = describeInstance(loadPkcs12(), 'pkcs12.pkcs12FromAsn1');
 
   const n = new certkit.jsbn.BigInteger('a1b2c3d4e5f6789012345678901234567890abcdef', 16);
@@ -120,14 +105,8 @@ function buildActual() {
   const p = new certkit.jsbn.BigInteger('f00d', 16);
   const q = new certkit.jsbn.BigInteger('ba11', 16);
 
-  actual['rsa.setPublicKey'] = describeInstance(
-    certkit.pki.rsa.setPublicKey(n, e),
-    'rsa.setPublicKey'
-  );
-  actual['rsa.setPrivateKey'] = describeInstance(
-    certkit.pki.rsa.setPrivateKey(n, e, d, p, q),
-    'rsa.setPrivateKey'
-  );
+  actual['rsa.setPublicKey'] = describeInstance(certkit.pki.rsa.setPublicKey(n, e), 'rsa.setPublicKey');
+  actual['rsa.setPrivateKey'] = describeInstance(certkit.pki.rsa.setPrivateKey(n, e, d, p, q), 'rsa.setPrivateKey');
   actual['pss.create'] = describeInstance(
     certkit.pss.create({
       md: certkit.md.sha1.create(),
@@ -136,24 +115,12 @@ function buildActual() {
     }),
     'pss.create'
   );
-  actual['mgf.mgf1.create'] = describeInstance(
-    certkit.mgf.mgf1.create(certkit.md.sha1.create()),
-    'mgf.mgf1.create'
-  );
+  actual['mgf.mgf1.create'] = describeInstance(certkit.mgf.mgf1.create(certkit.md.sha1.create()), 'mgf.mgf1.create');
 
   const rc2Key = certkit.util.createBuffer(certkit.random.getBytesSync(16));
-  actual['rc2.createEncryptionCipher'] = describeInstance(
-    certkit.rc2.createEncryptionCipher(rc2Key, 128),
-    'rc2.createEncryptionCipher'
-  );
-  actual['jsbn.BigInteger'] = describeInstance(
-    new certkit.jsbn.BigInteger('1234'),
-    'jsbn.BigInteger'
-  );
-  actual['util.createBuffer'] = describeInstance(
-    certkit.util.createBuffer(),
-    'util.createBuffer'
-  );
+  actual['rc2.createEncryptionCipher'] = describeInstance(certkit.rc2.createEncryptionCipher(rc2Key, 128), 'rc2.createEncryptionCipher');
+  actual['jsbn.BigInteger'] = describeInstance(new certkit.jsbn.BigInteger('1234'), 'jsbn.BigInteger');
+  actual['util.createBuffer'] = describeInstance(certkit.util.createBuffer(), 'util.createBuffer');
 
   return actual;
 }
@@ -163,19 +130,19 @@ function diffSnapshots(a, b) {
   const removed = [];
   const changed = [];
   const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
-  allKeys.forEach(function(key) {
+  allKeys.forEach(function (key) {
     if (!(key in a)) {
       added.push(key);
     } else if (!(key in b)) {
       removed.push(key);
     } else if (JSON.stringify(a[key]) !== JSON.stringify(b[key])) {
-      changed.push({key, expected: a[key], actual: b[key]});
+      changed.push({ key, expected: a[key], actual: b[key] });
     }
   });
-  return {added, removed, changed};
+  return { added, removed, changed };
 }
 
-describe('Instance shape snapshot', function() {
+describe('Instance shape snapshot', function () {
   it('matches the committed snapshot', (ctx) => {
     const actual = buildActual();
     const diff = diffSnapshots(expected, actual);
@@ -188,9 +155,15 @@ describe('Instance shape snapshot', function() {
         msg.push('Removed instances: ' + diff.removed.join(', '));
       }
       if (diff.changed.length) {
-        msg.push('Changed instances: ' + diff.changed.slice(0, 5).map(function(c) {
-          return c.key;
-        }).join(', '));
+        msg.push(
+          'Changed instances: ' +
+            diff.changed
+              .slice(0, 5)
+              .map(function (c) {
+                return c.key;
+              })
+              .join(', ')
+        );
       }
       expect.fail(msg.join('\n'));
     }

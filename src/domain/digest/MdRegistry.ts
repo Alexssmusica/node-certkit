@@ -1,7 +1,7 @@
-import type {Md5Digest} from './Md5.js';
-import type {Sha1Digest} from './Sha1.js';
-import type {Sha256Digest} from './Sha256.js';
-import type {Sha512Digest} from './Sha512.js';
+import type { Md5Digest } from './Md5.js';
+import type { Sha1Digest } from './Sha1.js';
+import type { Sha256Digest } from './Sha256.js';
+import type { Sha512Digest } from './Sha512.js';
 
 export type DigestFactory<T = unknown> = {
   create: () => T;

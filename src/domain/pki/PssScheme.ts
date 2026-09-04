@@ -1,5 +1,5 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import type {MessageDigest} from './Mgf1.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import type { MessageDigest } from './Mgf1.js';
 
 export type MgfObject = {
   generate: (seed: string, maskLen: number) => string;
@@ -9,7 +9,7 @@ export type PssCreateOptions = {
   md: MessageDigest;
   mgf: MgfObject;
   saltLength?: number;
-  prng?: {getBytesSync(count: number): string};
+  prng?: { getBytesSync(count: number): string };
   salt?: string | ByteStringBuffer;
 };
 
@@ -87,9 +87,8 @@ export class PssScheme {
           maskedDB += String.fromCharCode(db.charCodeAt(i) ^ dbMask.charCodeAt(i));
         }
 
-        const mask = (0xFF00 >> (8 * emLen - emBits)) & 0xFF;
-        maskedDB = String.fromCharCode(maskedDB.charCodeAt(0) & ~mask) +
-          maskedDB.substr(1);
+        const mask = (0xff00 >> (8 * emLen - emBits)) & 0xff;
+        maskedDB = String.fromCharCode(maskedDB.charCodeAt(0) & ~mask) + maskedDB.substr(1);
 
         return maskedDB + h + String.fromCharCode(0xbc);
       },
@@ -112,7 +111,7 @@ export class PssScheme {
         const maskedDB = em.substr(0, maskLen);
         const h = em.substr(maskLen, hLen);
 
-        const mask = (0xFF00 >> (8 * emLen - emBits)) & 0xFF;
+        const mask = (0xff00 >> (8 * emLen - emBits)) & 0xff;
         if ((maskedDB.charCodeAt(0) & mask) !== 0) {
           throw new Error('Bits beyond keysize not zero as expected.');
         }
@@ -157,7 +156,7 @@ export class PssScheme {
     create: (options?: PssCreateOptions) => PssObject;
   } {
     return {
-      create: function(options?: PssCreateOptions) {
+      create: function (options?: PssCreateOptions) {
         if (arguments.length === 3) {
           options = {
             md: arguments[0] as MessageDigest,
@@ -166,7 +165,7 @@ export class PssScheme {
           };
         }
         if (!options!.prng) {
-          options = {...options!, prng: {getBytesSync: getRandomBytes}};
+          options = { ...options!, prng: { getBytesSync: getRandomBytes } };
         }
         return PssScheme.create(options!);
       }

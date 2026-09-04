@@ -1,6 +1,6 @@
-import {ByteStringBuffer} from '../buffer/ByteStringBuffer.js';
-import {encodeUtf8} from '../encoding/Utf8Codec.js';
-import {UtilNamespace} from '../util/UtilNamespace.js';
+import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
+import { encodeUtf8 } from '../encoding/Utf8Codec.js';
+import { UtilNamespace } from '../util/UtilNamespace.js';
 
 interface Md5State {
   h0: number;
@@ -39,16 +39,12 @@ export class Md5 {
     Md5.#padding = String.fromCharCode(128);
     Md5.#padding += UtilNamespace.fillString(String.fromCharCode(0x00), 64);
     Md5.#g = [
-      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-      1, 6, 11, 0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12,
-      5, 8, 11, 14, 1, 4, 7, 10, 13, 0, 3, 6, 9, 12, 15, 2,
-      0, 7, 14, 5, 12, 3, 10, 1, 8, 15, 6, 13, 4, 11, 2, 9
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 1, 6, 11, 0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 5, 8, 11, 14, 1, 4, 7, 10,
+      13, 0, 3, 6, 9, 12, 15, 2, 0, 7, 14, 5, 12, 3, 10, 1, 8, 15, 6, 13, 4, 11, 2, 9
     ];
     Md5.#r = [
-      7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
-      5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20,
-      4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
-      6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21
+      7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4,
+      11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21
     ];
     Md5.#k = new Array<number>(64);
     for (let i = 0; i < 64; ++i) {
@@ -90,8 +86,8 @@ export class Md5 {
     this.#input = new ByteStringBuffer();
     this.#state = {
       h0: 0x67452301,
-      h1: 0xEFCDAB89,
-      h2: 0x98BADCFE,
+      h1: 0xefcdab89,
+      h2: 0x98badcfe,
       h3: 0x10325476
     };
     return md;
@@ -127,9 +123,7 @@ export class Md5 {
     const finalBlock = new ByteStringBuffer();
     finalBlock.putBytes(this.#input.bytes());
 
-    const remaining =
-      md.fullMessageLength![md.fullMessageLength!.length - 1]! +
-      md.messageLengthSize;
+    const remaining = md.fullMessageLength![md.fullMessageLength!.length - 1]! + md.messageLengthSize;
 
     const overflow = remaining & (md.blockLength - 1);
     finalBlock.putBytes(Md5.#padding!.substr(0, md.blockLength - overflow));

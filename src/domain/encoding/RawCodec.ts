@@ -14,6 +14,6 @@ export class RawCodec {
     for (let i = 0; i < s.length; ++i) {
       out[j++] = s.charCodeAt(i);
     }
-    return output ? (j - off) : out;
+    return output ? j - off : out;
   }
 }

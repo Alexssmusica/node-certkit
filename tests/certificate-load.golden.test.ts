@@ -1,4 +1,4 @@
-import {describe, it, expect, beforeAll, beforeEach, afterEach, afterAll} from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import certkit from '../src/presentation/index.js';
 /**
  * Golden test mirroring the certificate load use case.
@@ -11,12 +11,14 @@ const password = fs.readFileSync(path.join(fixtureDir, 'certificate.password.txt
 const meta = JSON.parse(fs.readFileSync(path.join(fixtureDir, 'certificate.meta.json'), 'utf8'));
 
 function getKey(p12) {
-  const shroudedKeyBags = p12.getBags({
-    bagType: certkit.pki.oids.pkcs8ShroudedKeyBag
-  })[certkit.pki.oids.pkcs8ShroudedKeyBag] ?? [];
-  const keyBags = p12.getBags({
-    bagType: certkit.pki.oids.keyBag
-  })[certkit.pki.oids.keyBag] ?? [];
+  const shroudedKeyBags =
+    p12.getBags({
+      bagType: certkit.pki.oids.pkcs8ShroudedKeyBag
+    })[certkit.pki.oids.pkcs8ShroudedKeyBag] ?? [];
+  const keyBags =
+    p12.getBags({
+      bagType: certkit.pki.oids.keyBag
+    })[certkit.pki.oids.keyBag] ?? [];
   const keyData = shroudedKeyBags.concat(keyBags);
   if (!keyData[0] || !keyData[0].key) {
     throw new Error('Private key not found in certificate');
@@ -27,9 +29,10 @@ function getKey(p12) {
 }
 
 function getPem(p12) {
-  const certBags = p12.getBags({
-    bagType: certkit.pki.oids.certBag
-  })[certkit.pki.oids.certBag] ?? [];
+  const certBags =
+    p12.getBags({
+      bagType: certkit.pki.oids.certBag
+    })[certkit.pki.oids.certBag] ?? [];
   if (!certBags[0] || !certBags[0].cert) {
     throw new Error('Certificate not found in certificate');
   }
@@ -38,8 +41,7 @@ function getPem(p12) {
 
 function getData(pem) {
   const certificate = certkit.pki.certificateFromPem(pem);
-  const values = certificate.subject.getField({name: 'commonName'}).value
-    .toString().split(':');
+  const values = certificate.subject.getField({ name: 'commonName' }).value.toString().split(':');
   return {
     emissao: certificate.validity.notBefore,
     validade: certificate.validity.notAfter,
@@ -62,12 +64,11 @@ function loadCertificate(input) {
   };
 }
 
-describe('Certificate load golden test', function() {
-  it('loads PKCS#12 and extracts PEM, key and certificate data', function() {
-    const result = loadCertificate({buffer: bufferB64, password});
+describe('Certificate load golden test', function () {
+  it('loads PKCS#12 and extracts PEM, key and certificate data', function () {
+    const result = loadCertificate({ buffer: bufferB64, password });
     expect(result.pem.includes('BEGIN CERTIFICATE')).toBeTruthy();
-    expect(result.key.includes('BEGIN RSA PRIVATE KEY') ||
-      result.key.includes('BEGIN PRIVATE KEY')).toBeTruthy();
+    expect(result.key.includes('BEGIN RSA PRIVATE KEY') || result.key.includes('BEGIN PRIVATE KEY')).toBeTruthy();
     expect(result.data.nome).toBe(meta.nome);
     expect(result.data.cnpj).toBe(meta.cnpj);
     expect(result.data.emissao.toISOString()).toBe(meta.notBefore);
@@ -75,8 +76,8 @@ describe('Certificate load golden test', function() {
   });
 
   it('throws on wrong password', (ctx) => {
-    expect(function() {
-      loadCertificate({buffer: bufferB64, password: 'wrong'});
+    expect(function () {
+      loadCertificate({ buffer: bufferB64, password: 'wrong' });
     }).toThrow();
   });
 });

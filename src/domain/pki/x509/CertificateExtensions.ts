@@ -1,4 +1,4 @@
-import type {X509AttachCtx, X509Extension} from './X509Types.js';
+import type { X509AttachCtx, X509Extension } from './X509Types.js';
 
 export type CertificateExtensionFromAsn1Options = {
   ctx: X509AttachCtx;
@@ -59,10 +59,7 @@ export type CertificateExtensionFromAsn1Options = {
  *
  * @return the array.
  */
-export function certificateExtensionsFromAsn1(
-  exts: any,
-  options?: CertificateExtensionFromAsn1Options
-): X509Extension[] {
+export function certificateExtensionsFromAsn1(exts: any, options?: CertificateExtensionFromAsn1Options): X509Extension[] {
   const rval: X509Extension[] = [];
   for (let i = 0; i < exts.value.length; ++i) {
     const extseq = exts.value[i];
@@ -81,10 +78,7 @@ export function certificateExtensionsFromAsn1(
  *
  * @return the parsed extension as an object.
  */
-export function certificateExtensionFromAsn1(
-  ext: any,
-  options?: CertificateExtensionFromAsn1Options
-): X509Extension {
+export function certificateExtensionFromAsn1(ext: any, options?: CertificateExtensionFromAsn1Options): X509Extension {
   const ctx = options!.ctx;
   const asn1 = ctx.asn1;
   const oids = ctx.oids;
@@ -98,7 +92,7 @@ export function certificateExtensionFromAsn1(
   e.id = asn1.derToOid(ext.value[0].value);
   e.critical = false;
   if (ext.value[1].type === asn1.Type.BOOLEAN) {
-    e.critical = (ext.value[1].value.charCodeAt(0) !== 0x00);
+    e.critical = ext.value[1].value.charCodeAt(0) !== 0x00;
     e.value = ext.value[2].value;
   } else {
     e.value = ext.value[1].value;
@@ -126,7 +120,7 @@ export function certificateExtensionFromAsn1(
     } else if (e.name === 'basicConstraints') {
       const ev = asn1.fromDer(e.value);
       if (ev.value.length > 0 && ev.value[0].type === asn1.Type.BOOLEAN) {
-        e.cA = (ev.value[0].value.charCodeAt(0) !== 0x00);
+        e.cA = ev.value[0].value.charCodeAt(0) !== 0x00;
       } else {
         e.cA = false;
       }
@@ -163,9 +157,7 @@ export function certificateExtensionFromAsn1(
       e.sslCA = (b2 & 0x04) === 0x04;
       e.emailCA = (b2 & 0x02) === 0x02;
       e.objCA = (b2 & 0x01) === 0x01;
-    } else if (
-      e.name === 'subjectAltName' ||
-      e.name === 'issuerAltName') {
+    } else if (e.name === 'subjectAltName' || e.name === 'issuerAltName') {
       e.altNames = [];
 
       let gn;

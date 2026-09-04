@@ -7,6 +7,5 @@ export function isArrayBuffer(x: unknown): x is ArrayBuffer {
 }
 
 export function isArrayBufferView(x: unknown): x is ArrayBufferView {
-  return !!x && isArrayBuffer((x as ArrayBufferView).buffer) &&
-    (x as ArrayBufferView).byteLength !== undefined;
+  return !!x && isArrayBuffer((x as ArrayBufferView).buffer) && (x as ArrayBufferView).byteLength !== undefined;
 }
