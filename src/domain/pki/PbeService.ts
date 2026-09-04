@@ -15,7 +15,8 @@ export class PbeService {
     const pki = deps.pki;
     const pbe: any = {};
     const pkiMethods: any = {};
-    const { encryptedPrivateKeyValidator, PBES2AlgorithmsValidator, pkcs12PbeParamsValidator } = createPbeValidators(asn1);
+    const { encryptedPrivateKeyValidator, PBES2AlgorithmsValidator, pkcs12PbeParamsValidator } =
+      createPbeValidators(asn1);
 
     /**
      * Encrypts a ASN.1 PrivateKeyInfo object, producing an EncryptedPrivateKeyInfo.
@@ -153,7 +154,12 @@ export class PbeService {
         encryptedData = cipher.output.getBytes();
 
         encryptionAlgorithm = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-          asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(oids['pbeWithSHAAnd3-KeyTripleDES-CBC']).getBytes()),
+          asn1.create(
+            asn1.Class.UNIVERSAL,
+            asn1.Type.OID,
+            false,
+            asn1.oidToDer(oids['pbeWithSHAAnd3-KeyTripleDES-CBC']).getBytes()
+          ),
           // pkcs-12PbeParams
           asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
             // salt
@@ -193,7 +199,9 @@ export class PbeService {
       const capture: any = {};
       const errors: any[] = [];
       if (!asn1.validate(obj, encryptedPrivateKeyValidator, capture, errors)) {
-        const error: any = new Error('Cannot read encrypted private key. ' + 'ASN.1 object is not a supported EncryptedPrivateKeyInfo.');
+        const error: any = new Error(
+          'Cannot read encrypted private key. ' + 'ASN.1 object is not a supported EncryptedPrivateKeyInfo.'
+        );
         error.errors = errors;
         throw error;
       }
@@ -242,7 +250,9 @@ export class PbeService {
       const msg = deps.pem.decode(pem)[0];
 
       if (msg.type !== 'ENCRYPTED PRIVATE KEY') {
-        const error: any = new Error('Could not convert encrypted private key from PEM; ' + 'PEM header type is "ENCRYPTED PRIVATE KEY".');
+        const error: any = new Error(
+          'Could not convert encrypted private key from PEM; ' + 'PEM header type is "ENCRYPTED PRIVATE KEY".'
+        );
         error.headerType = msg.type;
         throw error;
       }
@@ -617,7 +627,8 @@ export class PbeService {
       const errors: any[] = [];
       if (!asn1.validate(params, PBES2AlgorithmsValidator, capture, errors)) {
         const error: any = new Error(
-          'Cannot read password-based-encryption algorithm ' + 'parameters. ASN.1 object is not a supported EncryptedPrivateKeyInfo.'
+          'Cannot read password-based-encryption algorithm ' +
+            'parameters. ASN.1 object is not a supported EncryptedPrivateKeyInfo.'
         );
         error.errors = errors;
         throw error;
@@ -626,7 +637,9 @@ export class PbeService {
       // check oids
       oid = asn1.derToOid(capture.kdfOid);
       if (oid !== oids['pkcs5PBKDF2']) {
-        const error: any = new Error('Cannot read encrypted private key. ' + 'Unsupported key derivation function OID.');
+        const error: any = new Error(
+          'Cannot read encrypted private key. ' + 'Unsupported key derivation function OID.'
+        );
         error.oid = oid;
         error.supportedOids = ['pkcs5PBKDF2'];
         throw error;
@@ -704,7 +717,8 @@ export class PbeService {
       const errors: any[] = [];
       if (!asn1.validate(params, pkcs12PbeParamsValidator, capture, errors)) {
         const error: any = new Error(
-          'Cannot read password-based-encryption algorithm ' + 'parameters. ASN.1 object is not a supported EncryptedPrivateKeyInfo.'
+          'Cannot read password-based-encryption algorithm ' +
+            'parameters. ASN.1 object is not a supported EncryptedPrivateKeyInfo.'
         );
         error.errors = errors;
         throw error;

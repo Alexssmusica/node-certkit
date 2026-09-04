@@ -71,7 +71,8 @@ export class PemCodec {
   static decode(str: string): PemMessage[] {
     const rval: PemMessage[] = [];
 
-    const rMessage = /\s*-----BEGIN ([A-Z0-9- ]+)-----\r?\n?([\x21-\x7e\s]+?(?:\r?\n\r?\n))?([:A-Za-z0-9+\/=\s]+?)-----END \1-----/g;
+    const rMessage =
+      /\s*-----BEGIN ([A-Z0-9- ]+)-----\r?\n?([\x21-\x7e\s]+?(?:\r?\n\r?\n))?([:A-Za-z0-9+\/=\s]+?)-----END \1-----/g;
     const rHeader = /([\x21-\x7e]+):\s*([\x21-\x7e\s^:]+)/;
     const rCRLF = /\r?\n/;
     let match: RegExpExecArray | null;
@@ -133,7 +134,9 @@ export class PemCodec {
             msg.contentDomain = values[0] || '';
           } else if (!msg.dekInfo && header.name === 'DEK-Info') {
             if (header.values.length === 0) {
-              throw new Error('Invalid PEM formatted message. The "DEK-Info" ' + 'header must have at least one subfield.');
+              throw new Error(
+                'Invalid PEM formatted message. The "DEK-Info" ' + 'header must have at least one subfield.'
+              );
             }
             msg.dekInfo = { algorithm: values[0]!, parameters: values[1] || null };
           } else {
@@ -145,7 +148,9 @@ export class PemCodec {
       }
 
       if ((msg.procType as unknown) === 'ENCRYPTED' && !msg.dekInfo) {
-        throw new Error('Invalid PEM formatted message. The "DEK-Info" ' + 'header must be present if "Proc-Type" is "ENCRYPTED".');
+        throw new Error(
+          'Invalid PEM formatted message. The "DEK-Info" ' + 'header must be present if "Proc-Type" is "ENCRYPTED".'
+        );
       }
     }
 

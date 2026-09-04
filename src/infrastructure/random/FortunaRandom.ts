@@ -26,7 +26,17 @@ const RANDOM_CONTEXT_METHODS = [
   'seedFileSync'
 ] as const;
 
-const RANDOM_CONTEXT_PROPERTIES = ['plugin', 'key', 'seed', 'time', 'reseeds', 'generated', 'keyBytes', 'pools', 'pool'] as const;
+const RANDOM_CONTEXT_PROPERTIES = [
+  'plugin',
+  'key',
+  'seed',
+  'time',
+  'reseeds',
+  'generated',
+  'keyBytes',
+  'pools',
+  'pool'
+] as const;
 
 export type FortunaRandomNamespace = PrngContext & {
   getBytes: (count: number, callback?: (err: Error | null, bytes?: string) => void) => string | void;
@@ -86,7 +96,10 @@ export class FortunaRandom {
     return ctx;
   }
 
-  static mergeInto(target: FortunaRandomNamespace | undefined, deps: FortunaRandomDependencies): FortunaRandomNamespace {
+  static mergeInto(
+    target: FortunaRandomNamespace | undefined,
+    deps: FortunaRandomDependencies
+  ): FortunaRandomNamespace {
     const ctx = FortunaRandom.spawnPrng(deps);
 
     if (!target || !target.getBytes) {

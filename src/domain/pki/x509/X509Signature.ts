@@ -126,7 +126,9 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
       case 'RSASSA-PSS':
         return md.sha256.create();
       default:
-        const error = new Error('Could not compute ' + options.type + ' digest. ' + 'Unknown signature OID.') as DerError;
+        const error = new Error(
+          'Could not compute ' + options.type + ' digest. ' + 'Unknown signature OID.'
+        ) as DerError;
         error.signatureOid = options.signatureOid;
         throw error;
     }
@@ -202,7 +204,12 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
           parts.push(
             asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [
               asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-                asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(params.hash.algorithmOid).getBytes()),
+                asn1.create(
+                  asn1.Class.UNIVERSAL,
+                  asn1.Type.OID,
+                  false,
+                  asn1.oidToDer(params.hash.algorithmOid).getBytes()
+                ),
                 asn1.create(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, '')
               ])
             ])
@@ -213,9 +220,19 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
           parts.push(
             asn1.create(asn1.Class.CONTEXT_SPECIFIC, 1, true, [
               asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-                asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(params.mgf.algorithmOid).getBytes()),
+                asn1.create(
+                  asn1.Class.UNIVERSAL,
+                  asn1.Type.OID,
+                  false,
+                  asn1.oidToDer(params.mgf.algorithmOid).getBytes()
+                ),
                 asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-                  asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(params.mgf.hash.algorithmOid).getBytes()),
+                  asn1.create(
+                    asn1.Class.UNIVERSAL,
+                    asn1.Type.OID,
+                    false,
+                    asn1.oidToDer(params.mgf.hash.algorithmOid).getBytes()
+                  ),
                   asn1.create(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, '')
                 ])
               ])
@@ -226,7 +243,12 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
         if (params.saltLength !== undefined) {
           parts.push(
             asn1.create(asn1.Class.CONTEXT_SPECIFIC, 2, true, [
-              asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, asn1.integerToDer(params.saltLength).getBytes())
+              asn1.create(
+                asn1.Class.UNIVERSAL,
+                asn1.Type.INTEGER,
+                false,
+                asn1.integerToDer(params.saltLength).getBytes()
+              )
             ])
           );
         }

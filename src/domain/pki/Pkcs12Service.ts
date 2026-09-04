@@ -9,7 +9,8 @@ export class Pkcs12Service {
   static createCertkitNamespace(deps: Pkcs12Deps): CertkitPkcs12Namespace {
     const asn1 = deps.asn1;
     const p12: any = {};
-    const { contentInfoValidator, pfxValidator, safeBagValidator, attributeValidator, certBagValidator } = createPkcs12Validators(asn1);
+    const { contentInfoValidator, pfxValidator, safeBagValidator, attributeValidator, certBagValidator } =
+      createPkcs12Validators(asn1);
 
     // OID for the content type is 'data'
     function createDataContentInfo(contentBytes: any) {
@@ -17,7 +18,9 @@ export class Pkcs12Service {
         // contentType
         asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(deps.pki.oids.data).getBytes()),
         // content
-        asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, contentBytes)])
+        asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [
+          asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, contentBytes)
+        ])
       ]);
     }
 
@@ -119,7 +122,12 @@ export class Pkcs12Service {
             rval.localKeyId = _getBagsByAttribute(pfx.safeContents, 'localKeyId', localKeyId, filter.bagType);
           }
           if ('friendlyName' in filter) {
-            rval.friendlyName = _getBagsByAttribute(pfx.safeContents, 'friendlyName', filter.friendlyName, filter.bagType);
+            rval.friendlyName = _getBagsByAttribute(
+              pfx.safeContents,
+              'friendlyName',
+              filter.friendlyName,
+              filter.bagType
+            );
           }
 
           return rval;
@@ -205,7 +213,8 @@ export class Pkcs12Service {
 
         // verify MAC (iterations default to 1)
         const macSalt = new deps.util.ByteBuffer(capture.macSalt);
-        const macIterations = 'macIterations' in capture ? parseInt(deps.util.bytesToHex(capture.macIterations), 16) : 1;
+        const macIterations =
+          'macIterations' in capture ? parseInt(deps.util.bytesToHex(capture.macIterations), 16) : 1;
         const macKey = p12.generateKey(password, macSalt, 3, macIterations, macKeyBytes, md);
         const mac = deps.hmac.create();
         mac.start(md, macKey);
@@ -262,7 +271,11 @@ export class Pkcs12Service {
     function _decodeAuthenticatedSafe(pfx: any, authSafe: any, strict: any, password: any) {
       authSafe = asn1.fromDer(authSafe, strict); /* actually it's BER encoded */
 
-      if (authSafe.tagClass !== asn1.Class.UNIVERSAL || authSafe.type !== asn1.Type.SEQUENCE || authSafe.constructed !== true) {
+      if (
+        authSafe.tagClass !== asn1.Class.UNIVERSAL ||
+        authSafe.type !== asn1.Type.SEQUENCE ||
+        authSafe.constructed !== true
+      ) {
         throw new Error('PKCS#12 AuthenticatedSafe expected to be a ' + 'SEQUENCE OF ContentInfo');
       }
 
@@ -365,7 +378,11 @@ export class Pkcs12Service {
       // actually it's BER-encoded
       safeContents = asn1.fromDer(safeContents, strict);
 
-      if (safeContents.tagClass !== asn1.Class.UNIVERSAL || safeContents.type !== asn1.Type.SEQUENCE || safeContents.constructed !== true) {
+      if (
+        safeContents.tagClass !== asn1.Class.UNIVERSAL ||
+        safeContents.type !== asn1.Type.SEQUENCE ||
+        safeContents.constructed !== true
+      ) {
         throw new Error('PKCS#12 SafeContents expected to be a SEQUENCE OF SafeBag.');
       }
 
@@ -583,7 +600,12 @@ export class Pkcs12Service {
           // friendlyName
           asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
             // attrId
-            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(deps.pki.oids.friendlyName).getBytes()),
+            asn1.create(
+              asn1.Class.UNIVERSAL,
+              asn1.Type.OID,
+              false,
+              asn1.oidToDer(deps.pki.oids.friendlyName).getBytes()
+            ),
             // attrValues
             asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SET, true, [
               asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BMPSTRING, false, options.friendlyName)
@@ -628,7 +650,12 @@ export class Pkcs12Service {
             // CertBag
             asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
               // certId
-              asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(deps.pki.oids.x509Certificate).getBytes()),
+              asn1.create(
+                asn1.Class.UNIVERSAL,
+                asn1.Type.OID,
+                false,
+                asn1.oidToDer(deps.pki.oids.x509Certificate).getBytes()
+              ),
               // certValue (x509Certificate)
               asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [
                 asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, asn1.toDer(certAsn1).getBytes())
@@ -672,7 +699,12 @@ export class Pkcs12Service {
           // encrypted PrivateKeyInfo
           keyBag = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
             // bagId
-            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(deps.pki.oids.pkcs8ShroudedKeyBag).getBytes()),
+            asn1.create(
+              asn1.Class.UNIVERSAL,
+              asn1.Type.OID,
+              false,
+              asn1.oidToDer(deps.pki.oids.pkcs8ShroudedKeyBag).getBytes()
+            ),
             // bagValue
             asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [
               // EncryptedPrivateKeyInfo

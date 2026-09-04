@@ -649,9 +649,17 @@ describe('aes', function () {
 
   // AES-128-OFB
   (function () {
-    var keys = ['00000000000000000000000000000000', '00000000000000000000000000000000', '00000000000000000000000000000000'];
+    var keys = [
+      '00000000000000000000000000000000',
+      '00000000000000000000000000000000',
+      '00000000000000000000000000000000'
+    ];
 
-    var ivs = ['80000000000000000000000000000000', 'c8ca0d6a35dbeac776e911ee16bea7d3', '80000000000000000000000000000000'];
+    var ivs = [
+      '80000000000000000000000000000000',
+      'c8ca0d6a35dbeac776e911ee16bea7d3',
+      '80000000000000000000000000000000'
+    ];
 
     var inputs = ['00000000000000000000000000000000', 'This is a 48-byte message (exactly 3 AES blocks)', '0000'];
 
@@ -841,9 +849,17 @@ describe('aes', function () {
 
   // AES-128-CTR
   (function () {
-    var keys = ['2b7e151628aed2a6abf7158809cf4f3c', '00000000000000000000000000000000', '2b7e151628aed2a6abf7158809cf4f3c'];
+    var keys = [
+      '2b7e151628aed2a6abf7158809cf4f3c',
+      '00000000000000000000000000000000',
+      '2b7e151628aed2a6abf7158809cf4f3c'
+    ];
 
-    var ivs = ['f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff', '650cdb80ff9fc758342d2bd99ee2abcf', 'f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff'];
+    var ivs = [
+      'f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff',
+      '650cdb80ff9fc758342d2bd99ee2abcf',
+      'f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff'
+    ];
 
     var inputs = ['6bc1bee22e409f96e93d7e117393172a', 'This is a 48-byte message (exactly 3 AES blocks)', '6bc1be'];
 

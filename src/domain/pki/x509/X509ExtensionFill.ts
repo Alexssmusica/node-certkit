@@ -99,7 +99,9 @@ export function createFillMissingExtensionFields(deps: ExtensionFillDeps): FillM
         e.value.value.push(asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BOOLEAN, false, String.fromCharCode(0xff)));
       }
       if ('pathLenConstraint' in e) {
-        e.value.value.push(asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, asn1.integerToDer(e.pathLenConstraint).getBytes()));
+        e.value.value.push(
+          asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, asn1.integerToDer(e.pathLenConstraint).getBytes())
+        );
       }
     } else if (e.name === 'extKeyUsage') {
       e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
@@ -193,7 +195,8 @@ export function createFillMissingExtensionFields(deps: ExtensionFillDeps): FillM
       const seq = e.value.value;
 
       if (e.keyIdentifier) {
-        const keyIdentifier = e.keyIdentifier === true ? options.cert.generateSubjectKeyIdentifier().getBytes() : e.keyIdentifier;
+        const keyIdentifier =
+          e.keyIdentifier === true ? options.cert.generateSubjectKeyIdentifier().getBytes() : e.keyIdentifier;
         seq.push(asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, false, keyIdentifier));
       }
 

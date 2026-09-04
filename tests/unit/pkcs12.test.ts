@@ -169,7 +169,9 @@ describe('pkcs12', function () {
 
     expect(p12.safeContents[1].safeBags[0].type).toBe(PKI.oids.certBag);
     expect(p12.safeContents[1].safeBags[0].attributes.friendlyName.length).toBe(1);
-    expect(p12.safeContents[1].safeBags[0].attributes.friendlyName[0]).toBe('CN=1002753325,2.5.4.5=#130b3130303237353333323543');
+    expect(p12.safeContents[1].safeBags[0].attributes.friendlyName[0]).toBe(
+      'CN=1002753325,2.5.4.5=#130b3130303237353333323543'
+    );
     expect(p12.safeContents[1].safeBags[0].attributes.localKeyId.length).toBe(1);
     expect(p12.safeContents[1].safeBags[0].attributes.localKeyId[0]).toBe('Time 1311855238964');
 
@@ -183,7 +185,9 @@ describe('pkcs12', function () {
 
     expect(p12.safeContents[1].safeBags[3].type).toBe(PKI.oids.certBag);
     expect(p12.safeContents[1].safeBags[3].attributes.friendlyName.length).toBe(1);
-    expect(p12.safeContents[1].safeBags[3].attributes.friendlyName[0]).toBe('CN=1002753325,2.5.4.5=#130b3130303237353333323541');
+    expect(p12.safeContents[1].safeBags[3].attributes.friendlyName[0]).toBe(
+      'CN=1002753325,2.5.4.5=#130b3130303237353333323541'
+    );
     expect(p12.safeContents[1].safeBags[3].attributes.localKeyId.length).toBe(1);
     expect(p12.safeContents[1].safeBags[3].attributes.localKeyId[0]).toBe('Time 1311855238863');
 

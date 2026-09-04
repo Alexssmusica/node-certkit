@@ -4,7 +4,8 @@ import { decodeUtf8, encodeUtf8 } from '../encoding/Utf8Codec.js';
 
 const MAX_CONSTRUCTED_STRING_LENGTH = 4096;
 
-export type ByteStringBufferInput = string | ArrayBuffer | ArrayBufferView | Buffer | ByteStringBuffer | { data: string; read: number };
+export type ByteStringBufferInput =
+  string | ArrayBuffer | ArrayBufferView | Buffer | ByteStringBuffer | { data: string; read: number };
 
 /**
  * Constructor for a binary string backed byte buffer.
@@ -95,7 +96,9 @@ export class ByteStringBuffer {
   }
 
   putInt24(i: number): this {
-    return this.putBytes(String.fromCharCode((i >> 16) & 0xff) + String.fromCharCode((i >> 8) & 0xff) + String.fromCharCode(i & 0xff));
+    return this.putBytes(
+      String.fromCharCode((i >> 16) & 0xff) + String.fromCharCode((i >> 8) & 0xff) + String.fromCharCode(i & 0xff)
+    );
   }
 
   putInt32(i: number): this {
@@ -112,7 +115,9 @@ export class ByteStringBuffer {
   }
 
   putInt24Le(i: number): this {
-    return this.putBytes(String.fromCharCode(i & 0xff) + String.fromCharCode((i >> 8) & 0xff) + String.fromCharCode((i >> 16) & 0xff));
+    return this.putBytes(
+      String.fromCharCode(i & 0xff) + String.fromCharCode((i >> 8) & 0xff) + String.fromCharCode((i >> 16) & 0xff)
+    );
   }
 
   putInt32Le(i: number): this {
@@ -156,7 +161,10 @@ export class ByteStringBuffer {
   }
 
   getInt24(): number {
-    const rval = (this.data.charCodeAt(this.read) << 16) ^ (this.data.charCodeAt(this.read + 1) << 8) ^ this.data.charCodeAt(this.read + 2);
+    const rval =
+      (this.data.charCodeAt(this.read) << 16) ^
+      (this.data.charCodeAt(this.read + 1) << 8) ^
+      this.data.charCodeAt(this.read + 2);
     this.read += 3;
     return rval;
   }
@@ -178,7 +186,10 @@ export class ByteStringBuffer {
   }
 
   getInt24Le(): number {
-    const rval = this.data.charCodeAt(this.read) ^ (this.data.charCodeAt(this.read + 1) << 8) ^ (this.data.charCodeAt(this.read + 2) << 16);
+    const rval =
+      this.data.charCodeAt(this.read) ^
+      (this.data.charCodeAt(this.read + 1) << 8) ^
+      (this.data.charCodeAt(this.read + 2) << 16);
     this.read += 3;
     return rval;
   }

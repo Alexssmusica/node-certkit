@@ -6,7 +6,14 @@ import type { BigIntegerRandomSource } from '../math/BigInteger.js';
 import type { NativeCryptoProvider, PemKeyCodec, PrimeGenerator } from '../ports/index.js';
 import { UtilNamespace } from '../util/UtilNamespace.js';
 import { createRsaValidators } from './RsaAsn1.js';
-import type { KeyPairGenerationState, RsaKeyMaterial, RsaKeyPair, RsaPrivateKey, RsaPublicKey, RsaServiceDeps } from './RsaTypes.js';
+import type {
+  KeyPairGenerationState,
+  RsaKeyMaterial,
+  RsaKeyPair,
+  RsaPrivateKey,
+  RsaPublicKey,
+  RsaServiceDeps
+} from './RsaTypes.js';
 import { Pkcs1Codec } from './Pkcs1Codec.js';
 import { PemCodec } from './PemCodec.js';
 import type { CertkitRsaNamespace } from './CertkitPkiTypes.js';
@@ -144,7 +151,9 @@ export class RsaService {
     const oidBytes = asn1.oidToDer(oid).getBytes();
     const digestInfo = this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
     const digestAlgorithm = this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
-    (digestAlgorithm.value as Asn1Object[]).push(this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OID, false, oidBytes));
+    (digestAlgorithm.value as Asn1Object[]).push(
+      this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OID, false, oidBytes)
+    );
     (digestAlgorithm.value as Asn1Object[]).push(this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, ''));
     const digest = this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, md.digest().getBytes());
     (digestInfo.value as Asn1Object[]).push(digestAlgorithm);
@@ -233,7 +242,13 @@ export class RsaService {
     return eb;
   }
 
-  #decodePkcs1v15(em: string, key: RsaKeyMaterial, pub: boolean, ml?: number | false, options?: { _skipPaddingChecks?: boolean }): string {
+  #decodePkcs1v15(
+    em: string,
+    key: RsaKeyMaterial,
+    pub: boolean,
+    ml?: number | false,
+    options?: { _skipPaddingChecks?: boolean }
+  ): string {
     const k = Math.ceil(key.n.bitLength() / 8);
     const eb = new ByteStringBuffer(em);
     const first = eb.getByte();
@@ -424,7 +439,9 @@ export class RsaService {
               !Array.isArray((obj as Asn1Object).value) ||
               ((obj as Asn1Object).value as unknown[]).length !== 2
             ) {
-              const error = new Error('ASN.1 object does not contain a valid RSASSA-PKCS1-v1_5 DigestInfo value.') as Error & {
+              const error = new Error(
+                'ASN.1 object does not contain a valid RSASSA-PKCS1-v1_5 DigestInfo value.'
+              ) as Error & {
                 errors?: unknown[];
               };
               error.errors = errors;
@@ -443,7 +460,9 @@ export class RsaService {
               oid === oids['sha512-224'] ||
               oid === oids['sha512-256']
             )) {
-              const error = new Error('Unknown RSASSA-PKCS1-v1_5 DigestAlgorithm identifier.') as Error & { oid?: string };
+              const error = new Error('Unknown RSASSA-PKCS1-v1_5 DigestAlgorithm identifier.') as Error & {
+                oid?: string;
+              };
               error.oid = oid;
               throw error;
             }
@@ -528,7 +547,9 @@ export class RsaService {
 
       let schemeObj: { encode: (md: unknown, modBits?: number) => string };
       if (scheme === undefined || scheme === 'RSASSA-PKCS1-V1_5') {
-        schemeObj = { encode: (m) => service.#emsaPkcs1v15encode(m as { algorithm: string; digest(): ByteStringBuffer }) };
+        schemeObj = {
+          encode: (m) => service.#emsaPkcs1v15encode(m as { algorithm: string; digest(): ByteStringBuffer })
+        };
         bt = 0x01;
       } else if (scheme === 'NONE' || scheme === 'NULL' || scheme === null) {
         schemeObj = { encode: () => md as string };
@@ -544,7 +565,11 @@ export class RsaService {
     return key;
   }
 
-  createKeyPairGenerationState(bits?: number | string, e?: number, options?: Record<string, unknown>): KeyPairGenerationState {
+  createKeyPairGenerationState(
+    bits?: number | string,
+    e?: number,
+    options?: Record<string, unknown>
+  ): KeyPairGenerationState {
     if (typeof bits === 'string') {
       bits = parseInt(bits, 10);
     }
@@ -613,7 +638,9 @@ export class RsaService {
         } else if (state.pqState === 1) {
           if ((state.num as BigInteger).bitLength() > (bits as number)) {
             state.pqState = 0;
-          } else if ((state.num as BigInteger).isProbablePrime(getMillerRabinTests((state.num as BigInteger).bitLength()))) {
+          } else if (
+            (state.num as BigInteger).isProbablePrime(getMillerRabinTests((state.num as BigInteger).bitLength()))
+          ) {
             state.pqState = 2;
           } else {
             (state.num as BigInteger).dAddOffset(GCD_30_DELTA[deltaIdx++ % 8], 0);
@@ -739,7 +766,13 @@ export class RsaService {
     const pemCodec = this.#getPemKeyCodec();
     const nativeCrypto = this.#nativeCrypto;
 
-    if (!this.#usePureJavaScript && !opts.prng && (bits as number) >= 256 && (bits as number) <= 16384 && (e === 0x10001 || e === 3)) {
+    if (
+      !this.#usePureJavaScript &&
+      !opts.prng &&
+      (bits as number) >= 256 &&
+      (bits as number) <= 16384 &&
+      (e === 0x10001 || e === 3)
+    ) {
       if (callback) {
         if (nativeCrypto && typeof nativeCrypto.generateKeyPair === 'function') {
           return nativeCrypto.generateKeyPair(
@@ -900,7 +933,12 @@ export class RsaService {
     return this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
       this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, asn1.integerToDer(0).getBytes()),
       this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-        this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(this.#oids.rsaEncryption!).getBytes()),
+        this.#createAsn1(
+          asn1.Class.UNIVERSAL,
+          asn1.Type.OID,
+          false,
+          asn1.oidToDer(this.#oids.rsaEncryption!).getBytes()
+        ),
         this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, '')
       ]),
       this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, asn1.toDer(rsaKey).getBytes())
@@ -985,7 +1023,12 @@ export class RsaService {
     const asn1 = this.#asn1;
     return this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
       this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-        this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(this.#oids.rsaEncryption!).getBytes()),
+        this.#createAsn1(
+          asn1.Class.UNIVERSAL,
+          asn1.Type.OID,
+          false,
+          asn1.oidToDer(this.#oids.rsaEncryption!).getBytes()
+        ),
         this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, '')
       ]),
       this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false, [this.publicKeyToRSAPublicKey(key)])

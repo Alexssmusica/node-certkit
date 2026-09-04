@@ -90,12 +90,18 @@ function buildActual() {
   actual['hmac.create'] = describeInstance(certkit.hmac.create(), 'hmac.create');
 
   const aesKey = certkit.util.createBuffer(certkit.random.getBytesSync(16));
-  actual['cipher.createCipher(AES-CBC)'] = describeInstance(certkit.cipher.createCipher('AES-CBC', aesKey), 'cipher.createCipher(AES-CBC)');
+  actual['cipher.createCipher(AES-CBC)'] = describeInstance(
+    certkit.cipher.createCipher('AES-CBC', aesKey),
+    'cipher.createCipher(AES-CBC)'
+  );
 
   actual['prng.create'] = describeInstance(certkit.prng.create({ md: certkit.md.sha256 }), 'prng.create');
   actual['random'] = describeInstance(certkit.random, 'random');
   actual['pki.createCertificate'] = describeInstance(certkit.pki.createCertificate(), 'pki.createCertificate');
-  actual['pki.createCertificationRequest'] = describeInstance(certkit.pki.createCertificationRequest(), 'pki.createCertificationRequest');
+  actual['pki.createCertificationRequest'] = describeInstance(
+    certkit.pki.createCertificationRequest(),
+    'pki.createCertificationRequest'
+  );
   actual['pki.createCaStore'] = describeInstance(certkit.pki.createCaStore(), 'pki.createCaStore');
   actual['pkcs12.pkcs12FromAsn1'] = describeInstance(loadPkcs12(), 'pkcs12.pkcs12FromAsn1');
 
@@ -118,7 +124,10 @@ function buildActual() {
   actual['mgf.mgf1.create'] = describeInstance(certkit.mgf.mgf1.create(certkit.md.sha1.create()), 'mgf.mgf1.create');
 
   const rc2Key = certkit.util.createBuffer(certkit.random.getBytesSync(16));
-  actual['rc2.createEncryptionCipher'] = describeInstance(certkit.rc2.createEncryptionCipher(rc2Key, 128), 'rc2.createEncryptionCipher');
+  actual['rc2.createEncryptionCipher'] = describeInstance(
+    certkit.rc2.createEncryptionCipher(rc2Key, 128),
+    'rc2.createEncryptionCipher'
+  );
   actual['jsbn.BigInteger'] = describeInstance(new certkit.jsbn.BigInteger('1234'), 'jsbn.BigInteger');
   actual['util.createBuffer'] = describeInstance(certkit.util.createBuffer(), 'util.createBuffer');
 

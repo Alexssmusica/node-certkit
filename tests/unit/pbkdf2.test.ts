@@ -44,14 +44,18 @@ describe('pbkdf2', function () {
     var salt = '4bcda0d1c689fe465c5b8a817f0ddf3d';
     var md = MD.sha256.create();
     var dkHex = UTIL.bytesToHex(PBKDF2('password', salt, 1000, 48, md));
-    expect(dkHex).toBe('9da8a5f4ae605f35e82e5beac5f362df15c4255d88f738d641466a4107f9970238e768e72af29ac89a1b16ff277b31d2');
+    expect(dkHex).toBe(
+      '9da8a5f4ae605f35e82e5beac5f362df15c4255d88f738d641466a4107f9970238e768e72af29ac89a1b16ff277b31d2'
+    );
   });
 
   it('should derive a password with hmac-sha-256 (passed as an algorithm identifier) c=1000', (ctx) => {
     // Note: might be too slow on old browsers
     var salt = '4bcda0d1c689fe465c5b8a817f0ddf3d';
     var dkHex = UTIL.bytesToHex(PBKDF2('password', salt, 1000, 48, 'sha256'));
-    expect(dkHex).toBe('9da8a5f4ae605f35e82e5beac5f362df15c4255d88f738d641466a4107f9970238e768e72af29ac89a1b16ff277b31d2');
+    expect(dkHex).toBe(
+      '9da8a5f4ae605f35e82e5beac5f362df15c4255d88f738d641466a4107f9970238e768e72af29ac89a1b16ff277b31d2'
+    );
   });
 
   it('should derive a password with hmac-sha-512 c=1000', (ctx) => {
@@ -59,14 +63,18 @@ describe('pbkdf2', function () {
     var salt = '4bcda0d1c689fe465c5b8a817f0ddf3d';
     var md = MD.sha512.create();
     var dkHex = UTIL.bytesToHex(PBKDF2('password', salt, 1000, 48, md));
-    expect(dkHex).toBe('975725960aa736f721182962677291a9085c75421c38636098d904f5a96f11a485f767082b710a69f8a46bcf9eba29f3');
+    expect(dkHex).toBe(
+      '975725960aa736f721182962677291a9085c75421c38636098d904f5a96f11a485f767082b710a69f8a46bcf9eba29f3'
+    );
   });
 
   it('should derive a password with hmac-sha-512 (passed as an algorithm identifier) c=1000', (ctx) => {
     // Note: might be too slow on old browsers
     var salt = '4bcda0d1c689fe465c5b8a817f0ddf3d';
     var dkHex = UTIL.bytesToHex(PBKDF2('password', salt, 1000, 48, 'sha512'));
-    expect(dkHex).toBe('975725960aa736f721182962677291a9085c75421c38636098d904f5a96f11a485f767082b710a69f8a46bcf9eba29f3');
+    expect(dkHex).toBe(
+      '975725960aa736f721182962677291a9085c75421c38636098d904f5a96f11a485f767082b710a69f8a46bcf9eba29f3'
+    );
   });
 
   it('should asynchronously derive a password with hmac-sha-1 c=1', async () => {
@@ -163,7 +171,9 @@ describe('pbkdf2', function () {
         try {
           expect(err).toBeFalsy();
           var dkHex = UTIL.bytesToHex(dk);
-          expect(dkHex).toBe('9da8a5f4ae605f35e82e5beac5f362df15c4255d88f738d641466a4107f9970238e768e72af29ac89a1b16ff277b31d2');
+          expect(dkHex).toBe(
+            '9da8a5f4ae605f35e82e5beac5f362df15c4255d88f738d641466a4107f9970238e768e72af29ac89a1b16ff277b31d2'
+          );
 
           resolve();
         } catch (e) {
@@ -181,7 +191,9 @@ describe('pbkdf2', function () {
         try {
           expect(err).toBeFalsy();
           var dkHex = UTIL.bytesToHex(dk);
-          expect(dkHex).toBe('9da8a5f4ae605f35e82e5beac5f362df15c4255d88f738d641466a4107f9970238e768e72af29ac89a1b16ff277b31d2');
+          expect(dkHex).toBe(
+            '9da8a5f4ae605f35e82e5beac5f362df15c4255d88f738d641466a4107f9970238e768e72af29ac89a1b16ff277b31d2'
+          );
 
           resolve();
         } catch (e) {
@@ -199,7 +211,9 @@ describe('pbkdf2', function () {
       PBKDF2('password', salt, 1000, 48, md, function (err, dk) {
         try {
           var dkHex = UTIL.bytesToHex(dk);
-          expect(dkHex).toBe('975725960aa736f721182962677291a9085c75421c38636098d904f5a96f11a485f767082b710a69f8a46bcf9eba29f3');
+          expect(dkHex).toBe(
+            '975725960aa736f721182962677291a9085c75421c38636098d904f5a96f11a485f767082b710a69f8a46bcf9eba29f3'
+          );
 
           resolve();
         } catch (e) {
@@ -216,7 +230,9 @@ describe('pbkdf2', function () {
       PBKDF2('password', salt, 1000, 48, 'sha512', function (err, dk) {
         try {
           var dkHex = UTIL.bytesToHex(dk);
-          expect(dkHex).toBe('975725960aa736f721182962677291a9085c75421c38636098d904f5a96f11a485f767082b710a69f8a46bcf9eba29f3');
+          expect(dkHex).toBe(
+            '975725960aa736f721182962677291a9085c75421c38636098d904f5a96f11a485f767082b710a69f8a46bcf9eba29f3'
+          );
 
           resolve();
         } catch (e) {

@@ -236,16 +236,17 @@ export class X509Shared {
       }
     }
 
-    const { readSignatureParameters, createSignatureDigest, verifySignature, signatureParametersToAsn1 } = createX509SignatureHelpers(
-      {
-        asn1,
-        oids,
-        md: c.md,
-        pss: c.pss!,
-        mgf: c.mgf!
-      },
-      validators
-    );
+    const { readSignatureParameters, createSignatureDigest, verifySignature, signatureParametersToAsn1 } =
+      createX509SignatureHelpers(
+        {
+          asn1,
+          oids,
+          md: c.md,
+          pss: c.pss!,
+          mgf: c.mgf!
+        },
+        validators
+      );
 
     /**
      * Converts a certification request's attributes to an ASN.1 set of

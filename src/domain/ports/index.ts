@@ -10,7 +10,11 @@ export interface RandomSource {
  * Port for probable prime generation.
  */
 export interface PrimeGenerator {
-  generateProbablePrime(bits: number, options: Record<string, unknown>, callback: (err: Error | null, num?: unknown) => void): void;
+  generateProbablePrime(
+    bits: number,
+    options: Record<string, unknown>,
+    callback: (err: Error | null, num?: unknown) => void
+  ): void;
 }
 
 /**

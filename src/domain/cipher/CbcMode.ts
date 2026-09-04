@@ -1,5 +1,11 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
-import { BlockCipherApi, CipherModeOptions, CipherModeStartOptions, PadOptions, transformIV } from './cipherModeUtils.js';
+import {
+  BlockCipherApi,
+  CipherModeOptions,
+  CipherModeStartOptions,
+  PadOptions,
+  transformIV
+} from './cipherModeUtils.js';
 
 export class CbcMode {
   name = 'CBC';

@@ -558,10 +558,14 @@ describe('pkcs1', function () {
     exponent = 'AQAB';
     d =
       'GYwUHiNxWpK8z2oRmlvBE4lGjSgR9UjXJ+F7SrDrmG1vIR77U7cffMvqh+5px17mFQCMUzLetSvzkKvfv+N9cgU2gVmyY4wd4ybiHSIlHw+1hIs78VAF0qdDMPCv6RbuYszBNE0dg6cJ5gZ2JzhA9/N3QkpeCk2nXwGzH/doGc+cv90hUkPDkXwD7zgZkxLlZ7O/eu06tFfzce+KFCP0W2jG4oLsERu6KDO5h/1p+tg7wbjGE8Xh6hbBHtEl6n7B';
-    p = '/I1sBL7E65qBksp5AMvlNuLotRnezzOyRZeYxpCd9PF2230jGQ/HK4hlpxiviV8bzZFFKYAnQjtgXnCkfPWDkKjD6I/IxI6LMuPaIQ374+iB6lZ0tqNIwh6T+eVepl79';
-    q = '0gDUXniKrOpgakAdBGD4fdXBAn4S3BoNdYbok52c94m0D1GsBEKWHefSHMIeBcgxVcHyqpGTOHz9+VbLSNFTuicEBvm7ulN9SYfZ4vmULXoUy//+p0/s3ako0j4ln17h';
-    dP = '2xaAL3mi8NRfNY1p/TPkS4H66ChiLpOlQlPpl9AbB0N1naDoErSqTmyL6rIyjVQxlVpBimf/JqjFyAel2jVOBe8xzIz3WPRjcylQsD4mVyb7lOOdalcqJiRKsI23V1Kt';
-    dQ = 'oKMXz+ffFCP4em3uhFH04rSmflSX8ptPHk6DC5+t2UARZwJvVZblo5yXgX4PXxbifhnsmQLgHX6m+5qjx2Cv7h44G2neasnAdYWgatnEugC/dcitL6iYpHnoCuKU/tKh';
+    p =
+      '/I1sBL7E65qBksp5AMvlNuLotRnezzOyRZeYxpCd9PF2230jGQ/HK4hlpxiviV8bzZFFKYAnQjtgXnCkfPWDkKjD6I/IxI6LMuPaIQ374+iB6lZ0tqNIwh6T+eVepl79';
+    q =
+      '0gDUXniKrOpgakAdBGD4fdXBAn4S3BoNdYbok52c94m0D1GsBEKWHefSHMIeBcgxVcHyqpGTOHz9+VbLSNFTuicEBvm7ulN9SYfZ4vmULXoUy//+p0/s3ako0j4ln17h';
+    dP =
+      '2xaAL3mi8NRfNY1p/TPkS4H66ChiLpOlQlPpl9AbB0N1naDoErSqTmyL6rIyjVQxlVpBimf/JqjFyAel2jVOBe8xzIz3WPRjcylQsD4mVyb7lOOdalcqJiRKsI23V1Kt';
+    dQ =
+      'oKMXz+ffFCP4em3uhFH04rSmflSX8ptPHk6DC5+t2UARZwJvVZblo5yXgX4PXxbifhnsmQLgHX6m+5qjx2Cv7h44G2neasnAdYWgatnEugC/dcitL6iYpHnoCuKU/tKh';
     qInv =
       'CyHzNcNTNC60TDqiREV4DC1lW5QBdMrjjHyKTmSTwLqf0wN0gmewg7mnpsth5C2zYrjJiW23Bk4CrVrmFYfaFbRknJBZSQn+s328tlS+tyaOyAHlqLSqORG+vYhULwW+';
     pubkey = decodeBase64PublicKey(modulus, exponent);
@@ -1179,10 +1183,14 @@ describe('pkcs1', function () {
     exponent = 'AQAB';
     d =
       'GYwUHiNxWpK8z2oRmlvBE4lGjSgR9UjXJ+F7SrDrmG1vIR77U7cffMvqh+5px17mFQCMUzLetSvzkKvfv+N9cgU2gVmyY4wd4ybiHSIlHw+1hIs78VAF0qdDMPCv6RbuYszBNE0dg6cJ5gZ2JzhA9/N3QkpeCk2nXwGzH/doGc+cv90hUkPDkXwD7zgZkxLlZ7O/eu06tFfzce+KFCP0W2jG4oLsERu6KDO5h/1p+tg7wbjGE8Xh6hbBHtEl6n7B';
-    p = '/I1sBL7E65qBksp5AMvlNuLotRnezzOyRZeYxpCd9PF2230jGQ/HK4hlpxiviV8bzZFFKYAnQjtgXnCkfPWDkKjD6I/IxI6LMuPaIQ374+iB6lZ0tqNIwh6T+eVepl79';
-    q = '0gDUXniKrOpgakAdBGD4fdXBAn4S3BoNdYbok52c94m0D1GsBEKWHefSHMIeBcgxVcHyqpGTOHz9+VbLSNFTuicEBvm7ulN9SYfZ4vmULXoUy//+p0/s3ako0j4ln17h';
-    dP = '2xaAL3mi8NRfNY1p/TPkS4H66ChiLpOlQlPpl9AbB0N1naDoErSqTmyL6rIyjVQxlVpBimf/JqjFyAel2jVOBe8xzIz3WPRjcylQsD4mVyb7lOOdalcqJiRKsI23V1Kt';
-    dQ = 'oKMXz+ffFCP4em3uhFH04rSmflSX8ptPHk6DC5+t2UARZwJvVZblo5yXgX4PXxbifhnsmQLgHX6m+5qjx2Cv7h44G2neasnAdYWgatnEugC/dcitL6iYpHnoCuKU/tKh';
+    p =
+      '/I1sBL7E65qBksp5AMvlNuLotRnezzOyRZeYxpCd9PF2230jGQ/HK4hlpxiviV8bzZFFKYAnQjtgXnCkfPWDkKjD6I/IxI6LMuPaIQ374+iB6lZ0tqNIwh6T+eVepl79';
+    q =
+      '0gDUXniKrOpgakAdBGD4fdXBAn4S3BoNdYbok52c94m0D1GsBEKWHefSHMIeBcgxVcHyqpGTOHz9+VbLSNFTuicEBvm7ulN9SYfZ4vmULXoUy//+p0/s3ako0j4ln17h';
+    dP =
+      '2xaAL3mi8NRfNY1p/TPkS4H66ChiLpOlQlPpl9AbB0N1naDoErSqTmyL6rIyjVQxlVpBimf/JqjFyAel2jVOBe8xzIz3WPRjcylQsD4mVyb7lOOdalcqJiRKsI23V1Kt';
+    dQ =
+      'oKMXz+ffFCP4em3uhFH04rSmflSX8ptPHk6DC5+t2UARZwJvVZblo5yXgX4PXxbifhnsmQLgHX6m+5qjx2Cv7h44G2neasnAdYWgatnEugC/dcitL6iYpHnoCuKU/tKh';
     qInv =
       'CyHzNcNTNC60TDqiREV4DC1lW5QBdMrjjHyKTmSTwLqf0wN0gmewg7mnpsth5C2zYrjJiW23Bk4CrVrmFYfaFbRknJBZSQn+s328tlS+tyaOyAHlqLSqORG+vYhULwW+';
     pubkey = decodeBase64PublicKey(modulus, exponent);

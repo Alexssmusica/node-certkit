@@ -61,9 +61,13 @@ export class Pbkdf2 {
         const sBuf = Buffer.from(s, 'binary');
         if (!callback) {
           if (!nativeCrypto.pbkdf2SyncSupportsDigest) {
-            return nativeCrypto.pbkdf2Sync(pBuf.toString('binary'), sBuf.toString('binary'), c, dkLen).toString('binary');
+            return nativeCrypto
+              .pbkdf2Sync(pBuf.toString('binary'), sBuf.toString('binary'), c, dkLen)
+              .toString('binary');
           }
-          return nativeCrypto.pbkdf2Sync(pBuf.toString('binary'), sBuf.toString('binary'), c, dkLen, digest).toString('binary');
+          return nativeCrypto
+            .pbkdf2Sync(pBuf.toString('binary'), sBuf.toString('binary'), c, dkLen, digest)
+            .toString('binary');
         }
         const done: Pbkdf2Callback = callback;
         if (!nativeCrypto.pbkdf2SyncSupportsDigest) {

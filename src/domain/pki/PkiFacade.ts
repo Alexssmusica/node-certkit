@@ -132,7 +132,9 @@ export class PkiFacade {
           .toDer((pki.privateKeyToAsn1 as (k: unknown) => unknown)(key))
           .getBytes()
       };
-      return (deps.pem.encode as (msg: { type: string; body: string }, options?: { maxline?: number }) => string)(msg, { maxline });
+      return (deps.pem.encode as (msg: { type: string; body: string }, options?: { maxline?: number }) => string)(msg, {
+        maxline
+      });
     };
 
     pki.privateKeyInfoToPem = function (keyInfo: unknown, maxline?: number) {
@@ -140,7 +142,9 @@ export class PkiFacade {
         type: 'PRIVATE KEY',
         body: (asn1 as { toDer: (o: unknown) => { getBytes(): string } }).toDer(keyInfo).getBytes()
       };
-      return (deps.pem.encode as (msg: { type: string; body: string }, options?: { maxline?: number }) => string)(msg, { maxline });
+      return (deps.pem.encode as (msg: { type: string; body: string }, options?: { maxline?: number }) => string)(msg, {
+        maxline
+      });
     };
   }
 }

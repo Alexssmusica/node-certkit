@@ -46,9 +46,17 @@ export class CertificationRequest {
       const csr = pki.createCertificationRequest();
       csr.version = capture.csrVersion ? (capture.csrVersion as string).charCodeAt(0) : 0;
       csr.signatureOid = asn1.derToOid(capture.csrSignatureOid as string);
-      csr.signatureParameters = readSignatureParameters(csr.signatureOid, capture.csrSignatureParams as Asn1Object, true);
+      csr.signatureParameters = readSignatureParameters(
+        csr.signatureOid,
+        capture.csrSignatureParams as Asn1Object,
+        true
+      );
       csr.siginfo.algorithmOid = asn1.derToOid(capture.csrSignatureOid as string);
-      csr.siginfo.parameters = readSignatureParameters(csr.siginfo.algorithmOid, capture.csrSignatureParams as Asn1Object, false);
+      csr.siginfo.parameters = readSignatureParameters(
+        csr.siginfo.algorithmOid,
+        capture.csrSignatureParams as Asn1Object,
+        false
+      );
       csr.signature = capture.csrSignature as string;
 
       csr.certificationRequestInfo = capture.certificationRequestInfo as Asn1Object;
@@ -132,7 +140,9 @@ export class CertificationRequest {
         csr.md = md || c.md.sha1.create();
         const algorithmOid = oids[csr.md.algorithm + 'WithRSAEncryption'];
         if (!algorithmOid) {
-          const error = new Error('Could not compute certification request digest. ' + 'Unknown message digest algorithm OID.') as DerError;
+          const error = new Error(
+            'Could not compute certification request digest. ' + 'Unknown message digest algorithm OID.'
+          ) as DerError;
           error.algorithm = csr.md.algorithm;
           throw error;
         }

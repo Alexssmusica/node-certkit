@@ -338,7 +338,11 @@ export class AesAlgorithm {
         iNk++;
       } else if (Nk > 6 && i % Nk === 4) {
         // temp = SubWord(temp)
-        temp = (sbox[temp >>> 24] << 24) ^ (sbox[(temp >>> 16) & 255] << 16) ^ (sbox[(temp >>> 8) & 255] << 8) ^ sbox[temp & 255];
+        temp =
+          (sbox[temp >>> 24] << 24) ^
+          (sbox[(temp >>> 16) & 255] << 16) ^
+          (sbox[(temp >>> 8) & 255] << 8) ^
+          sbox[temp & 255];
       }
       w[i] = w[i - Nk] ^ temp;
     }
@@ -414,7 +418,8 @@ export class AesAlgorithm {
           // decryption mode) and swap indexes 3 and 1
           for (let n = 0; n < Nb; ++n) {
             tmp = w[wi + n];
-            wnew[i + (3 & -n)] = m0[sbox[tmp >>> 24]] ^ m1[sbox[(tmp >>> 16) & 255]] ^ m2[sbox[(tmp >>> 8) & 255]] ^ m3[sbox[tmp & 255]];
+            wnew[i + (3 & -n)] =
+              m0[sbox[tmp >>> 24]] ^ m1[sbox[(tmp >>> 16) & 255]] ^ m2[sbox[(tmp >>> 8) & 255]] ^ m3[sbox[tmp & 255]];
           }
         }
       }
@@ -630,10 +635,14 @@ export class AesAlgorithm {
     AddRoundKey(state, w[0, Nb-1])
    */
     // Note: rows are shifted inline
-    output[0] = (sub[a >>> 24] << 24) ^ (sub[(b >>> 16) & 255] << 16) ^ (sub[(c >>> 8) & 255] << 8) ^ sub[d & 255] ^ w[++i];
-    output[decrypt ? 3 : 1] = (sub[b >>> 24] << 24) ^ (sub[(c >>> 16) & 255] << 16) ^ (sub[(d >>> 8) & 255] << 8) ^ sub[a & 255] ^ w[++i];
-    output[2] = (sub[c >>> 24] << 24) ^ (sub[(d >>> 16) & 255] << 16) ^ (sub[(a >>> 8) & 255] << 8) ^ sub[b & 255] ^ w[++i];
-    output[decrypt ? 1 : 3] = (sub[d >>> 24] << 24) ^ (sub[(a >>> 16) & 255] << 16) ^ (sub[(b >>> 8) & 255] << 8) ^ sub[c & 255] ^ w[++i];
+    output[0] =
+      (sub[a >>> 24] << 24) ^ (sub[(b >>> 16) & 255] << 16) ^ (sub[(c >>> 8) & 255] << 8) ^ sub[d & 255] ^ w[++i];
+    output[decrypt ? 3 : 1] =
+      (sub[b >>> 24] << 24) ^ (sub[(c >>> 16) & 255] << 16) ^ (sub[(d >>> 8) & 255] << 8) ^ sub[a & 255] ^ w[++i];
+    output[2] =
+      (sub[c >>> 24] << 24) ^ (sub[(d >>> 16) & 255] << 16) ^ (sub[(a >>> 8) & 255] << 8) ^ sub[b & 255] ^ w[++i];
+    output[decrypt ? 1 : 3] =
+      (sub[d >>> 24] << 24) ^ (sub[(a >>> 16) & 255] << 16) ^ (sub[(b >>> 8) & 255] << 8) ^ sub[c & 255] ^ w[++i];
   }
 
   static registerAlgorithms(cipher: CipherApi<AesAlgorithm['mode']>): void {

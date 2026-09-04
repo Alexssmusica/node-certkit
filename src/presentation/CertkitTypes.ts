@@ -48,7 +48,11 @@ export type CertkitPrngNamespace = {
 };
 
 export type CertkitPrimeNamespace = {
-  generateProbablePrime: (bits: number, options?: unknown, callback?: (err: Error | null, num?: BigInteger) => void) => BigInteger | void;
+  generateProbablePrime: (
+    bits: number,
+    options?: unknown,
+    callback?: (err: Error | null, num?: BigInteger) => void
+  ) => BigInteger | void;
 };
 
 export type CertkitPkcs5Namespace = {

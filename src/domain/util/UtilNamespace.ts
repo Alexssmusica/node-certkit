@@ -10,7 +10,11 @@ import { EnvInfo } from '../../infrastructure/env/EnvInfo.js';
 import { isArray, isArrayBuffer, isArrayBufferView } from './typeChecks.js';
 
 type BaseNModule = {
-  encode: (input: Uint8Array | { length(): number; at(i: number): number }, alphabet: string, maxline?: number) => string;
+  encode: (
+    input: Uint8Array | { length(): number; at(i: number): number },
+    alphabet: string,
+    maxline?: number
+  ) => string;
   decode: (input: string, alphabet: string) => Buffer | Uint8Array | undefined;
 };
 

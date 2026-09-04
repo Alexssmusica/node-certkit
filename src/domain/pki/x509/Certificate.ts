@@ -26,7 +26,8 @@ export class Certificate {
 
       if (msg.type !== 'CERTIFICATE' && msg.type !== 'X509 CERTIFICATE' && msg.type !== 'TRUSTED CERTIFICATE') {
         const error = new Error(
-          'Could not convert certificate from PEM; PEM header type ' + 'is not "CERTIFICATE", "X509 CERTIFICATE", or "TRUSTED CERTIFICATE".'
+          'Could not convert certificate from PEM; PEM header type ' +
+            'is not "CERTIFICATE", "X509 CERTIFICATE", or "TRUSTED CERTIFICATE".'
         ) as DerError;
         error.headerType = msg.type;
         throw error;
@@ -344,7 +345,9 @@ export class Certificate {
         cert.md = md || c.md.sha1.create();
         const algorithmOid = oids[cert.md.algorithm + 'WithRSAEncryption'];
         if (!algorithmOid) {
-          const error = new Error('Could not compute certificate digest. ' + 'Unknown message digest algorithm OID.') as DerError;
+          const error = new Error(
+            'Could not compute certificate digest. ' + 'Unknown message digest algorithm OID.'
+          ) as DerError;
           error.algorithm = cert.md.algorithm;
           throw error;
         }
@@ -521,7 +524,9 @@ export class Certificate {
       const capture: any = {} as any;
       const errors: string[] = [];
       if (!asn1.validate(obj, validators.x509CertificateValidator, capture, errors)) {
-        const error = new Error('Cannot read X.509 certificate. ' + 'ASN.1 object is not an X509v3 Certificate.') as DerError;
+        const error = new Error(
+          'Cannot read X.509 certificate. ' + 'ASN.1 object is not an X509v3 Certificate.'
+        ) as DerError;
         error.errors = errors;
         throw error;
       }
@@ -540,7 +545,11 @@ export class Certificate {
       cert.signatureOid = asn1.derToOid(capture.certSignatureOid);
       cert.signatureParameters = readSignatureParameters(cert.signatureOid, capture.certSignatureParams, true);
       cert.siginfo.algorithmOid = asn1.derToOid(capture.certinfoSignatureOid);
-      cert.siginfo.parameters = readSignatureParameters(cert.siginfo.algorithmOid, capture.certinfoSignatureParams, false);
+      cert.siginfo.parameters = readSignatureParameters(
+        cert.siginfo.algorithmOid,
+        capture.certinfoSignatureParams,
+        false
+      );
       cert.signature = capture.certSignature;
 
       const validity = [];
@@ -557,10 +566,15 @@ export class Certificate {
         validity.push(asn1.generalizedTimeToDate(capture.certValidity4GeneralizedTime));
       }
       if (validity.length > 2) {
-        throw new Error('Cannot read notBefore/notAfter validity times; more ' + 'than two times were provided in the certificate.');
+        throw new Error(
+          'Cannot read notBefore/notAfter validity times; more ' + 'than two times were provided in the certificate.'
+        );
       }
       if (validity.length < 2) {
-        throw new Error('Cannot read notBefore/notAfter validity times; they ' + 'were not provided as either UTCTime or GeneralizedTime.');
+        throw new Error(
+          'Cannot read notBefore/notAfter validity times; they ' +
+            'were not provided as either UTCTime or GeneralizedTime.'
+        );
       }
       cert.validity.notBefore = validity[0];
       cert.validity.notAfter = validity[1];

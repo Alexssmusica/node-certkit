@@ -337,15 +337,22 @@ describe('rsa', function () {
     var prfAlgorithms = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512'];
     algorithms.forEach(function (algorithm) {
       prfAlgorithms.forEach(function (prfAlgorithm) {
-        it('should PKCS#8 encrypt and decrypt private key with ' + algorithm + ' encryption and ' + prfAlgorithm + ' PRF', function () {
-          var privateKey = PKI.privateKeyFromPem(_pem.privateKey);
-          var encryptedPem = PKI.encryptRsaPrivateKey(privateKey, 'password', {
-            algorithm: algorithm,
-            prfAlgorithm: prfAlgorithm
-          });
-          privateKey = PKI.decryptRsaPrivateKey(encryptedPem, 'password');
-          expect(PKI.privateKeyToPem(privateKey)).toBe(_pem.privateKey);
-        });
+        it(
+          'should PKCS#8 encrypt and decrypt private key with ' +
+            algorithm +
+            ' encryption and ' +
+            prfAlgorithm +
+            ' PRF',
+          function () {
+            var privateKey = PKI.privateKeyFromPem(_pem.privateKey);
+            var encryptedPem = PKI.encryptRsaPrivateKey(privateKey, 'password', {
+              algorithm: algorithm,
+              prfAlgorithm: prfAlgorithm
+            });
+            privateKey = PKI.decryptRsaPrivateKey(encryptedPem, 'password');
+            expect(PKI.privateKeyToPem(privateKey)).toBe(_pem.privateKey);
+          }
+        );
       });
     });
   })();
@@ -712,21 +719,24 @@ describe('rsa', function () {
         expect(publicKey.verify(md.digest().getBytes(), signature, pss)).toBe(true);
       });
 
-      it('should verify an rsa signature using a ' + keySize + '-bit key and PSS padding using pss named-param API', function () {
-        var signature = UTIL.decode64(params.signaturePss);
-        var key = PKI.publicKeyFromPem(params.publicKeyPem);
+      it(
+        'should verify an rsa signature using a ' + keySize + '-bit key and PSS padding using pss named-param API',
+        function () {
+          var signature = UTIL.decode64(params.signaturePss);
+          var key = PKI.publicKeyFromPem(params.publicKeyPem);
 
-        var md = MD.sha1.create();
-        md.start();
-        md.update('just testing');
+          var md = MD.sha1.create();
+          md.start();
+          md.update('just testing');
 
-        var pss = PSS.create({
-          md: MD.sha1.create(),
-          mgf: MGF.mgf1.create(MD.sha1.create()),
-          saltLength: 20
-        });
-        expect(key.verify(md.digest().getBytes(), signature, pss)).toBe(true);
-      });
+          var pss = PSS.create({
+            md: MD.sha1.create(),
+            mgf: MGF.mgf1.create(MD.sha1.create()),
+            saltLength: 20
+          });
+          expect(key.verify(md.digest().getBytes(), signature, pss)).toBe(true);
+        }
+      );
 
       it('should rsa sign using a ' + keySize + '-bit key and PSS padding using salt "abc"', function () {
         var privateKey = PKI.privateKeyFromPem(params.privateKeyPem);
@@ -746,21 +756,24 @@ describe('rsa', function () {
         expect(b64).toBe(params.signatureWithAbcSalt);
       });
 
-      it('should verify an rsa signature using a ' + keySize + '-bit key and PSS padding using salt "abc"', function () {
-        var signature = UTIL.decode64(params.signatureWithAbcSalt);
-        var key = PKI.publicKeyFromPem(params.publicKeyPem);
+      it(
+        'should verify an rsa signature using a ' + keySize + '-bit key and PSS padding using salt "abc"',
+        function () {
+          var signature = UTIL.decode64(params.signatureWithAbcSalt);
+          var key = PKI.publicKeyFromPem(params.publicKeyPem);
 
-        var md = MD.sha1.create();
-        md.start();
-        md.update('just testing');
+          var md = MD.sha1.create();
+          md.start();
+          md.update('just testing');
 
-        var pss = PSS.create({
-          md: MD.sha1.create(),
-          mgf: MGF.mgf1.create(MD.sha1.create()),
-          saltLength: 3
-        });
-        expect(key.verify(md.digest().getBytes(), signature, pss)).toBe(true);
-      });
+          var pss = PSS.create({
+            md: MD.sha1.create(),
+            mgf: MGF.mgf1.create(MD.sha1.create()),
+            saltLength: 3
+          });
+          expect(key.verify(md.digest().getBytes(), signature, pss)).toBe(true);
+        }
+      );
 
       it('should rsa sign using a ' + keySize + '-bit key and PSS padding using custom PRNG', function () {
         var prng = RANDOM.createInstance();
@@ -785,26 +798,29 @@ describe('rsa', function () {
         expect(b64).toBe(params.signatureWithCustomPrng);
       });
 
-      it('should verify an rsa signature using a ' + keySize + '-bit key and PSS padding using custom PRNG', function () {
-        var prng = RANDOM.createInstance();
-        prng.seedFileSync = function (needed) {
-          return UTIL.fillString('a', needed);
-        };
-        var signature = UTIL.decode64(params.signatureWithCustomPrng);
-        var key = PKI.publicKeyFromPem(params.publicKeyPem);
+      it(
+        'should verify an rsa signature using a ' + keySize + '-bit key and PSS padding using custom PRNG',
+        function () {
+          var prng = RANDOM.createInstance();
+          prng.seedFileSync = function (needed) {
+            return UTIL.fillString('a', needed);
+          };
+          var signature = UTIL.decode64(params.signatureWithCustomPrng);
+          var key = PKI.publicKeyFromPem(params.publicKeyPem);
 
-        var md = MD.sha1.create();
-        md.start();
-        md.update('just testing');
+          var md = MD.sha1.create();
+          md.start();
+          md.update('just testing');
 
-        var pss = PSS.create({
-          md: MD.sha1.create(),
-          mgf: MGF.mgf1.create(MD.sha1.create()),
-          saltLength: 20,
-          prng: prng
-        });
-        expect(key.verify(md.digest().getBytes(), signature, pss)).toBe(true);
-      });
+          var pss = PSS.create({
+            md: MD.sha1.create(),
+            mgf: MGF.mgf1.create(MD.sha1.create()),
+            saltLength: 20,
+            prng: prng
+          });
+          expect(key.verify(md.digest().getBytes(), signature, pss)).toBe(true);
+        }
+      );
     }
   })();
 

@@ -51,7 +51,11 @@ export class BigInteger {
   static ZERO: BigInteger;
   static ONE: BigInteger;
 
-  constructor(a?: number | string | number[] | null, b?: number | BigIntegerRandomSource | null, c?: BigIntegerRandomSource) {
+  constructor(
+    a?: number | string | number[] | null,
+    b?: number | BigIntegerRandomSource | null,
+    c?: BigIntegerRandomSource
+  ) {
     if (a != null) {
       if (typeof a === 'number') this.fromNumber(a, b as number | BigIntegerRandomSource | undefined, c);
       else if (b == null && typeof a !== 'string') this.fromString(a as number[], 256);
@@ -782,7 +786,8 @@ export class BigInteger {
     let i = (r.t = this.t + a.t - n);
     r.s = 0; // assumes a,this >= 0
     while (--i >= 0) r.data[i] = 0;
-    for (i = Math.max(n - this.t, 0); i < a.t; ++i) r.data[this.t + i - n] = this.am(n - i, a.data[i], r, 0, 0, this.t + i - n);
+    for (i = Math.max(n - this.t, 0); i < a.t; ++i)
+      r.data[this.t + i - n] = this.am(n - i, a.data[i], r, 0, 0, this.t + i - n);
     r.clamp();
     r.drShiftTo(1, r);
   }

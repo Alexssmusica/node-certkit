@@ -13,7 +13,11 @@ export class NodePrimeGenerator implements PrimeGenerator {
     this.#randomSource = randomSource ?? new NodeRandomSource(new NodeCryptoProvider());
   }
 
-  generateProbablePrime(bits: number, options: Record<string, unknown>, callback: (err: Error | null, num?: unknown) => void): void {
+  generateProbablePrime(
+    bits: number,
+    options: Record<string, unknown>,
+    callback: (err: Error | null, num?: unknown) => void
+  ): void {
     const opts = { ...options };
     if (!opts.prng) {
       opts.prng = this.#randomSource;

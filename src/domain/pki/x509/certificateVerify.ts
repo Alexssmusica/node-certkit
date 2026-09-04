@@ -1,11 +1,22 @@
 import type { X509Runtime } from './X509Runtime.js';
-import type { CertificateErrorMap, VerifyCallback, VerifyErrorObject, VerifyOptions, X509CaStore, X509Certificate } from './X509Types.js';
+import type {
+  CertificateErrorMap,
+  VerifyCallback,
+  VerifyErrorObject,
+  VerifyOptions,
+  X509CaStore,
+  X509Certificate
+} from './X509Types.js';
 
 type VerifyCtx = X509Runtime & {
   util: { isArray: (v: unknown) => boolean };
   pki: {
     certificateError: CertificateErrorMap;
-    verifyCertificateChain: (caStore: X509CaStore, chain: X509Certificate[], options?: VerifyOptions | VerifyCallback) => boolean;
+    verifyCertificateChain: (
+      caStore: X509CaStore,
+      chain: X509Certificate[],
+      options?: VerifyOptions | VerifyCallback
+    ) => boolean;
   };
 };
 

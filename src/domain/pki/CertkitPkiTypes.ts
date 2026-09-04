@@ -15,7 +15,10 @@ export type CertkitRsaNamespace = {
   encrypt: (data: string, key: RsaPublicKey, scheme?: unknown, schemeOptions?: unknown) => string;
   decrypt: (data: string, key: RsaPrivateKey, scheme?: unknown, schemeOptions?: unknown) => string;
   createKeyPairGenerationState: (bits: number, e?: number, options?: unknown) => Record<string, unknown>;
-  stepKeyPairGenerationState: (state: Record<string, unknown>, callback: (err: Error | null, keypair?: RsaKeyPair) => void) => void;
+  stepKeyPairGenerationState: (
+    state: Record<string, unknown>,
+    callback: (err: Error | null, keypair?: RsaKeyPair) => void
+  ) => void;
   generateKeyPair: (...args: unknown[]) => RsaKeyPair | void;
   setPublicKey: (n: BigInteger, e: BigInteger) => RsaPublicKey;
   setPrivateKey: (
@@ -32,7 +35,14 @@ export type CertkitRsaNamespace = {
 };
 
 export type CertkitPbeNamespace = {
-  generatePkcs12Key: (password: string | null | undefined, salt: unknown, id: number, iter: number, n: number, md?: unknown) => unknown;
+  generatePkcs12Key: (
+    password: string | null | undefined,
+    salt: unknown,
+    id: number,
+    iter: number,
+    n: number,
+    md?: unknown
+  ) => unknown;
   getCipher: (oid: string, params: unknown, password: string) => unknown;
   getCipherForPBES2: (oid: string, params: unknown, password: string) => unknown;
   getCipherForPKCS12PBE: (oid: string, params: unknown, password: string) => unknown;
@@ -89,7 +99,11 @@ export type CertkitPki = {
   getCertificationRequestInfo: (csr: X509CertificationRequest) => Asn1Object;
   createCaStore: (certs?: Array<X509Certificate | string>) => X509CaStore;
   certificateError: CertificateErrorMap;
-  verifyCertificateChain: (caStore: X509CaStore, chain: X509Certificate[], options?: VerifyCallback | VerifyOptions) => boolean;
+  verifyCertificateChain: (
+    caStore: X509CaStore,
+    chain: X509Certificate[],
+    options?: VerifyCallback | VerifyOptions
+  ) => boolean;
   RDNAttributesAsArray: (rdn: unknown, md: unknown) => DnAttribute[];
   CRIAttributesAsArray: (attributes: unknown) => DnAttribute[];
   pemToDer: (pem: string) => unknown;
@@ -123,4 +137,7 @@ export type CertkitPkiRsaAttach = Pick<
   | 'publicKeyToRSAPublicKey'
 >;
 
-export type CertkitPkiFinalizeMethods = Pick<CertkitPki, 'pemToDer' | 'privateKeyFromPem' | 'privateKeyToPem' | 'privateKeyInfoToPem'>;
+export type CertkitPkiFinalizeMethods = Pick<
+  CertkitPki,
+  'pemToDer' | 'privateKeyFromPem' | 'privateKeyToPem' | 'privateKeyInfoToPem'
+>;

@@ -59,7 +59,10 @@ export type CertificateExtensionFromAsn1Options = {
  *
  * @return the array.
  */
-export function certificateExtensionsFromAsn1(exts: any, options?: CertificateExtensionFromAsn1Options): X509Extension[] {
+export function certificateExtensionsFromAsn1(
+  exts: any,
+  options?: CertificateExtensionFromAsn1Options
+): X509Extension[] {
   const rval: X509Extension[] = [];
   for (let i = 0; i < exts.value.length; ++i) {
     const extseq = exts.value[i];

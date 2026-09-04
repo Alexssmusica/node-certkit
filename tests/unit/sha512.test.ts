@@ -24,7 +24,9 @@ describe('sha512', function () {
 
   it('should digest "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"', (ctx) => {
     var md = SHA512.create();
-    md.update('abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu');
+    md.update(
+      'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu'
+    );
     expect(md.digest().toHex()).toBe(
       '8e959b75dae313da8cf4f72814fc143f8f7779c6eb9f7fa17299aeadb6889018501d289e4900f7e4331b99dec4b5433ac7d329eeb6dd26545e96e55b874be909'
     );
@@ -84,31 +86,43 @@ describe('sha384', function () {
 
   it('should digest the empty string', (ctx) => {
     var md = SHA384.create();
-    expect(md.digest().toHex()).toBe('38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b');
+    expect(md.digest().toHex()).toBe(
+      '38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b'
+    );
   });
 
   it('should digest "abc"', (ctx) => {
     var md = SHA384.create();
     md.update('abc');
-    expect(md.digest().toHex()).toBe('cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7');
+    expect(md.digest().toHex()).toBe(
+      'cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7'
+    );
   });
 
   it('should digest "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"', (ctx) => {
     var md = SHA384.create();
-    md.update('abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu');
-    expect(md.digest().toHex()).toBe('09330c33f71147e83d192fc782cd1b4753111b173b3b05d22fa08086e3b0f712fcc7c71a557e2db966c3e9fa91746039');
+    md.update(
+      'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu'
+    );
+    expect(md.digest().toHex()).toBe(
+      '09330c33f71147e83d192fc782cd1b4753111b173b3b05d22fa08086e3b0f712fcc7c71a557e2db966c3e9fa91746039'
+    );
   });
 
   it('should digest "The quick brown fox jumps over the lazy dog"', (ctx) => {
     var md = SHA384.create();
     md.update('The quick brown fox jumps over the lazy dog');
-    expect(md.digest().toHex()).toBe('ca737f1014a48f4c0b6dd43cb177b0afd9e5169367544c494011e3317dbf9a509cb1e5dc1e85a941bbee3d7f2afbc9b1');
+    expect(md.digest().toHex()).toBe(
+      'ca737f1014a48f4c0b6dd43cb177b0afd9e5169367544c494011e3317dbf9a509cb1e5dc1e85a941bbee3d7f2afbc9b1'
+    );
   });
 
   it('should digest "c\'\u00e8"', (ctx) => {
     var md = SHA384.create();
     md.update("c'\u00e8", 'utf8');
-    expect(md.digest().toHex()).toBe('382ec8a92d50abf57f7d0f934ff3969d6d354d30c96f1616678a920677867aba49521d2d535c0f285a3c2961c2034ea3');
+    expect(md.digest().toHex()).toBe(
+      '382ec8a92d50abf57f7d0f934ff3969d6d354d30c96f1616678a920677867aba49521d2d535c0f285a3c2961c2034ea3'
+    );
   });
 
   it('should digest "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"', (ctx) => {
@@ -116,8 +130,12 @@ describe('sha384', function () {
     md.start();
     md.update('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq');
     // do twice to check continuing digest
-    expect(md.digest().toHex()).toBe('3391fdddfc8dc7393707a65b1b4709397cf8b1d162af05abfe8f450de5f36bc6b0455a8520bc4e6f5fe95b1fe3c8452b');
-    expect(md.digest().toHex()).toBe('3391fdddfc8dc7393707a65b1b4709397cf8b1d162af05abfe8f450de5f36bc6b0455a8520bc4e6f5fe95b1fe3c8452b');
+    expect(md.digest().toHex()).toBe(
+      '3391fdddfc8dc7393707a65b1b4709397cf8b1d162af05abfe8f450de5f36bc6b0455a8520bc4e6f5fe95b1fe3c8452b'
+    );
+    expect(md.digest().toHex()).toBe(
+      '3391fdddfc8dc7393707a65b1b4709397cf8b1d162af05abfe8f450de5f36bc6b0455a8520bc4e6f5fe95b1fe3c8452b'
+    );
   });
 
   it('should digest multiple long messages', (ctx) => {
@@ -128,7 +146,9 @@ describe('sha384', function () {
       for (var i = 0; i < 10000; ++i) {
         md.update('abc');
       }
-      expect(md.digest().toHex()).toBe('ade291a33b436cc10ed01090255e612f0d3868a795be7871e1f20183245aa48738d35a26d94ac5d791ef57e94763af6b');
+      expect(md.digest().toHex()).toBe(
+        'ade291a33b436cc10ed01090255e612f0d3868a795be7871e1f20183245aa48738d35a26d94ac5d791ef57e94763af6b'
+      );
     }
   });
 });

@@ -400,7 +400,12 @@ export class Asn1Codec {
       bytes,
       bytes.length(),
       0,
-      options as Asn1FromDerOptions & { maxDepth: number; strict: boolean; parseAllBytes: boolean; decodeBitStrings: boolean }
+      options as Asn1FromDerOptions & {
+        maxDepth: number;
+        strict: boolean;
+        parseAllBytes: boolean;
+        decodeBitStrings: boolean;
+      }
     );
     if (options.parseAllBytes && bytes.length() !== 0) {
       const error = new Error('Unparsed DER bytes remain after ASN.1 parsing.') as DerError;
@@ -926,7 +931,10 @@ export class Asn1Codec {
     let rval = false;
 
     // ensure tag class and type are the same if specified
-    if ((obj.tagClass === v.tagClass || typeof v.tagClass === 'undefined') && (obj.type === v.type || typeof v.type === 'undefined')) {
+    if (
+      (obj.tagClass === v.tagClass || typeof v.tagClass === 'undefined') &&
+      (obj.type === v.type || typeof v.type === 'undefined')
+    ) {
       // ensure constructed flag is the same if specified
       if (obj.constructed === v.constructed || typeof v.constructed === 'undefined') {
         rval = true;
@@ -1037,7 +1045,9 @@ export class Asn1Codec {
           }
         }
       } else if (errors) {
-        errors.push('[' + v.name + '] ' + 'Expected constructed "' + v.constructed + '", got "' + obj.constructed + '"');
+        errors.push(
+          '[' + v.name + '] ' + 'Expected constructed "' + v.constructed + '", got "' + obj.constructed + '"'
+        );
       }
     } else if (errors) {
       if (obj.tagClass !== v.tagClass) {
