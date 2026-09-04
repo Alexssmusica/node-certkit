@@ -19,68 +19,68 @@ describe('rc2', function () {
 
   it('should rc2-ecb encrypt zeros', (ctx) => {
     var key = UTIL.hexToBytes('88bca90e90875a7f0f79c384627bafb2');
-    var input = new UTIL.createBuffer().fillWithByte(0, 8);
+    var input = UTIL.createBuffer().fillWithByte(0, 8);
     var cipher = RC2.startEncrypting(key, null, null);
     cipher.update(input);
     cipher.finish();
-    expect(cipher.output.toHex()).toBe('2269552ab0f85ca6e35b3b2ce4e02191');
+    expect(cipher.output!.toHex()).toBe('2269552ab0f85ca6e35b3b2ce4e02191');
   });
 
   it('should rc2-ecb encrypt: vegan', (ctx) => {
     var key = UTIL.hexToBytes('88bca90e90875a7f0f79c384627bafb2');
-    var input = new UTIL.createBuffer('vegan');
+    var input = UTIL.createBuffer('vegan');
     var cipher = RC2.startEncrypting(key, null, null);
     cipher.update(input);
     cipher.finish();
-    expect(cipher.output.toHex()).toBe('2194adaf4d517e3a');
+    expect(cipher.output!.toHex()).toBe('2194adaf4d517e3a');
   });
 
   it('should rc2-ecb decrypt: 2194adaf4d517e3a', (ctx) => {
     var key = UTIL.hexToBytes('88bca90e90875a7f0f79c384627bafb2');
-    var input = new UTIL.createBuffer(UTIL.hexToBytes('2194adaf4d517e3a'));
+    var input = UTIL.createBuffer(UTIL.hexToBytes('2194adaf4d517e3a'));
     var cipher = RC2.startDecrypting(key, null, null);
     cipher.update(input);
     cipher.finish();
-    expect(cipher.output.getBytes()).toBe('vegan');
+    expect(cipher.output!.getBytes()).toBe('vegan');
   });
 
   it('should rc2-cbc encrypt: revolution', (ctx) => {
     var key = UTIL.hexToBytes('88bca90e90875a7f0f79c384627bafb2');
-    var iv = new UTIL.createBuffer(UTIL.hexToBytes('0123456789abcdef'));
-    var input = new UTIL.createBuffer('revolution');
+    var iv = UTIL.createBuffer(UTIL.hexToBytes('0123456789abcdef'));
+    var input = UTIL.createBuffer('revolution');
     var cipher = RC2.startEncrypting(key, iv, null);
     cipher.update(input);
     cipher.finish();
-    expect(cipher.output.toHex()).toBe('50cfd16e0fd7f20b17a622eb2a469b7e');
+    expect(cipher.output!.toHex()).toBe('50cfd16e0fd7f20b17a622eb2a469b7e');
   });
 
   it('should rc2-cbc decrypt: 50cfd16e0fd7f20b17a622eb2a469b7e', (ctx) => {
     var key = UTIL.hexToBytes('88bca90e90875a7f0f79c384627bafb2');
-    var iv = new UTIL.createBuffer(UTIL.hexToBytes('0123456789abcdef'));
-    var input = new UTIL.createBuffer(UTIL.hexToBytes('50cfd16e0fd7f20b17a622eb2a469b7e'));
+    var iv = UTIL.createBuffer(UTIL.hexToBytes('0123456789abcdef'));
+    var input = UTIL.createBuffer(UTIL.hexToBytes('50cfd16e0fd7f20b17a622eb2a469b7e'));
     var cipher = RC2.startDecrypting(key, iv, null);
     cipher.update(input);
     cipher.finish();
-    expect(cipher.output.data).toBe('revolution');
+    expect(cipher.output!.data).toBe('revolution');
   });
 
   it('should rc2-cbc encrypt w/binary string iv: revolution', (ctx) => {
     var key = UTIL.hexToBytes('88bca90e90875a7f0f79c384627bafb2');
     var iv = UTIL.hexToBytes('0123456789abcdef');
-    var input = new UTIL.createBuffer('revolution');
+    var input = UTIL.createBuffer('revolution');
     var cipher = RC2.startEncrypting(key, iv, null);
     cipher.update(input);
     cipher.finish();
-    expect(cipher.output.toHex()).toBe('50cfd16e0fd7f20b17a622eb2a469b7e');
+    expect(cipher.output!.toHex()).toBe('50cfd16e0fd7f20b17a622eb2a469b7e');
   });
 
   it('should rc2-cbc decrypt w/binary string iv: 50cfd16e0fd7f20b17a622eb2a469b7e', (ctx) => {
     var key = UTIL.hexToBytes('88bca90e90875a7f0f79c384627bafb2');
     var iv = UTIL.hexToBytes('0123456789abcdef');
-    var input = new UTIL.createBuffer(UTIL.hexToBytes('50cfd16e0fd7f20b17a622eb2a469b7e'));
+    var input = UTIL.createBuffer(UTIL.hexToBytes('50cfd16e0fd7f20b17a622eb2a469b7e'));
     var cipher = RC2.startDecrypting(key, iv, null);
     cipher.update(input);
     cipher.finish();
-    expect(cipher.output.data).toBe('revolution');
+    expect(cipher.output!.data).toBe('revolution');
   });
 });

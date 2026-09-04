@@ -1,5 +1,25 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import certkit from '../src/presentation/index.js';
+import type { PrngPlugin } from '../src/infrastructure/prng/Fortuna.js';
+
+type ValueDescription = {
+  type: string;
+  length?: number;
+};
+
+type InstanceDescription = {
+  label: string;
+  ownKeys: string[];
+  methods: Record<string, ValueDescription>;
+  properties: Record<string, ValueDescription>;
+  protoMethods: Record<string, ValueDescription>;
+};
+
+type SnapshotDiff = {
+  added: string[];
+  removed: string[];
+  changed: Array<{ key: string; expected: unknown; actual: unknown }>;
+};
 /**
  * Snapshot test for factory-created instance shapes.
  * Complements api-surface.test.js which only walks the certkit namespace.
@@ -13,13 +33,13 @@ const fixtureDir = path.join(import.meta.dirname, 'fixtures');
 const bufferB64 = fs.readFileSync(path.join(fixtureDir, 'certificate.pfx.b64'), 'utf8').trim();
 const password = fs.readFileSync(path.join(fixtureDir, 'certificate.password.txt'), 'utf8').trim();
 
-function describeValue(value) {
+function describeValue(value: unknown): ValueDescription {
   if (value === null || value === undefined) {
     return { type: String(value) };
   }
   const t = typeof value;
   if (t === 'function') {
-    return { type: 'function', length: value.length };
+    return { type: 'function', length: (value as (...args: unknown[]) => unknown).length };
   }
   if (t !== 'object') {
     return { type: t };
@@ -33,14 +53,15 @@ function describeValue(value) {
   return { type: 'object' };
 }
 
-function describeInstance(instance, label) {
-  const ownKeys = Object.keys(instance).sort();
-  const methods = {};
-  const properties = {};
+function describeInstance(instance: object, label: string): InstanceDescription {
+  const record = instance as Record<string, unknown>;
+  const ownKeys = Object.keys(record).sort();
+  const methods: Record<string, ValueDescription> = {};
+  const properties: Record<string, ValueDescription> = {};
 
   for (let i = 0; i < ownKeys.length; i++) {
     const key = ownKeys[i];
-    const val = instance[key];
+    const val = record[key];
     if (typeof val === 'function') {
       methods[key] = describeValue(val);
     } else {
@@ -49,7 +70,7 @@ function describeInstance(instance, label) {
   }
 
   const proto = Object.getPrototypeOf(instance);
-  const protoMethods = {};
+  const protoMethods: Record<string, ValueDescription> = {};
   if (proto && proto !== Object.prototype) {
     const names = Object.getOwnPropertyNames(proto).sort();
     for (let i = 0; i < names.length; i++) {
@@ -80,8 +101,8 @@ function loadPkcs12() {
   return certkit.pkcs12.pkcs12FromAsn1(asn, true, password);
 }
 
-function buildActual() {
-  const actual = {};
+function buildActual(): Record<string, InstanceDescription> {
+  const actual: Record<string, InstanceDescription> = {};
 
   actual['md5.create'] = describeInstance(certkit.md.md5.create(), 'md5.create');
   actual['sha1.create'] = describeInstance(certkit.md.sha1.create(), 'sha1.create');
@@ -95,7 +116,10 @@ function buildActual() {
     'cipher.createCipher(AES-CBC)'
   );
 
-  actual['prng.create'] = describeInstance(certkit.prng.create({ md: certkit.md.sha256 }), 'prng.create');
+  actual['prng.create'] = describeInstance(
+    certkit.prng.create({ md: certkit.md.sha256 } as unknown as PrngPlugin),
+    'prng.create'
+  );
   actual['random'] = describeInstance(certkit.random, 'random');
   actual['pki.createCertificate'] = describeInstance(certkit.pki.createCertificate(), 'pki.createCertificate');
   actual['pki.createCertificationRequest'] = describeInstance(
@@ -134,10 +158,10 @@ function buildActual() {
   return actual;
 }
 
-function diffSnapshots(a, b) {
-  const added = [];
-  const removed = [];
-  const changed = [];
+function diffSnapshots(a: Record<string, unknown>, b: Record<string, unknown>): SnapshotDiff {
+  const added: string[] = [];
+  const removed: string[] = [];
+  const changed: SnapshotDiff['changed'] = [];
   const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
   allKeys.forEach(function (key) {
     if (!(key in a)) {

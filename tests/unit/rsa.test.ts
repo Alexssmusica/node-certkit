@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import certkit from '../../src/presentation/index.js';
+import type { EncryptPrivateKeyInfoOptions } from '../../src/domain/pki/CertkitPkiTypes.js';
+import type { RsaKeyPair, RsaPrivateKey, RsaPublicKey } from '../../src/domain/pki/RsaTypes.js';
+import { UtilNamespace } from '../../src/domain/util/UtilNamespace.js';
 const JSBN = certkit.jsbn;
 const MD = certkit.md;
 const MGF = certkit.mgf;
@@ -59,7 +62,7 @@ var _signature =
 
 describe('rsa', function () {
   // check a pair
-  function _pairCheck(pair) {
+  function _pairCheck(pair: RsaKeyPair): void {
     // PEM check
     expect(PKI.privateKeyToPem(pair.privateKey).indexOf('-----BEGIN RSA PRIVATE KEY-----')).toBe(0);
     expect(PKI.publicKeyToPem(pair.publicKey).indexOf('-----BEGIN PUBLIC KEY-----')).toBe(0);
@@ -72,7 +75,7 @@ describe('rsa', function () {
   }
 
   // compare pairs
-  function _pairCmp(pair1, pair2) {
+  function _pairCmp(pair1: RsaKeyPair, pair2: RsaKeyPair): void {
     var pem1 = {
       privateKey: PKI.privateKeyToPem(pair1.privateKey),
       publicKey: PKI.publicKeyToPem(pair1.publicKey)
@@ -88,18 +91,18 @@ describe('rsa', function () {
   // create same prng
   function _samePrng() {
     var prng = RANDOM.createInstance();
-    prng.seedFileSync = function (needed) {
-      return UTIL.fillString('a', needed);
+    prng.seedFileSync = function (needed: number): string {
+      return UtilNamespace.fillString('a', needed);
     };
     return prng;
   }
 
   // generate pair in sync mode
-  function _genSync(options) {
+  function _genSync(options?: { samePrng?: boolean }): RsaKeyPair {
     options = options || { samePrng: false };
-    var pair;
+    var pair: RsaKeyPair;
     if (options.samePrng) {
-      pair = RSA.generateKeyPair(512, { prng: _samePrng() });
+      pair = RSA.generateKeyPair(512, 0x10001, { prng: _samePrng() });
     } else {
       pair = RSA.generateKeyPair(512);
     }
@@ -108,25 +111,31 @@ describe('rsa', function () {
   }
 
   // generate pair in async mode
-  function _genAsync(options, callback) {
+  function _genAsync(callback: (pair: RsaKeyPair) => void): void;
+  function _genAsync(options: { samePrng?: boolean; workers?: number }, callback: (pair: RsaKeyPair) => void): void;
+  function _genAsync(
+    options: { samePrng?: boolean; workers?: number } | ((pair: RsaKeyPair) => void),
+    callback?: (pair: RsaKeyPair) => void
+  ): void {
     if (typeof callback !== 'function') {
-      callback = options;
+      callback = options as (pair: RsaKeyPair) => void;
       options = { samePrng: false };
     }
-    var genOptions = {
+    var genOptions: Record<string, unknown> = {
       bits: 512,
       workerScript: '/certkit/prime.worker.js'
     };
-    if (options.samePrng) {
+    var opts = options as { samePrng?: boolean; workers?: number };
+    if (opts.samePrng) {
       genOptions.prng = _samePrng();
     }
-    if ('workers' in options) {
-      genOptions.workers = options.workers;
+    if ('workers' in opts) {
+      genOptions.workers = opts.workers;
     }
     RSA.generateKeyPair(genOptions, function (err, pair) {
       expect(err).toBeFalsy();
-      _pairCheck(pair);
-      callback(pair);
+      _pairCheck(pair!);
+      callback!(pair!);
     });
   }
 
@@ -238,8 +247,8 @@ describe('rsa', function () {
   });
 
   it('should generate same 512 bit key pair (prng+async,prng+async)', async () => {
-    var pair1;
-    var pair2;
+    var pair1: RsaKeyPair | undefined;
+    var pair2: RsaKeyPair | undefined;
     await new Promise<void>((resolve, reject) => {
       function _done() {
         if (pair1 && pair2) {
@@ -321,7 +330,10 @@ describe('rsa', function () {
     algorithms.forEach(function (algorithm) {
       it('should legacy (OpenSSL style) encrypt and decrypt private key with ' + algorithm, function () {
         var privateKey = PKI.privateKeyFromPem(_pem.privateKey);
-        var encryptedPem = PKI.encryptRsaPrivateKey(privateKey, 'password', { algorithm: algorithm, legacy: true });
+        var encryptedPem = PKI.encryptRsaPrivateKey(privateKey, 'password', {
+          algorithm: algorithm,
+          legacy: true
+        } as EncryptPrivateKeyInfoOptions & { legacy: boolean });
         privateKey = PKI.decryptRsaPrivateKey(encryptedPem, 'password');
         expect(PKI.privateKeyToPem(privateKey)).toBe(_pem.privateKey);
       });
@@ -575,23 +587,34 @@ describe('rsa', function () {
      *   -pubin -inkey rsa_1025_public.pem -pkeyopt digest:sha1 \
      *   -pkeyopt rsa_padding_mode:pss -pkeyopt rsa_pss_saltlen:20
      */
-    function createTests(params) {
+    type OpenSslTestParams = {
+      keySize: number;
+      publicKeyPem: string;
+      privateKeyPem: string;
+      encrypted: string;
+      signature: string;
+      signaturePss: string;
+      signatureWithAbcSalt: string;
+      signatureWithCustomPrng: string;
+    };
+
+    function createTests(params: OpenSslTestParams): void {
       var keySize = params.keySize;
 
       it('should rsa encrypt using a ' + keySize + '-bit key', function () {
         var message = "it need's to be about 20% cooler"; // it need's better grammar too
 
         /* First step, do public key encryption */
-        var key = PKI.publicKeyFromPem(params.publicKeyPem);
-        var data = key.encrypt(message);
+        var publicKey = PKI.publicKeyFromPem(params.publicKeyPem);
+        var data = publicKey.encrypt(message);
 
         /* Second step, use private key decryption to verify successful
             encryption. The encrypted message differs every time, since it is
             padded with random data. Therefore just rely on the decryption
             routine to work, which is tested separately against an externally
             provided encrypted message. */
-        key = PKI.privateKeyFromPem(params.privateKeyPem);
-        expect(key.decrypt(data)).toBe(message);
+        var privateKey = PKI.privateKeyFromPem(params.privateKeyPem);
+        expect(privateKey.decrypt(data)).toBe(message);
       });
 
       it('should rsa decrypt using a ' + keySize + '-bit key', function () {
@@ -635,7 +658,11 @@ describe('rsa', function () {
         md.update('just testing');
 
         // create signature
-        var pss = PSS.create(MD.sha1.create(), MGF.mgf1.create(MD.sha1.create()), 20);
+        var pss = PSS.create({
+          md: MD.sha1.create(),
+          mgf: MGF.mgf1.create(MD.sha1.create()),
+          saltLength: 20
+        });
         var signature = privateKey.sign(md, pss);
 
         // verify signature
@@ -652,7 +679,11 @@ describe('rsa', function () {
         md.start();
         md.update('just testing');
 
-        var pss = PSS.create(MD.sha1.create(), MGF.mgf1.create(MD.sha1.create()), 20);
+        var pss = PSS.create({
+          md: MD.sha1.create(),
+          mgf: MGF.mgf1.create(MD.sha1.create()),
+          saltLength: 20
+        });
         expect(key.verify(md.digest().getBytes(), signature, pss)).toBe(true);
       });
 
@@ -737,7 +768,7 @@ describe('rsa', function () {
       it('should rsa sign using a ' + keySize + '-bit key and PSS padding using custom PRNG', function () {
         var prng = RANDOM.createInstance();
         prng.seedFileSync = function (needed) {
-          return UTIL.fillString('a', needed);
+          return UtilNamespace.fillString('a', needed);
         };
         var privateKey = PKI.privateKeyFromPem(params.privateKeyPem);
 
@@ -762,7 +793,7 @@ describe('rsa', function () {
         function () {
           var prng = RANDOM.createInstance();
           prng.seedFileSync = function (needed) {
-            return UTIL.fillString('a', needed);
+            return UtilNamespace.fillString('a', needed);
           };
           var signature = UTIL.decode64(params.signatureWithCustomPrng);
           var key = PKI.publicKeyFromPem(params.publicKeyPem);
@@ -837,7 +868,12 @@ describe('rsa', function () {
     // signature value obtained by I^d mod N
     // S
 
-    function _checkBadTailingGarbage(publicKey, S) {
+    function _signatureBytes(S: string | Uint8Array): string {
+      return typeof S === 'string' ? S : UTIL.createBuffer(S).getBytes();
+    }
+
+    function _checkBadTailingGarbage(publicKey: RsaPublicKey, S: string | Uint8Array): void {
+      S = _signatureBytes(S);
       var md = MD.sha256.create();
       md.update(m);
 
@@ -848,7 +884,8 @@ describe('rsa', function () {
       }).toThrow('Unparsed DER bytes remain after ASN.1 parsing.');
     }
 
-    function _checkBadDigestInfo(publicKey, S, skipTailingGarbage) {
+    function _checkBadDigestInfo(publicKey: RsaPublicKey, S: string | Uint8Array, skipTailingGarbage = false): void {
+      S = _signatureBytes(S);
       var md = MD.sha256.create();
       md.update(m);
 
@@ -860,7 +897,8 @@ describe('rsa', function () {
       }).toThrow('ASN.1 object does not contain a valid RSASSA-PKCS1-v1_5 DigestInfo value.');
     }
 
-    function _checkGoodDigestInfo(publicKey, S, skipTailingGarbage) {
+    function _checkGoodDigestInfo(publicKey: RsaPublicKey, S: string | Uint8Array, skipTailingGarbage = false): void {
+      S = _signatureBytes(S);
       var md = MD.sha256.create();
       md.update(m);
 

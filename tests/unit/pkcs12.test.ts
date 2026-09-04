@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import certkit from '../../src/presentation/index.js';
+import type { EncryptPrivateKeyInfoOptions } from '../../src/domain/pki/CertkitPkiTypes.js';
+import type { Pkcs12CreateOptions } from '../../src/domain/pki/Pkcs12Types.js';
+import type { PemMessage } from '../../src/domain/pki/PemCodec.js';
+import type { RsaPrivateKey } from '../../src/domain/pki/RsaTypes.js';
 const PKCS12 = certkit.pkcs12;
 const ASN1 = certkit.asn1;
 const PEM = certkit.pem;
@@ -9,7 +13,22 @@ const oldRandomGenerate = certkit.random;
 const p12Der = certkit.util;
 const p12Asn1 = certkit.asn1;
 const p12 = certkit.pkcs12;
-var _data;
+
+type Pkcs12TestData = {
+  certificate: string;
+  privateKey: string;
+  p12certonly: string;
+  p12keyonly: string;
+  p12enckeyonly: string;
+  p12encmixed: string;
+  p12ecdsa: string;
+  p12ecdsaCert: string;
+};
+
+type Pkcs12MacKey = { toHex: () => string };
+
+let _data: Pkcs12TestData;
+
 describe('pkcs12', function () {
   it('should create certificate-only p12', (ctx) => {
     var p12Asn = PKCS12.toPkcs12Asn1(null, _data.certificate, null, {
@@ -47,8 +66,10 @@ describe('pkcs12', function () {
     var privateKey = PKI.privateKeyFromPem(_data.privateKey);
     var p12Asn = PKCS12.toPkcs12Asn1(privateKey, null, 'nopass', {
       useMac: false,
-      generateLocalKeyId: false
-    });
+      generateLocalKeyId: false,
+      count: 2048,
+      prfAlgorithm: 'sha1'
+    } as Pkcs12CreateOptions & EncryptPrivateKeyInfoOptions);
     var p12Der = ASN1.toDer(p12Asn).getBytes();
 
     // restore old random function
@@ -74,7 +95,7 @@ describe('pkcs12', function () {
     expect(p12.safeContents[0].safeBags[0].type).toBe(PKI.oids.certBag);
 
     // check cert's serial number
-    expect(p12.safeContents[0].safeBags[0].cert.serialNumber).toBe('00d4541c40d835e2f3');
+    expect(p12.safeContents[0].safeBags[0].cert!.serialNumber).toBe('00d4541c40d835e2f3');
   });
 
   it('should import key-only p12', (ctx) => {
@@ -93,8 +114,8 @@ describe('pkcs12', function () {
 
     // compare the key from the PFX by comparing both primes
     var expected = PKI.privateKeyFromPem(_data.privateKey);
-    expect(p12.safeContents[0].safeBags[0].key.p).toEqual(expected.p);
-    expect(p12.safeContents[0].safeBags[0].key.q).toEqual(expected.q);
+    expect(p12.safeContents[0].safeBags[0].key!.p).toEqual(expected.p);
+    expect(p12.safeContents[0].safeBags[0].key!.q).toEqual(expected.q);
   });
 
   it('should import encrypted-key-only p12', (ctx) => {
@@ -114,8 +135,8 @@ describe('pkcs12', function () {
 
     // compare the key from the PFX by comparing both primes
     var expected = PKI.privateKeyFromPem(_data.privateKey);
-    expect(p12.safeContents[0].safeBags[0].key.p).toEqual(expected.p);
-    expect(p12.safeContents[0].safeBags[0].key.q).toEqual(expected.q);
+    expect(p12.safeContents[0].safeBags[0].key!.p).toEqual(expected.p);
+    expect(p12.safeContents[0].safeBags[0].key!.q).toEqual(expected.q);
   });
 
   it('should import an encrypted-key-only p12', (ctx) => {
@@ -135,8 +156,8 @@ describe('pkcs12', function () {
 
     // compare the key from the PFX by comparing both primes
     var expected = PKI.privateKeyFromPem(_data.privateKey);
-    expect(p12.safeContents[0].safeBags[0].key.p).toEqual(expected.p);
-    expect(p12.safeContents[0].safeBags[0].key.q).toEqual(expected.q);
+    expect(p12.safeContents[0].safeBags[0].key!.p).toEqual(expected.p);
+    expect(p12.safeContents[0].safeBags[0].key!.q).toEqual(expected.q);
   });
 
   it('should import an encrypted p12 with keys and certificates', (ctx) => {
@@ -153,51 +174,51 @@ describe('pkcs12', function () {
     expect(p12.safeContents[0].encrypted).toBe(false);
     expect(p12.safeContents[0].safeBags.length).toBe(2);
     expect(p12.safeContents[0].safeBags[0].type).toBe(PKI.oids.pkcs8ShroudedKeyBag);
-    expect(p12.safeContents[0].safeBags[0].attributes.friendlyName.length).toBe(1);
-    expect(p12.safeContents[0].safeBags[0].attributes.friendlyName[0]).toBe('encryptionkey');
-    expect(p12.safeContents[0].safeBags[0].attributes.localKeyId.length).toBe(1);
-    expect(p12.safeContents[0].safeBags[0].attributes.localKeyId[0]).toBe('Time 1311855238964');
+    expect(p12.safeContents[0].safeBags[0].attributes.friendlyName!.length).toBe(1);
+    expect(p12.safeContents[0].safeBags[0].attributes.friendlyName![0]).toBe('encryptionkey');
+    expect(p12.safeContents[0].safeBags[0].attributes.localKeyId!.length).toBe(1);
+    expect(p12.safeContents[0].safeBags[0].attributes.localKeyId![0]).toBe('Time 1311855238964');
 
     expect(p12.safeContents[0].safeBags[1].type).toBe(PKI.oids.pkcs8ShroudedKeyBag);
-    expect(p12.safeContents[0].safeBags[1].attributes.friendlyName.length).toBe(1);
-    expect(p12.safeContents[0].safeBags[1].attributes.friendlyName[0]).toBe('signaturekey');
-    expect(p12.safeContents[0].safeBags[1].attributes.localKeyId.length).toBe(1);
-    expect(p12.safeContents[0].safeBags[1].attributes.localKeyId[0]).toBe('Time 1311855238863');
+    expect(p12.safeContents[0].safeBags[1].attributes.friendlyName!.length).toBe(1);
+    expect(p12.safeContents[0].safeBags[1].attributes.friendlyName![0]).toBe('signaturekey');
+    expect(p12.safeContents[0].safeBags[1].attributes.localKeyId!.length).toBe(1);
+    expect(p12.safeContents[0].safeBags[1].attributes.localKeyId![0]).toBe('Time 1311855238863');
 
     expect(p12.safeContents[1].encrypted).toBe(true);
     expect(p12.safeContents[1].safeBags.length).toBe(6);
 
     expect(p12.safeContents[1].safeBags[0].type).toBe(PKI.oids.certBag);
-    expect(p12.safeContents[1].safeBags[0].attributes.friendlyName.length).toBe(1);
-    expect(p12.safeContents[1].safeBags[0].attributes.friendlyName[0]).toBe(
+    expect(p12.safeContents[1].safeBags[0].attributes.friendlyName!.length).toBe(1);
+    expect(p12.safeContents[1].safeBags[0].attributes.friendlyName![0]).toBe(
       'CN=1002753325,2.5.4.5=#130b3130303237353333323543'
     );
-    expect(p12.safeContents[1].safeBags[0].attributes.localKeyId.length).toBe(1);
-    expect(p12.safeContents[1].safeBags[0].attributes.localKeyId[0]).toBe('Time 1311855238964');
+    expect(p12.safeContents[1].safeBags[0].attributes.localKeyId!.length).toBe(1);
+    expect(p12.safeContents[1].safeBags[0].attributes.localKeyId![0]).toBe('Time 1311855238964');
 
     expect(p12.safeContents[1].safeBags[1].type).toBe(PKI.oids.certBag);
-    expect(p12.safeContents[1].safeBags[1].attributes.friendlyName.length).toBe(1);
-    expect(p12.safeContents[1].safeBags[1].attributes.friendlyName[0]).toBe('CN=ElsterSoftTestCA,OU=CA,O=Elster,C=DE');
+    expect(p12.safeContents[1].safeBags[1].attributes.friendlyName!.length).toBe(1);
+    expect(p12.safeContents[1].safeBags[1].attributes.friendlyName![0]).toBe('CN=ElsterSoftTestCA,OU=CA,O=Elster,C=DE');
 
     expect(p12.safeContents[1].safeBags[2].type).toBe(PKI.oids.certBag);
-    expect(p12.safeContents[1].safeBags[2].attributes.friendlyName.length).toBe(1);
-    expect(p12.safeContents[1].safeBags[2].attributes.friendlyName[0]).toBe('CN=ElsterRootCA,OU=RootCA,O=Elster,C=DE');
+    expect(p12.safeContents[1].safeBags[2].attributes.friendlyName!.length).toBe(1);
+    expect(p12.safeContents[1].safeBags[2].attributes.friendlyName![0]).toBe('CN=ElsterRootCA,OU=RootCA,O=Elster,C=DE');
 
     expect(p12.safeContents[1].safeBags[3].type).toBe(PKI.oids.certBag);
-    expect(p12.safeContents[1].safeBags[3].attributes.friendlyName.length).toBe(1);
-    expect(p12.safeContents[1].safeBags[3].attributes.friendlyName[0]).toBe(
+    expect(p12.safeContents[1].safeBags[3].attributes.friendlyName!.length).toBe(1);
+    expect(p12.safeContents[1].safeBags[3].attributes.friendlyName![0]).toBe(
       'CN=1002753325,2.5.4.5=#130b3130303237353333323541'
     );
-    expect(p12.safeContents[1].safeBags[3].attributes.localKeyId.length).toBe(1);
-    expect(p12.safeContents[1].safeBags[3].attributes.localKeyId[0]).toBe('Time 1311855238863');
+    expect(p12.safeContents[1].safeBags[3].attributes.localKeyId!.length).toBe(1);
+    expect(p12.safeContents[1].safeBags[3].attributes.localKeyId![0]).toBe('Time 1311855238863');
 
     expect(p12.safeContents[1].safeBags[4].type).toBe(PKI.oids.certBag);
-    expect(p12.safeContents[1].safeBags[4].attributes.friendlyName.length).toBe(1);
-    expect(p12.safeContents[1].safeBags[4].attributes.friendlyName[0]).toBe('CN=ElsterSoftTestCA,OU=CA,O=Elster,C=DE');
+    expect(p12.safeContents[1].safeBags[4].attributes.friendlyName!.length).toBe(1);
+    expect(p12.safeContents[1].safeBags[4].attributes.friendlyName![0]).toBe('CN=ElsterSoftTestCA,OU=CA,O=Elster,C=DE');
 
     expect(p12.safeContents[1].safeBags[5].type).toBe(PKI.oids.certBag);
-    expect(p12.safeContents[1].safeBags[5].attributes.friendlyName.length).toBe(1);
-    expect(p12.safeContents[1].safeBags[5].attributes.friendlyName[0]).toBe('CN=ElsterRootCA,OU=RootCA,O=Elster,C=DE');
+    expect(p12.safeContents[1].safeBags[5].attributes.friendlyName!.length).toBe(1);
+    expect(p12.safeContents[1].safeBags[5].attributes.friendlyName![0]).toBe('CN=ElsterRootCA,OU=RootCA,O=Elster,C=DE');
   });
 
   it('should get bags by friendly name', (ctx) => {
@@ -206,8 +227,8 @@ describe('pkcs12', function () {
     var p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
     var bags = p12.getBags({ friendlyName: 'signaturekey' });
 
-    expect(bags.friendlyName.length).toBe(1);
-    expect(bags.friendlyName[0].attributes.friendlyName[0]).toBe('signaturekey');
+    expect(bags.friendlyName!.length).toBe(1);
+    expect(bags.friendlyName![0].attributes.friendlyName![0]).toBe('signaturekey');
   });
 
   it('should get cert bags by friendly name', (ctx) => {
@@ -219,8 +240,8 @@ describe('pkcs12', function () {
       bagType: PKI.oids.certBag
     });
 
-    expect(bags.friendlyName.length).toBe(1);
-    expect(bags.friendlyName[0].attributes.friendlyName[0]).toBe('CN=1002753325,2.5.4.5=#130b3130303237353333323543');
+    expect(bags.friendlyName!.length).toBe(1);
+    expect(bags.friendlyName![0].attributes.friendlyName![0]).toBe('CN=1002753325,2.5.4.5=#130b3130303237353333323543');
   });
 
   it('should get all cert bags', (ctx) => {
@@ -231,9 +252,9 @@ describe('pkcs12', function () {
       bagType: PKI.oids.certBag
     });
 
-    expect(bags[PKI.oids.certBag].length).toBe(6);
-    for (var i = 0; i < bags[PKI.oids.certBag].length; ++i) {
-      expect(bags[PKI.oids.certBag][i].type).toBe(PKI.oids.certBag);
+    expect(bags[PKI.oids.certBag]!.length).toBe(6);
+    for (var i = 0; i < bags[PKI.oids.certBag]!.length; ++i) {
+      expect(bags[PKI.oids.certBag]![i].type).toBe(PKI.oids.certBag);
     }
   });
 
@@ -243,9 +264,9 @@ describe('pkcs12', function () {
     var p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
     var bags = p12.getBags({ localKeyId: 'Time 1311855238863' });
 
-    expect(bags.localKeyId.length).toBe(2);
-    expect(bags.localKeyId[0].attributes.localKeyId[0]).toBe('Time 1311855238863');
-    expect(bags.localKeyId[1].attributes.localKeyId[0]).toBe('Time 1311855238863');
+    expect(bags.localKeyId!.length).toBe(2);
+    expect(bags.localKeyId![0].attributes.localKeyId![0]).toBe('Time 1311855238863');
+    expect(bags.localKeyId![1].attributes.localKeyId![0]).toBe('Time 1311855238863');
   });
 
   it('should get cert bags by local key ID', (ctx) => {
@@ -257,16 +278,15 @@ describe('pkcs12', function () {
       bagType: PKI.oids.certBag
     });
 
-    expect(bags.localKeyId.length).toBe(1);
-    expect(bags.localKeyId[0].attributes.localKeyId[0]).toBe('Time 1311855238863');
-    expect(bags.localKeyId[0].type).toBe(PKI.oids.certBag);
+    expect(bags.localKeyId!.length).toBe(1);
+    expect(bags.localKeyId![0].attributes.localKeyId![0]).toBe('Time 1311855238863');
+    expect(bags.localKeyId![0].type).toBe(PKI.oids.certBag);
   });
 
   it('should generate a PKCS#12 mac key', (ctx) => {
-    var salt = 'A15D6AA8F8DAFC352F9EE1C192F09966EB85D17B';
-    salt = UTIL.createBuffer(UTIL.hexToBytes(salt));
+    var salt = UTIL.createBuffer(UTIL.hexToBytes('A15D6AA8F8DAFC352F9EE1C192F09966EB85D17B'));
     var expected = '03e46727268575c6ebd6bff828d0d09b0c914201263ca543';
-    var key = PKCS12.generateKey('123456', salt, 1, 1024, 24);
+    var key = PKCS12.generateKey('123456', salt, 1, 1024, 24) as Pkcs12MacKey;
     expect(key.toHex()).toBe(expected);
   });
 
@@ -276,15 +296,19 @@ describe('pkcs12', function () {
     var p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123321');
     var bags = p12.getBags({ bagType: PKI.oids.certBag });
 
-    expect(bags[PKI.oids.certBag].length).toBe(1);
-    var bag = bags[PKI.oids.certBag][0];
+    expect(bags[PKI.oids.certBag]!.length).toBe(1);
+    var bag = bags[PKI.oids.certBag]![0];
     expect(bag.cert).toBe(null);
     expect('asn1' in bag).toBe(true);
 
     // convert to ASN.1, then DER, then PEM-encode
-    var msg = {
+    var msg: PemMessage = {
       type: 'CERTIFICATE',
-      body: ASN1.toDer(bag.asn1).getBytes()
+      procType: null,
+      contentDomain: null,
+      dekInfo: null,
+      headers: [],
+      body: ASN1.toDer(bag.asn1!).getBytes()
     };
     var pem = PEM.encode(msg);
     expect(pem).toBe(_data.p12ecdsaCert);

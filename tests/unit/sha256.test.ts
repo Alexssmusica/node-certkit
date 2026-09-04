@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from
 import certkit from '../../src/presentation/index.js';
 const SHA256 = certkit.sha256;
 const UTIL = certkit.util;
+const fillString = UTIL.fillString as (c: string, n: number) => string;
 describe('sha256', function () {
   it('should have correct digest length', (ctx) => {
     var md = SHA256.create();
@@ -43,7 +44,7 @@ describe('sha256', function () {
   it('should digest a long message', (ctx) => {
     // Note: might be too slow on old browsers
     var md = SHA256.create();
-    md.update(UTIL.fillString('a', 1000000));
+    md.update(fillString('a', 1000000));
     expect(md.digest().toHex()).toBe('cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0');
   });
 

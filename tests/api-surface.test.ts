@@ -6,9 +6,18 @@ const snapshotPath = path.join(import.meta.dirname, 'api-surface.snapshot.json')
 const expected = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
 
 const MAX_DEPTH = 12;
-const seen = new WeakSet();
+const seen = new WeakSet<object>();
 
-function walk(value, prefix, depth, out) {
+type SnapshotEntry = {
+  type: string;
+  length?: number;
+  opaque?: boolean;
+  circular?: boolean;
+  message?: string;
+};
+type Snapshot = Record<string, SnapshotEntry>;
+
+function walk(value: unknown, prefix: string, depth: number, out: Snapshot): void {
   if (depth > MAX_DEPTH) {
     return;
   }
@@ -18,7 +27,7 @@ function walk(value, prefix, depth, out) {
   }
   const t = typeof value;
   if (t === 'function') {
-    out[prefix] = { type: 'function', length: value.length };
+    out[prefix] = { type: 'function', length: (value as (...args: unknown[]) => unknown).length };
     return;
   }
   if (t !== 'object') {
@@ -35,21 +44,23 @@ function walk(value, prefix, depth, out) {
   }
   seen.add(value);
   out[prefix] = { type: 'object' };
-  const keys = Object.keys(value).sort();
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record).sort();
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     try {
-      walk(value[key], prefix ? prefix + '.' + key : key, depth + 1, out);
+      walk(record[key], prefix ? prefix + '.' + key : key, depth + 1, out);
     } catch (err) {
-      out[prefix + '.' + key] = { type: 'error', message: String(err.message) };
+      const message = err instanceof Error ? err.message : String(err);
+      out[prefix + '.' + key] = { type: 'error', message };
     }
   }
 }
 
-function diffSnapshots(a, b) {
-  const added = [];
-  const removed = [];
-  const changed = [];
+function diffSnapshots(a: Snapshot, b: Snapshot) {
+  const added: string[] = [];
+  const removed: string[] = [];
+  const changed: { key: string; expected: SnapshotEntry; actual: SnapshotEntry }[] = [];
   const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
   allKeys.forEach(function (key) {
     if (!(key in a)) {
@@ -65,7 +76,7 @@ function diffSnapshots(a, b) {
 
 describe('API surface snapshot', function () {
   it('matches the committed snapshot', (ctx) => {
-    const actual = {};
+    const actual: Snapshot = {};
     walk(certkit, 'certkit', 0, actual);
     const diff = diffSnapshots(expected, actual);
     if (diff.added.length || diff.removed.length || diff.changed.length) {

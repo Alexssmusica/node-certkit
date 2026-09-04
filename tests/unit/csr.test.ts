@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import certkit from '../../src/presentation/index.js';
+import type { BigInteger } from '../../src/domain/math/BigInteger.js';
+import type { PublicKey } from '../../src/domain/pki/x509/X509Types.js';
 const PKI = certkit.pki;
 var _pem = {
   privateKey:
@@ -34,7 +36,7 @@ describe('csr', function () {
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
     };
     var csr = PKI.createCertificationRequest();
-    csr.publicKey = keys.publicKey;
+    csr.publicKey = keys.publicKey as unknown as PublicKey;
     csr.setSubject([
       {
         name: 'commonName',
@@ -101,9 +103,10 @@ describe('csr', function () {
 
     var pem = PKI.certificationRequestToPem(csr);
     csr = PKI.certificationRequestFromPem(pem);
-    expect(csr.getAttribute({ name: 'extensionRequest' })).toBeTruthy();
-    expect(csr.getAttribute({ name: 'extensionRequest' }).extensions[0].name).toBe('subjectAltName');
-    expect(csr.getAttribute({ name: 'extensionRequest' }).extensions[0].altNames).toEqual([
+    var extReq = csr.getAttribute({ name: 'extensionRequest' });
+    expect(extReq).toBeTruthy();
+    expect(extReq!.extensions![0].name).toBe('subjectAltName');
+    expect(extReq!.extensions![0].altNames).toEqual([
       {
         // type 2 is DNS
         type: 2,
@@ -141,11 +144,11 @@ describe('csr', function () {
       '-----END CERTIFICATE REQUEST-----\r\n';
 
     var csr = PKI.certificationRequestFromPem(pem);
-    expect(csr.subject.getField('CN').value).toBe('MyCommonName');
-    expect(csr.subject.getField('O').value).toBe('MyOrganization');
+    expect(csr.subject.getField('CN')!.value).toBe('MyCommonName');
+    expect(csr.subject.getField('O')!.value).toBe('MyOrganization');
     expect(csr.signatureOid).toBe(PKI.oids.sha1WithRSAEncryption);
-    expect(csr.publicKey.e.toString(16)).toBe('10001');
-    expect(csr.publicKey.n.toString(16).toUpperCase()).toBe(
+    expect((csr.publicKey!.e as BigInteger).toString(16)).toBe('10001');
+    expect((csr.publicKey!.n as BigInteger).toString(16).toUpperCase()).toBe(
       'A454CEB00C6E28928C06189773D6B0EACDC18D15B5E9A0459734B7BFB71655A9D5EF2E200DCAC5915963CEF9C28D103AF0FE01D36FE7E627A248333A2F371774F8C9EC01491D1388EDCF6B8B4BE02EC2CD69E1625882FE8C24E5B1C25741CB91851617ACFB2F1DC7CA1A3194A9AB1F24923CF6512CAA7B29CC316E315CD847E1415DB523BDD9D66086E8C129EDC376A816D03F238C36301489B396B3824911D5235A19BCE84666F7EA9F8292F9B65A5909EFA45F24AB293A79EA632C7D2390BE5A25A513BCA4FF40523684A918A4099EF8E48FFD5BB74734F528CB19165798D10F0713EECEB9DBE2FAA31B68A95397A60DBCB802F491465031AF3091850A6623'
     );
     expect(csr.verify()).toBeTruthy();

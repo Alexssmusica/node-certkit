@@ -1,9 +1,17 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import certkit from '../../src/presentation/index.js';
+import type { DnAttributeInput, PrivateKey, PublicKey, X509Extension } from '../../src/domain/pki/x509/X509Types.js';
 const ASN1 = certkit.asn1;
 const MD = certkit.md;
 const PKI = certkit.pki;
 const UTIL = certkit.util;
+
+type PssSignatureParameters = {
+  hash: { algorithmOid: string };
+  mgf: { algorithmOid: string; hash: { algorithmOid: string } };
+};
+
+type DigestFingerprint = { toHex: () => string };
 var _pem = {
   privateKey:
     '-----BEGIN RSA PRIVATE KEY-----\r\n' +
@@ -514,7 +522,9 @@ describe('x509', function () {
     var index = findIndex(cert.extensions, { id: '2.16.840.1.113730.1.13' });
     expect(index !== -1).toBeTruthy();
     var ext = cert.extensions[index];
-    expect(ASN1.fromDer(ext.value).value).toBe(dummyTestStr);
+    expect(ext).toBeDefined();
+    expect(ext!.value).toBeDefined();
+    expect(ASN1.fromDer(ext!.value!).value).toBe(dummyTestStr);
 
     // verify certificate chain
     var caStore = PKI.createCaStore();
@@ -1491,7 +1501,8 @@ describe('x509', function () {
       '-----END CERTIFICATE-----\r\n';
     var cert = PKI.certificateFromPem(certPem, true);
     expect(cert.signatureOid).toBe(PKI.oids['sha1WithRSASignature']);
-    expect(cert.md.algorithm).toBe('sha1');
+    expect(cert.md).not.toBeNull();
+    expect(cert.md!.algorithm).toBe('sha1');
   });
 
   it('should verify certificate with sha256WithRSAEncryption signature', (ctx) => {
@@ -1579,13 +1590,15 @@ describe('x509', function () {
     var cert = PKI.certificateFromPem(certPem, true);
 
     expect(cert.signatureOid).toBe(PKI.oids['RSASSA-PSS']);
-    expect(cert.signatureParameters.hash.algorithmOid).toBe(PKI.oids['sha256']);
-    expect(cert.signatureParameters.mgf.algorithmOid).toBe(PKI.oids['mgf1']);
-    expect(cert.signatureParameters.mgf.hash.algorithmOid).toBe(PKI.oids['sha256']);
+    const sigParams = cert.signatureParameters as unknown as PssSignatureParameters;
+    const siginfoParams = cert.siginfo.parameters as unknown as PssSignatureParameters;
+    expect(sigParams.hash.algorithmOid).toBe(PKI.oids['sha256']);
+    expect(sigParams.mgf.algorithmOid).toBe(PKI.oids['mgf1']);
+    expect(sigParams.mgf.hash.algorithmOid).toBe(PKI.oids['sha256']);
     expect(cert.siginfo.algorithmOid).toBe(PKI.oids['RSASSA-PSS']);
-    expect(cert.siginfo.parameters.hash.algorithmOid).toBe(PKI.oids['sha256']);
-    expect(cert.siginfo.parameters.mgf.algorithmOid).toBe(PKI.oids['mgf1']);
-    expect(cert.siginfo.parameters.mgf.hash.algorithmOid).toBe(PKI.oids['sha256']);
+    expect(siginfoParams.hash.algorithmOid).toBe(PKI.oids['sha256']);
+    expect(siginfoParams.mgf.algorithmOid).toBe(PKI.oids['mgf1']);
+    expect(siginfoParams.mgf.hash.algorithmOid).toBe(PKI.oids['sha256']);
   });
 
   it('should export certificate with sha256 RSASSA-PSS signature', (ctx) => {
@@ -1718,14 +1731,14 @@ describe('x509', function () {
   it('should require basicConstraints on non-leaf certificates', (ctx) => {
     // see https://github.com/digitalbazaar/forge/security/advisories/GHSA-2328-f5f3-gj25
     function generateKeyPair() {
-      return PKI.rsa.generateKeyPair({ bits: 2048, e: 0x10001 });
+      return PKI.rsa.generateKeyPair(2048, 0x10001);
     }
 
     // 1. Create a legitimate Root CA (self-signed, with basicConstraints
     // cA=true)
     var rootKeys = generateKeyPair();
     var rootCert = PKI.createCertificate();
-    rootCert.publicKey = rootKeys.publicKey;
+    rootCert.publicKey = rootKeys.publicKey as unknown as PublicKey;
     rootCert.serialNumber = '01';
     rootCert.validity.notBefore = new Date();
     rootCert.validity.notAfter = new Date();
@@ -1748,7 +1761,7 @@ describe('x509', function () {
     // certificates
     var leafKeys = generateKeyPair();
     var leafCert = PKI.createCertificate();
-    leafCert.publicKey = leafKeys.publicKey;
+    leafCert.publicKey = leafKeys.publicKey as unknown as PublicKey;
     leafCert.serialNumber = '02';
     leafCert.validity.notBefore = new Date();
     leafCert.validity.notAfter = new Date();
@@ -1767,7 +1780,7 @@ describe('x509', function () {
     // This simulates an attacker using a non-CA cert to forge certificates
     var victimKeys = generateKeyPair();
     var victimCert = PKI.createCertificate();
-    victimCert.publicKey = victimKeys.publicKey;
+    victimCert.publicKey = victimKeys.publicKey as unknown as PublicKey;
     victimCert.serialNumber = '03';
     victimCert.validity.notBefore = new Date();
     victimCert.validity.notAfter = new Date();
@@ -1803,13 +1816,13 @@ describe('public key fingerprints', function () {
   it('should get a SHA-1 RSAPublicKey fingerprint', (ctx) => {
     var publicKey = PKI.publicKeyFromPem(_pem.publicKey);
     var fp = PKI.getPublicKeyFingerprint(publicKey, { type: 'RSAPublicKey' });
-    expect(fp.toHex()).toBe('f57563e0c75d6e9b03fafdb2fd72349f23030300');
+    expect((fp as DigestFingerprint).toHex()).toBe('f57563e0c75d6e9b03fafdb2fd72349f23030300');
   });
 
   it('should get a SHA-1 SubjectPublicKeyInfo fingerprint', (ctx) => {
     var publicKey = PKI.publicKeyFromPem(_pem.publicKey);
     var fp = PKI.getPublicKeyFingerprint(publicKey, { type: 'SubjectPublicKeyInfo' });
-    expect(fp.toHex()).toBe('984724bc548bbc2c8acbac044bd8d518abd26dd8');
+    expect((fp as DigestFingerprint).toHex()).toBe('984724bc548bbc2c8acbac044bd8d518abd26dd8');
   });
 
   it('should get a hex SHA-1 RSAPublicKey fingerprint', (ctx) => {
@@ -1837,13 +1850,13 @@ describe('public key fingerprints', function () {
   it('should get an MD5 RSAPublicKey fingerprint', (ctx) => {
     var publicKey = PKI.publicKeyFromPem(_pem.publicKey);
     var fp = PKI.getPublicKeyFingerprint(publicKey, { md: MD.md5.create(), type: 'RSAPublicKey' });
-    expect(fp.toHex()).toBe('c7da180cc48d31a071d31a78bc43d9d7');
+    expect((fp as DigestFingerprint).toHex()).toBe('c7da180cc48d31a071d31a78bc43d9d7');
   });
 
   it('should get an MD5 SubjectPublicKeyInfo fingerprint', (ctx) => {
     var publicKey = PKI.publicKeyFromPem(_pem.publicKey);
     var fp = PKI.getPublicKeyFingerprint(publicKey, { md: MD.md5.create(), type: 'SubjectPublicKeyInfo' });
-    expect(fp.toHex()).toBe('e5c5ba577fe24fb8a678d8d58f539cd7');
+    expect((fp as DigestFingerprint).toHex()).toBe('e5c5ba577fe24fb8a678d8d58f539cd7');
   });
 
   it('should get a hex MD5 RSAPublicKey fingerprint', (ctx) => {
@@ -1920,7 +1933,8 @@ describe('CA store', function () {
     caStore.addCertificate(cert1);
     caStore.addCertificate(cert2);
     var result = caStore.removeCertificate(cert1);
-    expect(PKI.certificateToPem(result)).toBe(PKI.certificateToPem(cert1));
+    expect(result).not.toBeNull();
+    expect(PKI.certificateToPem(result!)).toBe(PKI.certificateToPem(cert1));
     expect(!caStore.hasCertificate(cert1)).toBeTruthy();
     expect(caStore.hasCertificate(cert2)).toBeTruthy();
     expect(caStore.listAllCertificates().length).toBe(1);
@@ -1933,7 +1947,8 @@ describe('CA store', function () {
     caStore.addCertificate(cert1);
     caStore.addCertificate(cert2);
     var result = caStore.removeCertificate(cert1);
-    expect(PKI.certificateToPem(result)).toBe(cert1);
+    expect(result).not.toBeNull();
+    expect(PKI.certificateToPem(result!)).toBe(cert1);
     expect(!caStore.hasCertificate(cert1)).toBeTruthy();
     expect(caStore.hasCertificate(cert2)).toBeTruthy();
     expect(caStore.listAllCertificates().length).toBe(1);
@@ -1948,7 +1963,8 @@ describe('CA store', function () {
     caStore.addCertificate(cert2);
     caStore.addCertificate(cert3);
     var result = caStore.removeCertificate(cert1);
-    expect(PKI.certificateToPem(result)).toBe(PKI.certificateToPem(cert1));
+    expect(result).not.toBeNull();
+    expect(PKI.certificateToPem(result!)).toBe(PKI.certificateToPem(cert1));
     expect(!caStore.hasCertificate(cert1)).toBeTruthy();
     expect(caStore.hasCertificate(cert2)).toBeTruthy();
     expect(caStore.hasCertificate(cert3)).toBeTruthy();
@@ -1964,7 +1980,8 @@ describe('CA store', function () {
     caStore.addCertificate(cert2);
     caStore.addCertificate(cert3);
     var result = caStore.removeCertificate(cert1);
-    expect(PKI.certificateToPem(result)).toBe(cert1);
+    expect(result).not.toBeNull();
+    expect(PKI.certificateToPem(result!)).toBe(cert1);
     expect(!caStore.hasCertificate(cert1)).toBeTruthy();
     expect(caStore.hasCertificate(cert2)).toBeTruthy();
     expect(caStore.hasCertificate(cert3)).toBeTruthy();
@@ -2056,11 +2073,14 @@ describe('CA store', function () {
     caStore.addCertificate(cert2);
     caStore.addCertificate(cert3);
     var result = caStore.removeCertificate(cert1);
-    expect(PKI.certificateToPem(result)).toBe(cert1);
+    expect(result).not.toBeNull();
+    expect(PKI.certificateToPem(result!)).toBe(cert1);
     result = caStore.removeCertificate(cert2);
-    expect(PKI.certificateToPem(result)).toBe(cert2);
+    expect(result).not.toBeNull();
+    expect(PKI.certificateToPem(result!)).toBe(cert2);
     result = caStore.removeCertificate(cert3);
-    expect(PKI.certificateToPem(result)).toBe(cert3);
+    expect(result).not.toBeNull();
+    expect(PKI.certificateToPem(result!)).toBe(cert3);
     result = caStore.removeCertificate(cert1);
     expect(result).toBe(null);
     result = caStore.removeCertificate(cert2);
@@ -2071,9 +2091,9 @@ describe('CA store', function () {
   });
 });
 
-function findIndex(array, predicateObj) {
+function findIndex(array: Array<Record<string, unknown>>, predicateObj: Record<string, unknown>) {
   var result = -1;
-  array.forEach(function (el, index) {
+  array.forEach(function (el: Record<string, unknown>, index: number) {
     var match = Object.keys(predicateObj).reduce(function (soFar, key) {
       return soFar && el[key] === predicateObj[key];
     }, true);
@@ -2084,9 +2104,19 @@ function findIndex(array, predicateObj) {
   return result;
 }
 
-function createCertificate(options) {
-  var publicKey = options.publicKey;
-  var signingKey = options.signingKey;
+function createCertificate(options: {
+  publicKey: PublicKey | ReturnType<typeof PKI.publicKeyFromPem>;
+  signingKey: PrivateKey | ReturnType<typeof PKI.privateKeyFromPem>;
+  subject: DnAttributeInput[];
+  issuer: DnAttributeInput[];
+  isCA?: boolean;
+  serialNumber?: string;
+  notBefore?: Date;
+  notAfter?: Date;
+  extensions?: X509Extension[];
+}) {
+  var publicKey = options.publicKey as PublicKey;
+  var signingKey = options.signingKey as PrivateKey;
   var subject = options.subject;
   var issuer = options.issuer;
   var isCA = options.isCA;

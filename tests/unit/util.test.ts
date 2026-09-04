@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import certkit from '../../src/presentation/index.js';
 const UTIL = certkit.util;
+const bytesFromIP = UTIL.bytesFromIP as (addr: string) => string;
+const bytesToIP = UTIL.bytesToIP as (bytes: string) => string;
 // custom assertion to test array-like objects
-function assertArrayEqual(actual, expected) {
+function assertArrayEqual(actual: ArrayLike<unknown>, expected: ArrayLike<unknown>) {
   expect(actual.length).toBe(expected.length);
   for (var idx = 0; idx < expected.length; idx++) {
     expect(actual[idx]).toBe(expected[idx]);
@@ -318,13 +320,13 @@ describe('util', function () {
   });
 
   it('should convert IPv4 0.0.0.0 textual address to 4-byte address', (ctx) => {
-    var bytes = UTIL.bytesFromIP('0.0.0.0');
+    var bytes = bytesFromIP('0.0.0.0');
     var b = UTIL.createBuffer().fillWithByte(0, 4);
     expect(bytes).toBe(b.getBytes());
   });
 
   it('should convert IPv4 127.0.0.1 textual address to 4-byte address', (ctx) => {
-    var bytes = UTIL.bytesFromIP('127.0.0.1');
+    var bytes = bytesFromIP('127.0.0.1');
     var b = UTIL.createBuffer();
     b.putByte(127);
     b.putByte(0);
@@ -334,32 +336,32 @@ describe('util', function () {
   });
 
   it('should convert IPv6 :: textual address to 16-byte address', (ctx) => {
-    var bytes = UTIL.bytesFromIP('::');
+    var bytes = bytesFromIP('::');
     var b = UTIL.createBuffer().fillWithByte(0, 16);
     expect(bytes).toBe(b.getBytes());
   });
 
   it('should convert IPv6 ::0 textual address to 16-byte address', (ctx) => {
-    var bytes = UTIL.bytesFromIP('::0');
+    var bytes = bytesFromIP('::0');
     var b = UTIL.createBuffer().fillWithByte(0, 16);
     expect(bytes).toBe(b.getBytes());
   });
 
   it('should convert IPv6 0:: textual address to 16-byte address', (ctx) => {
-    var bytes = UTIL.bytesFromIP('0::');
+    var bytes = bytesFromIP('0::');
     var b = UTIL.createBuffer().fillWithByte(0, 16);
     expect(bytes).toBe(b.getBytes());
   });
 
   it('should convert IPv6 ::1 textual address to 16-byte address', (ctx) => {
-    var bytes = UTIL.bytesFromIP('::1');
+    var bytes = bytesFromIP('::1');
     var b = UTIL.createBuffer().fillWithByte(0, 14);
     b.putBytes(UTIL.hexToBytes('0001'));
     expect(bytes).toBe(b.getBytes());
   });
 
   it('should convert IPv6 1:: textual address to 16-byte address', (ctx) => {
-    var bytes = UTIL.bytesFromIP('1::');
+    var bytes = bytesFromIP('1::');
     var b = UTIL.createBuffer();
     b.putBytes(UTIL.hexToBytes('0001'));
     b.fillWithByte(0, 14);
@@ -367,7 +369,7 @@ describe('util', function () {
   });
 
   it('should convert IPv6 1::1 textual address to 16-byte address', (ctx) => {
-    var bytes = UTIL.bytesFromIP('1::1');
+    var bytes = bytesFromIP('1::1');
     var b = UTIL.createBuffer();
     b.putBytes(UTIL.hexToBytes('0001'));
     b.fillWithByte(0, 12);
@@ -376,7 +378,7 @@ describe('util', function () {
   });
 
   it('should convert IPv6 1::1:0 textual address to 16-byte address', (ctx) => {
-    var bytes = UTIL.bytesFromIP('1::1:0');
+    var bytes = bytesFromIP('1::1:0');
     var b = UTIL.createBuffer();
     b.putBytes(UTIL.hexToBytes('0001'));
     b.fillWithByte(0, 10);
@@ -386,7 +388,7 @@ describe('util', function () {
   });
 
   it('should convert IPv6 2001:db8:0:1:1:1:1:1 textual address to 16-byte address', (ctx) => {
-    var bytes = UTIL.bytesFromIP('2001:db8:0:1:1:1:1:1');
+    var bytes = bytesFromIP('2001:db8:0:1:1:1:1:1');
     var b = UTIL.createBuffer();
     b.putBytes(UTIL.hexToBytes('2001'));
     b.putBytes(UTIL.hexToBytes('0db8'));
@@ -402,91 +404,91 @@ describe('util', function () {
   it('should convert IPv4 0.0.0.0 byte address to textual representation', (ctx) => {
     var addr = '0.0.0.0';
     var bytes = UTIL.createBuffer().fillWithByte(0, 4).getBytes();
-    var addr = UTIL.bytesToIP(bytes);
+    var addr = bytesToIP(bytes);
     expect(addr).toBe('0.0.0.0');
   });
 
   it('should convert IPv4 0.0.0.0 byte address to textual representation', (ctx) => {
     var addr = '127.0.0.1';
-    var bytes = UTIL.bytesFromIP(addr);
-    var addr = UTIL.bytesToIP(bytes);
+    var bytes = bytesFromIP(addr);
+    var addr = bytesToIP(bytes);
     expect(addr).toBe('127.0.0.1');
   });
 
   it('should convert IPv6 :: byte address to canonical textual representation (RFC 5952)', (ctx) => {
     var addr = '::';
     var bytes = UTIL.createBuffer().fillWithByte(0, 16).getBytes();
-    var addr = UTIL.bytesToIP(bytes);
+    var addr = bytesToIP(bytes);
     expect(addr).toBe('::');
   });
 
   it('should convert IPv6 ::1 byte address to canonical textual representation (RFC 5952)', (ctx) => {
     var addr = '::1';
-    var bytes = UTIL.bytesFromIP(addr);
-    var addr = UTIL.bytesToIP(bytes);
+    var bytes = bytesFromIP(addr);
+    var addr = bytesToIP(bytes);
     expect(addr).toBe('::1');
   });
 
   it('should convert IPv6 1:: byte address to canonical textual representation (RFC 5952)', (ctx) => {
     var addr = '1::';
-    var bytes = UTIL.bytesFromIP(addr);
-    var addr = UTIL.bytesToIP(bytes);
+    var bytes = bytesFromIP(addr);
+    var addr = bytesToIP(bytes);
     expect(addr).toBe('1::');
   });
 
   it('should convert IPv6 0:0:0:0:0:0:0:1 byte address to canonical textual representation (RFC 5952)', (ctx) => {
     var addr = '0:0:0:0:0:0:0:1';
-    var bytes = UTIL.bytesFromIP(addr);
-    var addr = UTIL.bytesToIP(bytes);
+    var bytes = bytesFromIP(addr);
+    var addr = bytesToIP(bytes);
     expect(addr).toBe('::1');
   });
 
   it('should convert IPv6 1:0:0:0:0:0:0:0 byte address to canonical textual representation (RFC 5952)', (ctx) => {
     var addr = '1:0:0:0:0:0:0:0';
-    var bytes = UTIL.bytesFromIP(addr);
-    var addr = UTIL.bytesToIP(bytes);
+    var bytes = bytesFromIP(addr);
+    var addr = bytesToIP(bytes);
     expect(addr).toBe('1::');
   });
 
   it('should convert IPv6 1::1 byte address to canonical textual representation (RFC 5952)', (ctx) => {
     var addr = '1::1';
-    var bytes = UTIL.bytesFromIP(addr);
-    var addr = UTIL.bytesToIP(bytes);
+    var bytes = bytesFromIP(addr);
+    var addr = bytesToIP(bytes);
     expect(addr).toBe('1::1');
   });
 
   it('should convert IPv6 1:0:0:0:0:0:0:1 byte address to canonical textual representation (RFC 5952)', (ctx) => {
     var addr = '1:0:0:0:0:0:0:1';
-    var bytes = UTIL.bytesFromIP(addr);
-    var addr = UTIL.bytesToIP(bytes);
+    var bytes = bytesFromIP(addr);
+    var addr = bytesToIP(bytes);
     expect(addr).toBe('1::1');
   });
 
   it('should convert IPv6 1:0000:0000:0000:0000:0000:0000:1 byte address to canonical textual representation (RFC 5952)', (ctx) => {
     var addr = '1:0000:0000:0000:0000:0000:0000:1';
-    var bytes = UTIL.bytesFromIP(addr);
-    var addr = UTIL.bytesToIP(bytes);
+    var bytes = bytesFromIP(addr);
+    var addr = bytesToIP(bytes);
     expect(addr).toBe('1::1');
   });
 
   it('should convert IPv6 1:0:0:1:1:1:0:1 byte address to canonical textual representation (RFC 5952)', (ctx) => {
     var addr = '1:0:0:1:1:1:0:1';
-    var bytes = UTIL.bytesFromIP(addr);
-    var addr = UTIL.bytesToIP(bytes);
+    var bytes = bytesFromIP(addr);
+    var addr = bytesToIP(bytes);
     expect(addr).toBe('1::1:1:1:0:1');
   });
 
   it('should convert IPv6 1:0:1:1:1:0:0:1 byte address to canonical textual representation (RFC 5952)', (ctx) => {
     var addr = '1:0:1:1:1:0:0:1';
-    var bytes = UTIL.bytesFromIP(addr);
-    var addr = UTIL.bytesToIP(bytes);
+    var bytes = bytesFromIP(addr);
+    var addr = bytesToIP(bytes);
     expect(addr).toBe('1:0:1:1:1::1');
   });
 
   it('should convert IPv6 2001:db8:0:1:1:1:1:1 byte address to canonical textual representation (RFC 5952)', (ctx) => {
     var addr = '2001:db8:0:1:1:1:1:1';
-    var bytes = UTIL.bytesFromIP(addr);
-    var addr = UTIL.bytesToIP(bytes);
+    var bytes = bytesFromIP(addr);
+    var addr = bytesToIP(bytes);
     expect(addr).toBe('2001:db8:0:1:1:1:1:1');
   });
 
@@ -494,7 +496,7 @@ describe('util', function () {
     if (typeof Uint8Array === 'undefined') {
       return;
     }
-    var result = UTIL.text.utf8.encode('foo');
+    var result = UTIL.text.utf8.encode('foo') as Uint8Array;
     expect(result.byteLength).toBe(3);
     expect(result[0]).toBe(102);
     expect(result[1]).toBe(111);
@@ -514,7 +516,7 @@ describe('util', function () {
     if (typeof Uint8Array === 'undefined') {
       return;
     }
-    var result = UTIL.text.utf8.encode('\ud83c\udc00');
+    var result = UTIL.text.utf8.encode('\ud83c\udc00') as Uint8Array;
     expect(result.byteLength).toBe(4);
     expect(result[0]).toBe(240);
     expect(result[1]).toBe(159);
@@ -535,7 +537,7 @@ describe('util', function () {
     if (typeof Uint8Array === 'undefined') {
       return;
     }
-    var result = UTIL.text.utf16.encode('foo');
+    var result = UTIL.text.utf16.encode('foo') as Uint8Array;
     expect(result.byteLength).toBe(6);
     expect(result[0]).toBe(102);
     expect(result[1]).toBe(0);
@@ -558,7 +560,7 @@ describe('util', function () {
     if (typeof Uint8Array === 'undefined') {
       return;
     }
-    var result = UTIL.text.utf16.encode('\ud83c\udc00');
+    var result = UTIL.text.utf16.encode('\ud83c\udc00') as Uint8Array;
     expect(result.byteLength).toBe(4);
     expect(result[0]).toBe(60);
     expect(result[1]).toBe(216);

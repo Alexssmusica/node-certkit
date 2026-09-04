@@ -76,7 +76,7 @@ describe('sha512', function () {
   });
 });
 
-var SHA384 = SHA512.sha384;
+var SHA384 = SHA512.sha384!;
 
 describe('sha384', function () {
   it('should have correct digest length', (ctx) => {
@@ -153,7 +153,7 @@ describe('sha384', function () {
   });
 });
 
-var SHA256 = SHA512.sha256;
+var SHA256 = SHA512.sha256!;
 
 describe('sha512/256', function () {
   it('should have correct digest length', (ctx) => {
@@ -173,7 +173,7 @@ describe('sha512/256', function () {
   });
 });
 
-var SHA224 = SHA512.sha224;
+var SHA224 = SHA512.sha224!;
 
 describe('sha512/224', function () {
   it('should have correct digest length', (ctx) => {

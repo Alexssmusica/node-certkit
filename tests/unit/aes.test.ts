@@ -8,7 +8,7 @@ describe('aes', function () {
     var key = [0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f];
     var block = [0x00112233, 0x44556677, 0x8899aabb, 0xccddeeff];
 
-    var output = [];
+    var output: number[] = [];
     var w = AES._expandKey(key, false);
     AES._updateBlock(w, block, output, false);
 
@@ -25,7 +25,7 @@ describe('aes', function () {
     var key = [0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f];
     var block = [0x69c4e0d8, 0x6a7b0430, 0xd8cdb780, 0x70b4c55a];
 
-    var output = [];
+    var output: number[] = [];
     var w = AES._expandKey(key, true);
     AES._updateBlock(w, block, output, true);
 
@@ -42,7 +42,7 @@ describe('aes', function () {
     var key = [0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f, 0x10111213, 0x14151617];
     var block = [0x00112233, 0x44556677, 0x8899aabb, 0xccddeeff];
 
-    var output = [];
+    var output: number[] = [];
     var w = AES._expandKey(key, false);
     AES._updateBlock(w, block, output, false);
 
@@ -59,7 +59,7 @@ describe('aes', function () {
     var key = [0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f, 0x10111213, 0x14151617];
     var block = [0xdda97ca4, 0x864cdfe0, 0x6eaf70a0, 0xec0d7191];
 
-    var output = [];
+    var output: number[] = [];
     var w = AES._expandKey(key, true);
     AES._updateBlock(w, block, output, true);
 
@@ -76,7 +76,7 @@ describe('aes', function () {
     var key = [0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f, 0x10111213, 0x14151617, 0x18191a1b, 0x1c1d1e1f];
     var block = [0x00112233, 0x44556677, 0x8899aabb, 0xccddeeff];
 
-    var output = [];
+    var output: number[] = [];
     var w = AES._expandKey(key, false);
     AES._updateBlock(w, block, output, false);
 
@@ -93,7 +93,7 @@ describe('aes', function () {
     var key = [0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f, 0x10111213, 0x14151617, 0x18191a1b, 0x1c1d1e1f];
     var block = [0x8ea2b7ca, 0x516745bf, 0xeafc4990, 0x4b496089];
 
-    var output = [];
+    var output: number[] = [];
     var w = AES._expandKey(key, true);
     AES._updateBlock(w, block, output, true);
 
@@ -138,21 +138,21 @@ describe('aes', function () {
         it('should aes-128-ecb encrypt: ' + inputs[i], function () {
           // encrypt w/no padding
           var cipher = CIPHER.createCipher('AES-ECB', key);
-          cipher.mode.pad = false;
+          cipher.mode.pad = () => false;
           cipher.start();
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
         });
 
         it('should aes-128-ecb decrypt: ' + outputs[i], function () {
           // decrypt w/no padding
           var cipher = CIPHER.createDecipher('AES-ECB', key);
-          cipher.mode.unpad = false;
+          cipher.mode.unpad = () => false;
           cipher.start();
           cipher.update(UTIL.createBuffer(output));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(inputs[i]);
+          expect(cipher.output!.toHex()).toBe(inputs[i]);
         });
       })(i);
     }
@@ -190,21 +190,21 @@ describe('aes', function () {
         it('should aes-192-ecb encrypt: ' + inputs[i], function () {
           // encrypt w/no padding
           var cipher = CIPHER.createCipher('AES-ECB', key);
-          cipher.mode.pad = false;
+          cipher.mode.pad = () => false;
           cipher.start();
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
         });
 
         it('should aes-192-ecb decrypt: ' + outputs[i], function () {
           // decrypt w/no padding
           var cipher = CIPHER.createDecipher('AES-ECB', key);
-          cipher.mode.unpad = false;
+          cipher.mode.unpad = () => false;
           cipher.start();
           cipher.update(UTIL.createBuffer(output));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(inputs[i]);
+          expect(cipher.output!.toHex()).toBe(inputs[i]);
         });
       })(i);
     }
@@ -242,21 +242,21 @@ describe('aes', function () {
         it('should aes-256-ecb encrypt: ' + inputs[i], function () {
           // encrypt w/no padding
           var cipher = CIPHER.createCipher('AES-ECB', key);
-          cipher.mode.pad = false;
+          cipher.mode.pad = () => false;
           cipher.start();
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
         });
 
         it('should aes-256-ecb decrypt: ' + outputs[i], function () {
           // decrypt w/no padding
           var cipher = CIPHER.createDecipher('AES-ECB', key);
-          cipher.mode.unpad = false;
+          cipher.mode.unpad = () => false;
           cipher.start();
           cipher.update(UTIL.createBuffer(output));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(inputs[i]);
+          expect(cipher.output!.toHex()).toBe(inputs[i]);
         });
       })(i);
     }
@@ -308,21 +308,21 @@ describe('aes', function () {
         it('should aes-128-cbc encrypt: ' + inputs[i], function () {
           // encrypt w/no padding
           var cipher = CIPHER.createCipher('AES-CBC', key);
-          cipher.mode.pad = false;
+          cipher.mode.pad = () => false;
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
         });
 
         it('should aes-128-cbc decrypt: ' + outputs[i], function () {
           // decrypt w/no padding
           var cipher = CIPHER.createDecipher('AES-CBC', key);
-          cipher.mode.unpad = false;
+          cipher.mode.unpad = () => false;
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(output));
           cipher.finish();
-          var out = i & 1 ? cipher.output.toHex() : cipher.output.bytes();
+          var out = i & 1 ? cipher.output!.toHex() : cipher.output!.bytes();
           expect(out).toBe(inputs[i]);
         });
       })(i);
@@ -369,21 +369,21 @@ describe('aes', function () {
         it('should aes-192-cbc encrypt: ' + inputs[i], function () {
           // encrypt w/no padding
           var cipher = CIPHER.createCipher('AES-CBC', key);
-          cipher.mode.pad = false;
+          cipher.mode.pad = () => false;
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
         });
 
         it('should aes-192-cbc decrypt: ' + outputs[i], function () {
           // decrypt w/no padding
           var cipher = CIPHER.createDecipher('AES-CBC', key);
-          cipher.mode.unpad = false;
+          cipher.mode.unpad = () => false;
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(output));
           cipher.finish();
-          var out = cipher.output.toHex();
+          var out = cipher.output!.toHex();
           expect(out).toBe(inputs[i]);
         });
       })(i);
@@ -430,21 +430,21 @@ describe('aes', function () {
         it('should aes-256-cbc encrypt: ' + inputs[i], function () {
           // encrypt w/no padding
           var cipher = CIPHER.createCipher('AES-CBC', key);
-          cipher.mode.pad = false;
+          cipher.mode.pad = () => false;
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
         });
 
         it('should aes-256-cbc decrypt: ' + outputs[i], function () {
           // decrypt w/no padding
           var cipher = CIPHER.createDecipher('AES-CBC', key);
-          cipher.mode.unpad = false;
+          cipher.mode.unpad = () => false;
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(output));
           cipher.finish();
-          var out = cipher.output.toHex();
+          var out = cipher.output!.toHex();
           expect(out).toBe(inputs[i]);
         });
       })(i);
@@ -502,7 +502,7 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
         });
 
         it('should aes-128-cfb decrypt: ' + outputs[i], function () {
@@ -511,8 +511,8 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(output));
           cipher.finish();
-          var out = i !== 5 ? cipher.output.toHex() : cipher.output.getBytes();
-          expect(out).toBe(inputs[i]);
+          var outValue = i !== 5 ? cipher.output!.toHex() : cipher.output!.getBytes();
+          expect(outValue).toBe(inputs[i]);
         });
 
         it('should aes-128-cfb encrypt (one byte at a time): ' + inputs[i], function () {
@@ -523,8 +523,8 @@ describe('aes', function () {
           var out = UTIL.createBuffer();
           while (input_.length() > 0) {
             cipher.update(UTIL.createBuffer(input_.getBytes(1)));
-            expect(cipher.output.length()).toBe(1);
-            out.putByte(cipher.output.getByte());
+            expect(cipher.output!.length()).toBe(1);
+            out.putByte(cipher.output!.getByte());
           }
           cipher.finish();
           expect(out.toHex()).toBe(outputs[i]);
@@ -538,12 +538,12 @@ describe('aes', function () {
           var out = UTIL.createBuffer();
           while (output_.length() > 0) {
             cipher.update(UTIL.createBuffer(output_.getBytes(1)));
-            expect(cipher.output.length()).toBe(1);
-            out.putByte(cipher.output.getByte());
+            expect(cipher.output!.length()).toBe(1);
+            out.putByte(cipher.output!.getByte());
           }
           cipher.finish();
-          out = i !== 5 ? out.toHex() : out.getBytes();
-          expect(out).toBe(inputs[i]);
+          var outValue = i !== 5 ? out.toHex() : out.getBytes();
+          expect(outValue).toBe(inputs[i]);
         });
       })(i);
     }
@@ -592,7 +592,7 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
         });
 
         it('should aes-192-cfb decrypt: ' + outputs[i], function () {
@@ -601,7 +601,7 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(output));
           cipher.finish();
-          var out = cipher.output.toHex();
+          var out = cipher.output!.toHex();
           expect(out).toBe(inputs[i]);
         });
       })(i);
@@ -631,7 +631,7 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
         });
 
         it('should aes-256-cfb decrypt: ' + outputs[i], function () {
@@ -640,7 +640,7 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(output));
           cipher.finish();
-          var out = cipher.output.getBytes();
+          var out = cipher.output!.getBytes();
           expect(out).toBe(inputs[i]);
         });
       })(i);
@@ -682,7 +682,7 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
         });
 
         it('should aes-128-ofb decrypt: ' + outputs[i], function () {
@@ -691,8 +691,8 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(output));
           cipher.finish();
-          var out = i !== 1 ? cipher.output.toHex() : cipher.output.getBytes();
-          expect(out).toBe(inputs[i]);
+          var outValue = i !== 1 ? cipher.output!.toHex() : cipher.output!.getBytes();
+          expect(outValue).toBe(inputs[i]);
         });
 
         it('should aes-128-ofb encrypt (one byte at a time): ' + inputs[i], function () {
@@ -703,8 +703,8 @@ describe('aes', function () {
           var out = UTIL.createBuffer();
           while (input_.length() > 0) {
             cipher.update(UTIL.createBuffer(input_.getBytes(1)));
-            expect(cipher.output.length()).toBe(1);
-            out.putByte(cipher.output.getByte());
+            expect(cipher.output!.length()).toBe(1);
+            out.putByte(cipher.output!.getByte());
           }
           cipher.finish();
           expect(out.toHex()).toBe(outputs[i]);
@@ -718,12 +718,12 @@ describe('aes', function () {
           var out = UTIL.createBuffer();
           while (output_.length() > 0) {
             cipher.update(UTIL.createBuffer(output_.getBytes(1)));
-            expect(cipher.output.length()).toBe(1);
-            out.putByte(cipher.output.getByte());
+            expect(cipher.output!.length()).toBe(1);
+            out.putByte(cipher.output!.getByte());
           }
           cipher.finish();
-          out = i !== 1 ? out.toHex() : out.getBytes();
-          expect(out).toBe(inputs[i]);
+          var outValue = i !== 1 ? out.toHex() : out.getBytes();
+          expect(outValue).toBe(inputs[i]);
         });
       })(i);
     }
@@ -772,7 +772,7 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
         });
 
         it('should aes-192-ofb decrypt: ' + outputs[i], function () {
@@ -781,7 +781,7 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(output));
           cipher.finish();
-          var out = cipher.output.toHex();
+          var out = cipher.output!.toHex();
           expect(out).toBe(inputs[i]);
         });
       })(i);
@@ -831,7 +831,7 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
         });
 
         it('should aes-256-ofb decrypt: ' + outputs[i], function () {
@@ -840,7 +840,7 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(output));
           cipher.finish();
-          var out = cipher.output.toHex();
+          var out = cipher.output!.toHex();
           expect(out).toBe(inputs[i]);
         });
       })(i);
@@ -882,7 +882,7 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
         });
 
         it('should aes-128-ctr decrypt: ' + outputs[i], function () {
@@ -891,8 +891,8 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(output));
           cipher.finish();
-          var out = i !== 1 ? cipher.output.toHex() : cipher.output.getBytes();
-          expect(out).toBe(inputs[i]);
+          var outValue = i !== 1 ? cipher.output!.toHex() : cipher.output!.getBytes();
+          expect(outValue).toBe(inputs[i]);
         });
 
         it('should aes-128-ctr encrypt (one byte at a time): ' + inputs[i], function () {
@@ -903,8 +903,8 @@ describe('aes', function () {
           var out = UTIL.createBuffer();
           while (input_.length() > 0) {
             cipher.update(UTIL.createBuffer(input_.getBytes(1)));
-            expect(cipher.output.length()).toBe(1);
-            out.putByte(cipher.output.getByte());
+            expect(cipher.output!.length()).toBe(1);
+            out.putByte(cipher.output!.getByte());
           }
           cipher.finish();
           expect(out.toHex()).toBe(outputs[i]);
@@ -918,12 +918,12 @@ describe('aes', function () {
           var out = UTIL.createBuffer();
           while (output_.length() > 0) {
             cipher.update(UTIL.createBuffer(output_.getBytes(1)));
-            expect(cipher.output.length()).toBe(1);
-            out.putByte(cipher.output.getByte());
+            expect(cipher.output!.length()).toBe(1);
+            out.putByte(cipher.output!.getByte());
           }
           cipher.finish();
-          out = i !== 1 ? out.toHex() : out.getBytes();
-          expect(out).toBe(inputs[i]);
+          var outValue = i !== 1 ? out.toHex() : out.getBytes();
+          expect(outValue).toBe(inputs[i]);
         });
       })(i);
     }
@@ -962,7 +962,7 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
         });
 
         it('should aes-192-ctr decrypt: ' + outputs[i], function () {
@@ -971,7 +971,7 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(output));
           cipher.finish();
-          var out = cipher.output.toHex();
+          var out = cipher.output!.toHex();
           expect(out).toBe(inputs[i]);
         });
       })(i);
@@ -1011,7 +1011,7 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
         });
 
         it('should aes-256-ctr decrypt: ' + outputs[i], function () {
@@ -1020,7 +1020,7 @@ describe('aes', function () {
           cipher.start({ iv: iv });
           cipher.update(UTIL.createBuffer(output));
           cipher.finish();
-          var out = cipher.output.toHex();
+          var out = cipher.output!.toHex();
           expect(out).toBe(inputs[i]);
         });
       })(i);
@@ -1136,8 +1136,8 @@ describe('aes', function () {
           cipher.start({ iv: iv, additionalData: adata });
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
-          expect(cipher.mode.tag.toHex()).toBe(tags[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
+          expect(cipher.mode.tag!.toHex()).toBe(tags[i]);
         });
 
         it('should aes-128-gcm decrypt: ' + outputs[i], function () {
@@ -1150,9 +1150,9 @@ describe('aes', function () {
           });
           cipher.update(UTIL.createBuffer(output));
           var pass = cipher.finish();
-          expect(cipher.mode.tag.toHex()).toBe(tags[i]);
+          expect(cipher.mode.tag!.toHex()).toBe(tags[i]);
           expect(pass).toBe(true);
-          expect(cipher.output.toHex()).toBe(inputs[i]);
+          expect(cipher.output!.toHex()).toBe(inputs[i]);
         });
 
         it('should aes-128-gcm encrypt (one byte at a time): ' + inputs[i], function () {
@@ -1163,12 +1163,12 @@ describe('aes', function () {
           var out = UTIL.createBuffer();
           while (input_.length() > 0) {
             cipher.update(UTIL.createBuffer(input_.getBytes(1)));
-            expect(cipher.output.length()).toBe(1);
-            out.putByte(cipher.output.getByte());
+            expect(cipher.output!.length()).toBe(1);
+            out.putByte(cipher.output!.getByte());
           }
           cipher.finish();
           expect(out.toHex()).toBe(outputs[i]);
-          expect(cipher.mode.tag.toHex()).toBe(tags[i]);
+          expect(cipher.mode.tag!.toHex()).toBe(tags[i]);
         });
 
         it('should aes-128-gcm encrypt (blockSize/2+1 bytes at a time): ' + inputs[i], function () {
@@ -1180,11 +1180,11 @@ describe('aes', function () {
           var out = UTIL.createBuffer();
           while (input_.length() > 0) {
             cipher.update(UTIL.createBuffer(input_.getBytes(size)));
-            out.putBytes(cipher.output.getBytes(size));
+            out.putBytes(cipher.output!.getBytes(size));
           }
           cipher.finish();
           expect(out.toHex()).toBe(outputs[i]);
-          expect(cipher.mode.tag.toHex()).toBe(tags[i]);
+          expect(cipher.mode.tag!.toHex()).toBe(tags[i]);
         });
       })(i);
     }
@@ -1287,8 +1287,8 @@ describe('aes', function () {
           cipher.start({ iv: iv, additionalData: adata });
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
-          expect(cipher.mode.tag.toHex()).toBe(tags[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
+          expect(cipher.mode.tag!.toHex()).toBe(tags[i]);
         });
 
         it('should aes-128-gcm decrypt: ' + outputs[i], function () {
@@ -1301,9 +1301,9 @@ describe('aes', function () {
           });
           cipher.update(UTIL.createBuffer(output));
           var pass = cipher.finish();
-          expect(cipher.mode.tag.toHex()).toBe(tags[i]);
+          expect(cipher.mode.tag!.toHex()).toBe(tags[i]);
           expect(pass).toBe(true);
-          expect(cipher.output.toHex()).toBe(inputs[i]);
+          expect(cipher.output!.toHex()).toBe(inputs[i]);
         });
       })(i);
     }
@@ -1406,8 +1406,8 @@ describe('aes', function () {
           cipher.start({ iv: iv, additionalData: adata });
           cipher.update(UTIL.createBuffer(input));
           cipher.finish();
-          expect(cipher.output.toHex()).toBe(outputs[i]);
-          expect(cipher.mode.tag.toHex()).toBe(tags[i]);
+          expect(cipher.output!.toHex()).toBe(outputs[i]);
+          expect(cipher.mode.tag!.toHex()).toBe(tags[i]);
         });
 
         it('should aes-256-gcm decrypt: ' + outputs[i], function () {
@@ -1420,9 +1420,9 @@ describe('aes', function () {
           });
           cipher.update(UTIL.createBuffer(output));
           var pass = cipher.finish();
-          expect(cipher.mode.tag.toHex()).toBe(tags[i]);
+          expect(cipher.mode.tag!.toHex()).toBe(tags[i]);
           expect(pass).toBe(true);
-          expect(cipher.output.toHex()).toBe(inputs[i]);
+          expect(cipher.output!.toHex()).toBe(inputs[i]);
         });
       })(i);
     }

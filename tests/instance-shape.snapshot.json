@@ -1112,7 +1112,7 @@
   },
   "util.createBuffer": {
     "label": "util.createBuffer",
-    "ownKeys": ["_constructedStringLength", "data", "read"],
+    "ownKeys": ["_constructedStringLength", "data", "read", "strictReads"],
     "methods": {},
     "properties": {
       "_constructedStringLength": {
@@ -1123,6 +1123,9 @@
       },
       "read": {
         "type": "number"
+      },
+      "strictReads": {
+        "type": "boolean"
       }
     },
     "protoMethods": {

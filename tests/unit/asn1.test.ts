@@ -1,7 +1,27 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import certkit from '../../src/presentation/index.js';
+import type { Asn1Object, Asn1Validator } from '../../src/domain/asn1/Asn1Types.js';
 const ASN1 = certkit.asn1;
 const UTIL = certkit.util;
+
+type CertkitBuffer = ReturnType<typeof UTIL.createBuffer>;
+
+type Asn1TestOptions = {
+  init: (b: CertkitBuffer) => void;
+  dump?: boolean;
+  roundtrip?: boolean;
+  strictThrows?: boolean;
+  nonStrictThrows?: boolean;
+  decodeBitStrings?: boolean;
+  v?: Asn1Validator;
+  captured?: Record<string, unknown>;
+  done?: (data: { strict: Asn1TestResult; nonStrict: Asn1TestResult }) => void;
+};
+
+type Asn1TestResult = {
+  asn1?: Asn1Object;
+  der?: CertkitBuffer;
+};
 describe('asn1', function () {
   // TODO: add more ASN.1 coverage
 
@@ -336,7 +356,7 @@ describe('asn1', function () {
 
   (function () {
     // use function to avoid calling apis during setup
-    function _asn1(str) {
+    function _asn1(str: string) {
       return function () {
         return ASN1.fromDer(UTIL.hexToBytes(str.replace(/ /g, '')));
       };
@@ -406,8 +426,8 @@ describe('asn1', function () {
         name: 'mutated BIT STRINGs',
         obj1: _asn1('03 04 00 02 01 01'),
         obj2: _asn1('03 04 00 02 01 01'),
-        mutate: function (obj1, obj2) {
-          obj2.value[0].value = '\u0002';
+        mutate: function (obj1: Asn1Object, obj2: Asn1Object) {
+          (obj2.value as Asn1Object[])[0].value = '\u0002';
         },
         equal: false
       }
@@ -418,7 +438,7 @@ describe('asn1', function () {
         var obj1 = typeof test.obj1 === 'function' ? test.obj1() : test.obj1;
         var obj2 = typeof test.obj2 === 'function' ? test.obj2() : test.obj2;
         if (test.mutate) {
-          test.mutate(obj1, obj2);
+          test.mutate(obj1 as Asn1Object, obj2 as Asn1Object);
         }
         expect(ASN1.equals(obj1, obj2)).toBe(test.equal);
       });
@@ -427,7 +447,7 @@ describe('asn1', function () {
 
   (function () {
     // use function to avoid calling apis during setup
-    function _asn1(str) {
+    function _asn1(str: string) {
       return function () {
         return ASN1.fromDer(UTIL.hexToBytes(str.replace(/ /g, '')));
       };
@@ -472,17 +492,17 @@ describe('asn1', function () {
   })();
 
   (function () {
-    function _h2b(str) {
+    function _h2b(str: string): string {
       return UTIL.hexToBytes(str.replace(/ /g, ''));
     }
-    function _add(b, str) {
+    function _add(b: CertkitBuffer, str: string): void {
       b.putBytes(_h2b(str));
     }
-    function _asn1dump(asn1) {
+    function _asn1dump(asn1: Asn1Object): void {
       console.log(ASN1.prettyPrint(asn1));
       console.log(JSON.stringify(asn1, null, 2));
     }
-    function _asn1TestOne(strict, throws, options) {
+    function _asn1TestOne(strict: boolean, throws: boolean, options: Asn1TestOptions): Asn1TestResult {
       options = options || {};
       if (!('decodeBitStrings' in options)) {
         options.decodeBitStrings = true;
@@ -535,7 +555,7 @@ describe('asn1', function () {
       // validator check
       if (!throws && options.v) {
         var capture = {};
-        var errors = [];
+        var errors: unknown[] = [];
         var asn1ok = ASN1.validate(asn1, options.v, capture, errors);
         expect(errors).toEqual([]);
         if (options.captured) {
@@ -551,9 +571,9 @@ describe('asn1', function () {
         der: der
       };
     }
-    function _asn1Test(options) {
-      var s = _asn1TestOne(true, options.strictThrows, options);
-      var ns = _asn1TestOne(false, options.nonStrictThrows, options);
+    function _asn1Test(options: Asn1TestOptions): void {
+      var s = _asn1TestOne(true, options.strictThrows ?? false, options);
+      var ns = _asn1TestOne(false, options.nonStrictThrows ?? false, options);
 
       // check asn1 equality
       if (s.asn1 && ns.asn1) {
@@ -575,7 +595,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from DER (short,empty)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // BIT STRING value=none
           _add(b, '03 00');
         },
@@ -595,7 +615,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from DER (short,empty2)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // BIT STRING value=none
           _add(b, '03 01 00');
         },
@@ -617,7 +637,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from BER (short,invalid)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // BIT STRING value=partial
           // invalid in strict mode, non-strict will read 1 of 2 bytes
           _add(b, '03 02 00');
@@ -641,7 +661,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from DER (short)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // BIT STRING value=0110111001011101
           _add(b, '03 03 00 6e 5d');
         },
@@ -661,7 +681,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from DER (short2)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // BIT STRING value=0110111001011101
           // contains an INTEGER=0x12
           _add(b, '03 04 00 02 01 12');
@@ -694,7 +714,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from DER (short,unused1z)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // BIT STRING value=01101110010111011010111, unused=0
           _add(b, '03 04 01 6e 5d ae');
         },
@@ -714,7 +734,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from DER (short,unused6z)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // BIT STRING short len, value=011011100101110111, unused=000000
           _add(b, '03 04 06 6e 5d c0');
         },
@@ -734,7 +754,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from BER (short,unused6d)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // BIT STRING short len, value=011011100101110111, unused=100000
           _add(b, '03 04 06 6e 5d e0');
         },
@@ -754,7 +774,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from BER (long,unused6z)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // BIT STRING long len, value=011011100101110111, unused=000000
           _add(b, '03 81 04 06 6e 5d c0');
         },
@@ -775,7 +795,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from BER (unused6z)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // BIT STRING constructed, value=0110111001011101+11, unused=000000
           _add(b, '23 09');
           _add(b, '03 03 00 6e 5d');
@@ -811,7 +831,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from BER (decode)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data that includes encapsulated
           // data.  often used to store SEQUENCE of INTEGERs.
           // add bit stream of bytes using long length
@@ -866,7 +886,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from BER (no decode)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data that includes encapsulated
           // data.  often used to store SEQUENCE of INTEGERs.
           // add bit stream
@@ -898,7 +918,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from DER (decode2)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data that includes encapsulated
           // data.  often used to store SEQUENCE of INTEGERs.
           // bit stream
@@ -969,7 +989,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from DER (sig)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data similar to a signature that
           // could be interpreted incorrectly as encapsulated data.
           // add bit stream of 257 bytes
@@ -1029,7 +1049,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from DER (sig2)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data similar to a signature that
           // could be interpreted incorrectly as encapsulated data.
           // add bit stream of 257 bytes
@@ -1088,7 +1108,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from DER (sig3)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data similar to a signature that
           // could be interpreted incorrectly as encapsulated data.
           _add(b, '03 0B');
@@ -1114,7 +1134,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from BER (decodable sig)', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data similar to a signature that
           // could be interpreted as encapsulated data. data is such that
           // a round trip process could change the data due to INTEGER
@@ -1176,7 +1196,7 @@ describe('asn1', function () {
 
     it('should convert BIT STRING from strict DER', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data that includes encapsulated
           // data.  include valid data that would only parse in strict
           // mode.
@@ -1206,7 +1226,7 @@ describe('asn1', function () {
     });
     it('should convert BIT STRING from non-strict DER', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // create crafted DER BIT STRING data that includes encapsulated
           // data.  include invalid data that would only parse in non-strict
           // mode.  ensure it is never parsed.
@@ -1239,7 +1259,7 @@ describe('asn1', function () {
 
     it('should convert indefinite length seq from BER', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // SEQUENCE
           _add(b, '30 80');
           // a few INTEGERs
@@ -1287,7 +1307,7 @@ describe('asn1', function () {
 
     it('should handle ASN.1 mutations', function () {
       _asn1Test({
-        init: function (b) {
+        init: function (b: CertkitBuffer) {
           // BIT STRING
           _add(b, '03 09 00');
           // SEQUENCE
@@ -1331,25 +1351,27 @@ describe('asn1', function () {
           int0: _h2b('00'),
           int1: _h2b('01')
         },
-        done: function (data) {
-          var asn1 = data.strict.asn1;
+        done: function (data: { strict: Asn1TestResult; nonStrict: Asn1TestResult }) {
+          var asn1 = data.strict.asn1!;
+          var bitString = (asn1.value as Asn1Object[])[0];
+          var innerValues = bitString.value as Asn1Object[];
           // mutate
-          asn1.value[0].value[0].value = _h2b('02');
-          asn1.value[0].value[1].value = _h2b('03');
+          innerValues[0].value = _h2b('02');
+          innerValues[1].value = _h2b('03');
           // convert
           // must use new data vs saved BIT STRING data
           var der = ASN1.toDer(asn1);
           var expectedValue = _h2b('03 09 00 30 06 02 01 02 02 01 03');
           // compare
-          expect(UTIL.bytesToHex(der)).toBe(UTIL.bytesToHex(expectedValue));
+          expect(UTIL.bytesToHex(der.bytes())).toBe(UTIL.bytesToHex(expectedValue));
         }
       });
     });
 
     it('should convert BMP STRING from DER', function () {
       _asn1Test({
-        init: function (b) {
-          // BPMSTRING
+        init: function (b: CertkitBuffer) {
+          // BMPSTRING
           _add(b, '1e 08');
           _add(b, '01 02 03 04 05 06 07 08');
         },
@@ -1357,7 +1379,7 @@ describe('asn1', function () {
         roundtrip: true,
         v: {
           tagClass: ASN1.Class.UNIVERSAL,
-          type: ASN1.Type.BPMSTRING,
+          type: ASN1.Type.BMPSTRING,
           constructed: false,
           capture: 'bits'
         },
@@ -1371,10 +1393,10 @@ describe('asn1', function () {
     // .. fromDer will create the full integer
     // .. toDer will remove only first byte if possible
     it('should minimally encode INTEGERs', function () {
-      function _test(hin, hout) {
+      function _test(hin: string, hout: string): void {
         var derIn = _h2b(hin);
         var derOut = ASN1.toDer(ASN1.fromDer(derIn));
-        expect(UTIL.bytesToHex(derOut)).toBe(UTIL.bytesToHex(_h2b(hout)));
+        expect(UTIL.bytesToHex(derOut.bytes())).toBe(UTIL.bytesToHex(_h2b(hout)));
       }
       // optimal
       _test('02 01 01', '02 01 01');

@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import certkit from '../../src/presentation/index.js';
+import type { RsaPrivateKey, RsaPublicKey } from '../../src/domain/pki/RsaTypes.js';
+import { UtilNamespace } from '../../src/domain/util/UtilNamespace.js';
 const JSBN = certkit.jsbn;
 const MD = certkit.md;
 const PKCS1 = certkit.pkcs1;
@@ -41,14 +43,15 @@ describe('pkcs1', function () {
           message: 'Expected an exception.'
         };
       } catch (e) {
-        expect(e.message).toBe('Invalid RSAES-OAEP padding.');
+        const err = e as { message?: string };
+        expect(err.message).toBe('Invalid RSAES-OAEP padding.');
       }
     }
   });
 
   it('should detect leading zero bytes', (ctx) => {
     var keys = makeKey();
-    var message = UTIL.fillString('\x00', 80);
+    var message = UtilNamespace.fillString('\x00', 80);
     var encoded = PKCS1.encode_rsa_oaep(keys.publicKey, message);
     var ciphertext = keys.publicKey.encrypt(encoded, null);
     var decrypted = keys.privateKey.decrypt(ciphertext, null);
@@ -1309,34 +1312,46 @@ describe('pkcs1', function () {
     checkOAEPEncryptExamples(pubkey, privateKey, 'sha256', examples);
   }
 
-  function _bytesToBigInteger(bytes) {
+  function _bytesToBigInteger(bytes: string) {
     var buffer = UTIL.createBuffer(bytes);
     var hex = buffer.toHex();
     return new BigInteger(hex, 16);
   }
 
-  function _base64ToBn(s) {
+  function _base64ToBn(s: string) {
     var decoded = UTIL.decode64(s);
     return _bytesToBigInteger(decoded);
   }
 
-  function checkOAEPEncryptExamples(publicKey, privateKey, md, examples) {
+  function checkOAEPEncryptExamples(
+    publicKey: RsaPublicKey,
+    privateKey: RsaPrivateKey,
+    md: 'sha1' | 'sha256' | ReturnType<typeof MD.sha1.create>,
+    examples: Array<{ title: string; message: string; seed: string; encrypted: string }>
+  ) {
     if (md === 'sha1') {
       md = MD.sha1.create();
     } else if (md === 'sha256') {
       md = MD.sha256.create();
     }
 
-    examples.forEach(function (ex) {
+    examples.forEach(function (ex: { title: string; message: string; seed: string; encrypted: string }) {
       it('should test ' + ex.title, (ctx) => {
         checkOAEPEncrypt(publicKey, privateKey, md, ex.message, ex.seed, ex.encrypted);
       });
     });
   }
 
-  function checkOAEPEncrypt(publicKey, privateKey, md, message, seed, expected) {
-    var message = UTIL.decode64(message);
-    var seed = UTIL.decode64(seed);
+  function checkOAEPEncrypt(
+    publicKey: RsaPublicKey,
+    privateKey: RsaPrivateKey,
+    md: ReturnType<typeof MD.sha1.create>,
+    messageB64: string,
+    seedB64: string,
+    expected: string
+  ) {
+    var message = UTIL.decode64(messageB64);
+    var seed = UTIL.decode64(seedB64);
     var encoded = PKCS1.encode_rsa_oaep(publicKey, message, { seed: seed, md: md });
     var ciphertext = publicKey.encrypt(encoded, null);
     expect(expected).toBe(UTIL.encode64(ciphertext));
@@ -1351,22 +1366,31 @@ describe('pkcs1', function () {
     expect(message).toBe(decoded);
   }
 
-  function decodeBase64PublicKey(modulus, exponent) {
-    modulus = _base64ToBn(modulus);
-    exponent = _base64ToBn(exponent);
-    return PKI.setRsaPublicKey(modulus, exponent);
+  function decodeBase64PublicKey(modulusB64: string, exponentB64: string) {
+    const n = _base64ToBn(modulusB64);
+    const e = _base64ToBn(exponentB64);
+    return PKI.setRsaPublicKey(n, e);
   }
 
-  function decodeBase64PrivateKey(modulus, exponent, d, p, q, dP, dQ, qInv) {
-    modulus = _base64ToBn(modulus);
-    exponent = _base64ToBn(exponent);
-    d = _base64ToBn(d);
-    p = _base64ToBn(p);
-    q = _base64ToBn(q);
-    dP = _base64ToBn(dP);
-    dQ = _base64ToBn(dQ);
-    qInv = _base64ToBn(qInv);
-    return PKI.setRsaPrivateKey(modulus, exponent, d, p, q, dP, dQ, qInv);
+  function decodeBase64PrivateKey(
+    modulusB64: string,
+    exponentB64: string,
+    dB64: string,
+    pB64: string,
+    qB64: string,
+    dPB64: string,
+    dQB64: string,
+    qInvB64: string
+  ) {
+    const n = _base64ToBn(modulusB64);
+    const e = _base64ToBn(exponentB64);
+    const d = _base64ToBn(dB64);
+    const p = _base64ToBn(pB64);
+    const q = _base64ToBn(qB64);
+    const dP = _base64ToBn(dPB64);
+    const dQ = _base64ToBn(dQB64);
+    const qInv = _base64ToBn(qInvB64);
+    return PKI.setRsaPrivateKey(n, e, d, p, q, dP, dQ, qInv);
   }
 
   function makeKey() {
