@@ -9,5 +9,5 @@
     "incremental": false
   },
   "include": ["tests/**/*.ts", "src/**/*.ts"],
-  "exclude": ["node_modules", "lib", "dist"]
+  "exclude": ["node_modules", "lib", "dist", "tests/types/dts-consumer-usage.ts"]
 }

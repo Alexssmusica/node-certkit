@@ -5,7 +5,16 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs', 'node_modules', 'lib', 'dist', '*.js', 'vitest.config.mts', 'examples']
+    ignores: [
+      'eslint.config.mjs',
+      'node_modules',
+      'lib',
+      'dist',
+      '*.js',
+      'vitest.config.mts',
+      'examples',
+      'tests/types/dts-consumer-usage.ts'
+    ]
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,

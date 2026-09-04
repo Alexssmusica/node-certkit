@@ -24,6 +24,8 @@ jobs:
     - run: npm ci
     - run: npm run lint
     - run: npm run test:types
+    - run: npm run test:types:public
     - run: npm test
     - run: npm run test:security
     - run: npm run build
+    - run: npm run test:dts

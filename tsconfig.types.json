@@ -8,5 +8,5 @@
     "incremental": false
   },
   "include": ["src/**/*.ts", "tests/types/**/*.ts", "tests/certificate-load.golden.test.ts"],
-  "exclude": ["node_modules", "lib", "dist"]
+  "exclude": ["node_modules", "lib", "dist", "tests/types/dts-consumer-usage.ts"]
 }
