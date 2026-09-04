@@ -1,3 +1,11 @@
+## [1.1.1](https://github.com/Alexssmusica/node-certkit/compare/v1.1.0...v1.1.1) (2026-09-04)
+
+
+### Bug Fixes
+
+* corrigir declaracoes de tipo erradas mascaradas por casts duplos ([4697a90](https://github.com/Alexssmusica/node-certkit/commit/4697a90be6825658dc65832b758d96f2764d9b42))
+* corrigir headerType circular em decryptRsaPrivateKey ([3b08477](https://github.com/Alexssmusica/node-certkit/commit/3b08477a1623ae8fc8cad90a19999629eacf2937))
+
 # [1.1.0](https://github.com/Alexssmusica/node-certkit/compare/v1.0.3...v1.1.0) (2026-09-04)
 
 
