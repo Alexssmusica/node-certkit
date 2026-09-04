@@ -3,11 +3,6 @@
   "compilerOptions": {
     "noEmit": false
   },
-  "include": [
-    "src/index.ts",
-    "src/presentation/**/*.ts",
-    "src/domain/**/*.ts",
-    "src/infrastructure/**/*.ts"
-  ],
+  "include": ["src/index.ts", "src/presentation/**/*.ts", "src/domain/**/*.ts", "src/infrastructure/**/*.ts"],
   "exclude": ["node_modules", "lib", "dist", "tests"]
 }

@@ -7,36 +7,46 @@ console.log('Key-pair created.');
 console.log('Creating certification request (CSR) ...');
 var csr = certkit.pki.createCertificationRequest();
 csr.publicKey = keys.publicKey;
-csr.setSubject([{
-  name: 'commonName',
-  value: 'example.org'
-}, {
-  name: 'countryName',
-  value: 'US'
-}, {
-  shortName: 'ST',
-  value: 'Virginia'
-}, {
-  name: 'localityName',
-  value: 'Blacksburg'
-}, {
-  name: 'organizationName',
-  value: 'Test'
-}, {
-  shortName: 'OU',
-  value: 'Test'
-}]);
+csr.setSubject([
+  {
+    name: 'commonName',
+    value: 'example.org'
+  },
+  {
+    name: 'countryName',
+    value: 'US'
+  },
+  {
+    shortName: 'ST',
+    value: 'Virginia'
+  },
+  {
+    name: 'localityName',
+    value: 'Blacksburg'
+  },
+  {
+    name: 'organizationName',
+    value: 'Test'
+  },
+  {
+    shortName: 'OU',
+    value: 'Test'
+  }
+]);
 // add optional attributes
-csr.setAttributes([{
-  name: 'challengePassword',
-  value: 'password'
-}, {
-  name: 'unstructuredName',
-  value: 'My company'
-}]);
+csr.setAttributes([
+  {
+    name: 'challengePassword',
+    value: 'password'
+  },
+  {
+    name: 'unstructuredName',
+    value: 'My company'
+  }
+]);
 
 // sign certification request
-csr.sign(keys.privateKey/*, certkit.md.sha256.create()*/);
+csr.sign(keys.privateKey /*, certkit.md.sha256.create()*/);
 console.log('Certification request (CSR) created.');
 
 // PEM-format keys and csr
@@ -55,12 +65,11 @@ console.log(pem.csr);
 
 // verify certification request
 try {
-  if(csr.verify()) {
+  if (csr.verify()) {
     console.log('Certification request (CSR) verified.');
   } else {
     throw new Error('Signature not verified.');
   }
-} catch(err) {
-  console.log('Certification request (CSR) verification failure: ' +
-    JSON.stringify(err, null, 2));
+} catch (err) {
+  console.log('Certification request (CSR) verification failure: ' + JSON.stringify(err, null, 2));
 }

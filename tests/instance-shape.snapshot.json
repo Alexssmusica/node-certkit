@@ -221,12 +221,7 @@
   },
   "hmac.create": {
     "label": "hmac.create",
-    "ownKeys": [
-      "digest",
-      "getMac",
-      "start",
-      "update"
-    ],
+    "ownKeys": ["digest", "getMac", "start", "update"],
     "methods": {
       "digest": {
         "type": "function",
@@ -250,16 +245,7 @@
   },
   "cipher.createCipher(AES-CBC)": {
     "label": "cipher.createCipher(AES-CBC)",
-    "ownKeys": [
-      "_decrypt",
-      "_finish",
-      "_input",
-      "_op",
-      "algorithm",
-      "blockSize",
-      "mode",
-      "output"
-    ],
+    "ownKeys": ["_decrypt", "_finish", "_input", "_op", "algorithm", "blockSize", "mode", "output"],
     "methods": {
       "_op": {
         "type": "function",
@@ -655,14 +641,7 @@
   },
   "pki.createCaStore": {
     "label": "pki.createCaStore",
-    "ownKeys": [
-      "addCertificate",
-      "certs",
-      "getIssuer",
-      "hasCertificate",
-      "listAllCertificates",
-      "removeCertificate"
-    ],
+    "ownKeys": ["addCertificate", "certs", "getIssuer", "hasCertificate", "listAllCertificates", "removeCertificate"],
     "methods": {
       "addCertificate": {
         "type": "function",
@@ -694,13 +673,7 @@
   },
   "pkcs12.pkcs12FromAsn1": {
     "label": "pkcs12.pkcs12FromAsn1",
-    "ownKeys": [
-      "getBags",
-      "getBagsByFriendlyName",
-      "getBagsByLocalKeyId",
-      "safeContents",
-      "version"
-    ],
+    "ownKeys": ["getBags", "getBagsByFriendlyName", "getBagsByLocalKeyId", "safeContents", "version"],
     "methods": {
       "getBags": {
         "type": "function",
@@ -728,12 +701,7 @@
   },
   "rsa.setPublicKey": {
     "label": "rsa.setPublicKey",
-    "ownKeys": [
-      "e",
-      "encrypt",
-      "n",
-      "verify"
-    ],
+    "ownKeys": ["e", "encrypt", "n", "verify"],
     "methods": {
       "encrypt": {
         "type": "function",
@@ -756,18 +724,7 @@
   },
   "rsa.setPrivateKey": {
     "label": "rsa.setPrivateKey",
-    "ownKeys": [
-      "d",
-      "dP",
-      "dQ",
-      "decrypt",
-      "e",
-      "n",
-      "p",
-      "q",
-      "qInv",
-      "sign"
-    ],
+    "ownKeys": ["d", "dP", "dQ", "decrypt", "e", "n", "p", "q", "qInv", "sign"],
     "methods": {
       "decrypt": {
         "type": "function",
@@ -808,10 +765,7 @@
   },
   "pss.create": {
     "label": "pss.create",
-    "ownKeys": [
-      "encode",
-      "verify"
-    ],
+    "ownKeys": ["encode", "verify"],
     "methods": {
       "encode": {
         "type": "function",
@@ -827,9 +781,7 @@
   },
   "mgf.mgf1.create": {
     "label": "mgf.mgf1.create",
-    "ownKeys": [
-      "generate"
-    ],
+    "ownKeys": ["generate"],
     "methods": {
       "generate": {
         "type": "function",
@@ -841,11 +793,7 @@
   },
   "rc2.createEncryptionCipher": {
     "label": "rc2.createEncryptionCipher",
-    "ownKeys": [
-      "finish",
-      "start",
-      "update"
-    ],
+    "ownKeys": ["finish", "start", "update"],
     "methods": {
       "finish": {
         "type": "function",
@@ -865,11 +813,7 @@
   },
   "jsbn.BigInteger": {
     "label": "jsbn.BigInteger",
-    "ownKeys": [
-      "data",
-      "s",
-      "t"
-    ],
+    "ownKeys": ["data", "s", "t"],
     "methods": {},
     "properties": {
       "data": {
@@ -1168,11 +1112,7 @@
   },
   "util.createBuffer": {
     "label": "util.createBuffer",
-    "ownKeys": [
-      "_constructedStringLength",
-      "data",
-      "read"
-    ],
+    "ownKeys": ["_constructedStringLength", "data", "read"],
     "methods": {},
     "properties": {
       "_constructedStringLength": {

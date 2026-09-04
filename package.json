@@ -26,8 +26,8 @@
   "scripts": {
     "clean-lib": "npx rimraf lib && npx rimraf tsconfig.build.tsbuildinfo",
     "build": "npm run clean-lib && tsc -p tsconfig.build.json",
-    "build-release": "npm run prettier && npm run build && node release.js && npm run publish:npm",
-    "prettier": "prettier src/**/*.ts tests/**/*.ts --write",
+    "build-release": "npm run format && npm run build && node release.js && npm run publish:npm",
+    "format": "prettier --write \"**/*.{js,ts,vue,scss,html,json}\" --ignore-path .gitignore",
     "publish:npm": "node publish.js",
     "release": "node release.js",
     "type": "tsc --project tsconfig.json",

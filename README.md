@@ -233,10 +233,26 @@ import certkit from 'node-certkit';
 
 ### Importing types
 
-With **default import** (typical runtime usage), import types by name:
+**Important:** `import certkit from 'node-certkit'` gives you the runtime API
+only. Forge-style namespace types such as `certkit.pki.rsa.PrivateKey` require
+the **named import** (same instance, merged with the type namespace):
 
 ```ts
-import certkit, { type Pkcs12Pfx } from 'node-certkit';
+// TS2503: Cannot find namespace 'certkit' — default import has no type namespace
+import certkit from 'node-certkit';
+let key: certkit.pki.rsa.PrivateKey; // error
+
+// Correct: named import for runtime + namespace types
+import { certkit, type Pkcs12Pfx } from 'node-certkit';
+
+let privateKey: certkit.pki.rsa.PrivateKey | null = null;
+let certificate: certkit.pki.Certificate | null = null;
+```
+
+With **default import**, use named type exports instead of namespace paths:
+
+```ts
+import certkit, { type Pkcs12Pfx, type RsaPrivateKey, type X509Certificate } from 'node-certkit';
 
 function getKey(p12: Pkcs12Pfx): string {
   const bags = p12.getBags({ bagType: certkit.pki.oids.keyBag });
@@ -244,14 +260,49 @@ function getKey(p12: Pkcs12Pfx): string {
 }
 ```
 
-For **forge-style namespace types** (`certkit.pkcs12.Pkcs12Pfx`), use the named
-value export (merged with the type namespace):
+### NFSe certificate load (typed)
+
+Typical flow when rebuilding a PKCS#12 for NFSe — uses named import throughout:
 
 ```ts
-import { certkit } from 'node-certkit';
+import { certkit, type Pkcs12Pfx } from 'node-certkit';
 
-type Pfx = certkit.pkcs12.Pkcs12Pfx;
+export function loadCertificateNFSe(p12: Pkcs12Pfx) {
+  let privateKey: certkit.pki.rsa.PrivateKey | null = null;
+  let certificate: certkit.pki.Certificate | null = null;
+  const caCertificates: certkit.pki.Certificate[] = [];
+
+  for (const safeContent of p12.safeContents) {
+    for (const bag of safeContent.safeBags) {
+      if (bag.type === certkit.pki.oids.keyBag) {
+        privateKey = bag.key ?? null; // bag.key is optional
+      }
+      if (bag.type === certkit.pki.oids.certBag && bag.cert) {
+        const bc = bag.cert.getExtension('basicConstraints');
+        if (!bc || bc['cA'] === false) {
+          certificate = bag.cert;
+        } else {
+          caCertificates.push(bag.cert);
+        }
+      }
+    }
+  }
+
+  const tempPassword = Math.random().toString(36).substring(2);
+  const p12Asn1 = certkit.pkcs12.toPkcs12Asn1(
+    privateKey!,
+    [certificate!, ...caCertificates],
+    tempPassword,
+    { algorithm: '3des' }
+  );
+  const p12Der = certkit.asn1.toDer(p12Asn1).getBytes();
+  return { p12Buffer: Buffer.from(p12Der, 'binary'), tempPassword };
+}
 ```
+
+Note: `bag.certChain` from node-forge typings is not populated by certkit; use
+`bag.cert` only. `safeContents[].safeBags` is already `Pkcs12Bag[]` (no need for
+`Object.values` + `Array.isArray`).
 
 ### PKCS#12 load (typed)
 

@@ -14,44 +14,57 @@ try {
   cert.validity.notBefore = new Date();
   cert.validity.notAfter = new Date();
   cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 1);
-  var attrs = [{
-    name: 'commonName',
-    value: 'example.org'
-  }, {
-    name: 'countryName',
-    value: 'US'
-  }, {
-    shortName: 'ST',
-    value: 'Virginia'
-  }, {
-    name: 'localityName',
-    value: 'Blacksburg'
-  }, {
-    name: 'organizationName',
-    value: 'Test'
-  }, {
-    shortName: 'OU',
-    value: 'Test'
-  }];
+  var attrs = [
+    {
+      name: 'commonName',
+      value: 'example.org'
+    },
+    {
+      name: 'countryName',
+      value: 'US'
+    },
+    {
+      shortName: 'ST',
+      value: 'Virginia'
+    },
+    {
+      name: 'localityName',
+      value: 'Blacksburg'
+    },
+    {
+      name: 'organizationName',
+      value: 'Test'
+    },
+    {
+      shortName: 'OU',
+      value: 'Test'
+    }
+  ];
   cert.setSubject(attrs);
   cert.setIssuer(attrs);
-  cert.setExtensions([{
-    name: 'basicConstraints',
-    cA: true
-  }, {
-    name: 'keyUsage',
-    keyCertSign: true,
-    digitalSignature: true,
-    nonRepudiation: true,
-    keyEncipherment: true,
-    dataEncipherment: true
-  }, {
-    name: 'subjectAltName',
-    altNames: [{
-      type: 6, // URI
-      value: 'http://example.org/webid#me'
-    }]
-  }]);
+  cert.setExtensions([
+    {
+      name: 'basicConstraints',
+      cA: true
+    },
+    {
+      name: 'keyUsage',
+      keyCertSign: true,
+      digitalSignature: true,
+      nonRepudiation: true,
+      keyEncipherment: true,
+      dataEncipherment: true
+    },
+    {
+      name: 'subjectAltName',
+      altNames: [
+        {
+          type: 6, // URI
+          value: 'http://example.org/webid#me'
+        }
+      ]
+    }
+  ]);
 
   // self-sign certificate
   cert.sign(keys.privateKey);
@@ -60,9 +73,10 @@ try {
   // create PKCS12
   console.log('\nCreating PKCS#12...');
   var password = 'password';
-  var newPkcs12Asn1 = certkit.pkcs12.toPkcs12Asn1(
-    keys.privateKey, [cert], password,
-    {generateLocalKeyId: true, friendlyName: 'test'});
+  var newPkcs12Asn1 = certkit.pkcs12.toPkcs12Asn1(keys.privateKey, [cert], password, {
+    generateLocalKeyId: true,
+    friendlyName: 'test'
+  });
   var newPkcs12Der = certkit.asn1.toDer(newPkcs12Asn1).getBytes();
 
   console.log('\nBase64-encoded new PKCS#12:');
@@ -73,8 +87,8 @@ try {
 
   console.log('\nLoading new PKCS#12 to confirm...');
   loadPkcs12(newPkcs12Der, password, caStore);
-} catch(ex) {
-  if(ex.stack) {
+} catch (ex) {
+  if (ex.stack) {
     console.log(ex.stack);
   } else {
     console.log('Error', ex);
@@ -87,20 +101,19 @@ function loadPkcs12(pkcs12Der, password, caStore) {
 
   // load keypair and cert chain from safe content(s) and map to key ID
   var map = {};
-  for(var sci = 0; sci < pkcs12.safeContents.length; ++sci) {
+  for (var sci = 0; sci < pkcs12.safeContents.length; ++sci) {
     var safeContents = pkcs12.safeContents[sci];
     console.log('safeContents ' + (sci + 1));
 
-    for(var sbi = 0; sbi < safeContents.safeBags.length; ++sbi) {
+    for (var sbi = 0; sbi < safeContents.safeBags.length; ++sbi) {
       var safeBag = safeContents.safeBags[sbi];
       console.log('safeBag.type: ' + safeBag.type);
 
       var localKeyId = null;
-      if(safeBag.attributes.localKeyId) {
-        localKeyId = certkit.util.bytesToHex(
-          safeBag.attributes.localKeyId[0]);
+      if (safeBag.attributes.localKeyId) {
+        localKeyId = certkit.util.bytesToHex(safeBag.attributes.localKeyId[0]);
         console.log('localKeyId: ' + localKeyId);
-        if(!(localKeyId in map)) {
+        if (!(localKeyId in map)) {
           map[localKeyId] = {
             privateKey: null,
             certChain: []
@@ -112,10 +125,10 @@ function loadPkcs12(pkcs12Der, password, caStore) {
       }
 
       // this bag has a private key
-      if(safeBag.type === certkit.pki.oids.pkcs8ShroudedKeyBag) {
+      if (safeBag.type === certkit.pki.oids.pkcs8ShroudedKeyBag) {
         console.log('found private key');
         map[localKeyId].privateKey = safeBag.key;
-      } else if(safeBag.type === certkit.pki.oids.certBag) {
+      } else if (safeBag.type === certkit.pki.oids.certBag) {
         // this bag has a certificate
         console.log('found certificate');
         map[localKeyId].certChain.push(safeBag.cert);
@@ -125,13 +138,12 @@ function loadPkcs12(pkcs12Der, password, caStore) {
 
   console.log('\nPKCS#12 Info:');
 
-  for(var localKeyId in map) {
+  for (var localKeyId in map) {
     var entry = map[localKeyId];
     console.log('\nLocal Key ID: ' + localKeyId);
-    if(entry.privateKey) {
+    if (entry.privateKey) {
       var privateKeyP12Pem = certkit.pki.privateKeyToPem(entry.privateKey);
-      var encryptedPrivateKeyP12Pem = certkit.pki.encryptRsaPrivateKey(
-        entry.privateKey, password);
+      var encryptedPrivateKeyP12Pem = certkit.pki.encryptRsaPrivateKey(entry.privateKey, password);
 
       console.log('\nPrivate Key:');
       console.log(privateKeyP12Pem);
@@ -140,10 +152,10 @@ function loadPkcs12(pkcs12Der, password, caStore) {
     } else {
       console.log('');
     }
-    if(entry.certChain.length > 0) {
+    if (entry.certChain.length > 0) {
       console.log('Certificate chain:');
       var certChain = entry.certChain;
-      for(var i = 0; i < certChain.length; ++i) {
+      for (var i = 0; i < certChain.length; ++i) {
         var certP12Pem = certkit.pki.certificateToPem(certChain[i]);
         console.log(certP12Pem);
       }
@@ -151,7 +163,7 @@ function loadPkcs12(pkcs12Der, password, caStore) {
       var chainVerified = false;
       try {
         chainVerified = certkit.pki.verifyCertificateChain(caStore, certChain);
-      } catch(ex) {
+      } catch (ex) {
         chainVerified = ex;
       }
       console.log('Certificate chain verified: ', chainVerified);
