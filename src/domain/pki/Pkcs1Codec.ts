@@ -18,7 +18,15 @@ function rsaMgf1(seed: string, maskLength: number, hash?: MessageDigest): string
   return t.substring(0, maskLength);
 }
 
+/**
+ * PKCS#1 v2.2 encoding helpers (RFC 8017).
+ *
+ * Canonical variable names in OAEP encode/decode map to the spec:
+ * `lHash` (hash of label L), `PS` (padding string), `DB` (data block),
+ * `em` (encoded message), `maskedDB`, `maskedSeed`.
+ */
 export class Pkcs1Codec {
+  /** RSAES-OAEP-ENCRYPT (RFC 8017 section 7.1.1). */
   static encodeRsaOaep(
     key: RsaOaepKey,
     message: string,
@@ -73,8 +81,8 @@ export class Pkcs1Codec {
     md.update(label);
     const lHash = md.digest();
 
-    const PS_length = maxLength - message.length;
-    const PS = UtilNamespace.fillString('\x00', PS_length);
+    const psLength = maxLength - message.length;
+    const PS = UtilNamespace.fillString('\x00', psLength);
     const DB = lHash.getBytes() + PS + '\x01' + message;
 
     if (!seed) {
@@ -100,6 +108,7 @@ export class Pkcs1Codec {
     return '\x00' + maskedSeed + maskedDB;
   }
 
+  /** RSAES-OAEP-DECRYPT (RFC 8017 section 7.1.2). */
   static decodeRsaOaep(key: RsaOaepKey, em: string, options?: RsaOaepOptions | string, mdArg?: MessageDigest): string {
     let label: string | undefined;
     let md: MessageDigest | undefined;

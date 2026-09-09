@@ -3,6 +3,9 @@ import { constantTimeEquals } from '../util/constantTimeEquals.js';
 import { from64To32, inc32 } from './cipherModeUtils.js';
 import type { BlockCipherApi, CipherModeOptions, CipherModeStartOptions, PadOptions } from './CipherTypes.js';
 
+/** NIST SP 800-38D GHASH reduction polynomial for GF(2^128). */
+const GHASH_REDUCTION_POLY = 0xe1000000;
+
 export class GcmMode {
   name = 'GCM';
   cipher: BlockCipherApi;
@@ -34,7 +37,7 @@ export class GcmMode {
     this._outBlock = new Array(this._ints);
     this._partialOutput = new ByteStringBuffer();
     this._partialBytes = 0;
-    this._R = 0xe1000000;
+    this._R = GHASH_REDUCTION_POLY;
   }
 
   start(options: CipherModeStartOptions): void {

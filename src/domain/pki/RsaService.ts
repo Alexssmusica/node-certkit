@@ -406,8 +406,8 @@ export class RsaService {
         };
       } else if (['RAW', 'NONE', 'NULL', null].indexOf(scheme as string | null) !== -1) {
         schemeObj = {
-          encode(e) {
-            return e;
+          encode(encodedData) {
+            return encodedData;
           }
         };
       } else if (typeof scheme === 'string') {
@@ -525,19 +525,25 @@ export class RsaService {
 
       const decrypted = service.decrypt(data, key, false, false);
 
-      let schemeObj: { decode: (d: string, key: RsaKeyMaterial, pub?: boolean) => string };
+      let schemeObj: { decode: (ciphertext: string, key: RsaKeyMaterial, pub?: boolean) => string };
       if (scheme === 'RSAES-PKCS1-V1_5') {
-        schemeObj = { decode: (d, k, pub) => service.#decodePkcs1v15(d, k, pub!) };
+        schemeObj = {
+          decode: (ciphertext, k, pub) => service.#decodePkcs1v15(ciphertext, k, pub!)
+        };
       } else if (scheme === 'RSA-OAEP' || scheme === 'RSAES-OAEP') {
         schemeObj = {
-          decode(d, k) {
-            return Pkcs1Codec.decodeRsaOaep(k, d, schemeOptions as Parameters<typeof Pkcs1Codec.decodeRsaOaep>[2]);
+          decode(ciphertext, k) {
+            return Pkcs1Codec.decodeRsaOaep(
+              k,
+              ciphertext,
+              schemeOptions as Parameters<typeof Pkcs1Codec.decodeRsaOaep>[2]
+            );
           }
         };
       } else if (['RAW', 'NONE', 'NULL', null].indexOf(scheme as string | null) !== -1) {
         schemeObj = {
-          decode(d) {
-            return d;
+          decode(ciphertext) {
+            return ciphertext;
           }
         };
       } else {
@@ -566,8 +572,8 @@ export class RsaService {
         schemeObj = scheme as typeof schemeObj;
       }
 
-      const d = schemeObj.encode(md, key.n.bitLength());
-      return service.encrypt(d, key, bt);
+      const encodedDigestInfo = schemeObj.encode(md, key.n.bitLength());
+      return service.encrypt(encodedDigestInfo, key, bt);
     };
 
     return key;

@@ -15,6 +15,7 @@ export class Pbkdf2 {
   static createCertkitFunction(deps: Pbkdf2Dependencies): Pbkdf2Function {
     const nativeCrypto = deps.nativeCrypto;
 
+    /** PBKDF2 key derivation (RFC 2898 section 5.2): `p` password, `s` salt, `c` iterations, `dk` derived key. */
     function pbkdf2(
       p: string,
       s: string,

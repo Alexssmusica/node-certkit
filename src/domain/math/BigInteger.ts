@@ -4,6 +4,7 @@
 // See "LICENSE" for details.
 
 // Basic JavaScript BN library - subset useful for RSA encryption.
+// Short names follow HAC / jsBN convention (e.g. `t` limb count, `s` sign, `r`/`q`/`a`/`x`/`y` operands).
 
 import type { BigIntegerRandomSource, BigIntegerReduction, BitwiseWordOp } from './BigIntegerTypes.js';
 export type { BigIntegerRandomSource, BigIntegerReduction, BitwiseWordOp } from './BigIntegerTypes.js';

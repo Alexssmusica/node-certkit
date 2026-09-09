@@ -3,6 +3,11 @@ import { constantTimeEquals } from '../util/constantTimeEquals.js';
 import type { MessageDigest } from './MgfTypes.js';
 import type { MgfObject, PssCreateOptions, PssObject } from './PssTypes.js';
 
+/**
+ * RSASSA-PSS encoding and verification (RFC 8017 section 9.1).
+ *
+ * Spec notation preserved: `mHash`, `M'`, `H`, `PS`, `DB`, `em`, `emBits`, `emLen`, `salt`.
+ */
 export class PssScheme {
   static create(options: PssCreateOptions): PssObject {
     const hash = options.md;

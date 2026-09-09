@@ -162,12 +162,15 @@ export class UtilNamespace {
   }
 
   static formatSize(size: number): string {
-    if (size >= 1073741824) {
-      return UtilNamespace.formatNumber(size / 1073741824, 2, '.', '') + ' GiB';
-    } else if (size >= 1048576) {
-      return UtilNamespace.formatNumber(size / 1048576, 2, '.', '') + ' MiB';
-    } else if (size >= 1024) {
-      return UtilNamespace.formatNumber(size / 1024, 0) + ' KiB';
+    const KIBIBYTE = 1024;
+    const MEBIBYTE = 1048576;
+    const GIBIBYTE = 1073741824;
+    if (size >= GIBIBYTE) {
+      return UtilNamespace.formatNumber(size / GIBIBYTE, 2, '.', '') + ' GiB';
+    } else if (size >= MEBIBYTE) {
+      return UtilNamespace.formatNumber(size / MEBIBYTE, 2, '.', '') + ' MiB';
+    } else if (size >= KIBIBYTE) {
+      return UtilNamespace.formatNumber(size / KIBIBYTE, 0) + ' KiB';
     } else {
       return UtilNamespace.formatNumber(size, 0) + ' bytes';
     }

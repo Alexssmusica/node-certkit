@@ -19,6 +19,7 @@ type InitializeOptions = {
 
 let cipherApi: CipherApi<AesAlgorithm['mode']>;
 
+/** Number of 32-bit words in the AES state column (FIPS 197, Nb = 4). */
 const Nb = 4;
 
 /**

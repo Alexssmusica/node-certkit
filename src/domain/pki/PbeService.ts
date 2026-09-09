@@ -514,6 +514,11 @@ export class PbeService {
      *
      * @return a ByteBuffer with the bytes derived from the password.
      */
+    /**
+     * PKCS#12 key derivation (RFC 7292 appendix B.2).
+     *
+     * Spec notation preserved: `D`, `S`, `P`, `I`, `B`, `u` (hash length), `v` (block size).
+     */
     pbe.generatePkcs12Key = function (
       password: string | null | undefined,
       salt: ByteStringBuffer,

@@ -110,6 +110,79 @@ export default tseslint.config(
     }
   },
   {
+    files: [
+      'src/domain/pki/**/*.ts',
+      'src/domain/asn1/**/*.ts',
+      'src/domain/buffer/**/*.ts',
+      'src/domain/util/**/*.ts',
+      'src/presentation/**/*.ts'
+    ],
+    rules: {
+      'id-length': [
+        'error',
+        {
+          min: 2,
+          exceptions: [
+            'i',
+            'j',
+            'k',
+            'x',
+            'y',
+            'z',
+            'n',
+            'e',
+            'd',
+            'p',
+            'q',
+            'r',
+            'a',
+            'b',
+            'c',
+            'f',
+            'g',
+            'h',
+            'm',
+            's',
+            't',
+            'u',
+            'v',
+            'w',
+            'l',
+            'C',
+            'L',
+            'O',
+            'E',
+            'D',
+            'S',
+            'P',
+            'I',
+            'B'
+          ]
+        }
+      ],
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          selector: 'variableLike',
+          format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
+          leadingUnderscore: 'allow',
+          filter: {
+            regex:
+              '^(encode_rsa_oaep|decode_rsa_oaep|bad_certificate|unknown_ca|certificate_expired|unsupported_certificate|certificate_revoked|certificate_unknown|salt_|m_|h_|sha512_256|sha512_224)$',
+            match: false
+          }
+        },
+        {
+          selector: 'parameter',
+          format: ['camelCase'],
+          leadingUnderscore: 'allow'
+        }
+      ],
+      'no-shadow': 'error',
+      '@typescript-eslint/no-shadow': 'error'
+    }
+  },
+  {
     files: ['src/domain/math/BigInteger.ts'],
     rules: {
       'prefer-const': 'off'
