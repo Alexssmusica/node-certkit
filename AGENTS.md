@@ -46,6 +46,12 @@ ESLint naming rules apply as `error` in: `src/domain/pki/`, `src/domain/asn1/`, 
 
 They are disabled in `src/domain/math/`, `src/domain/cipher/`, and `src/domain/digest/` where canonical algorithm notation applies.
 
+In cleaned directories, `id-denylist` rejects category-3 placeholders even when they satisfy `id-length` and camelCase: `rval`, `tmp`, `obj`, `msg`, `res`, `ret`, `cap`, `s2`, `b2`.
+
+Narrow `id-length` exceptions exist only where spec notation requires them: `C`/`L`/`O`/`E` in `X509Asn1.ts` (X.500 DN short names) and `D`/`S`/`P`/`I`/`B` in `PbeService.ts` (RFC 7292 appendix B.2).
+
+Naming rules are off in `tests/` so spec-mirrored vectors do not drown out real warnings.
+
 ### Safety net before merging naming changes
 
 ```bash

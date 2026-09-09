@@ -122,64 +122,56 @@ export default tseslint.config(
         'error',
         {
           min: 2,
-          exceptions: [
-            'i',
-            'j',
-            'k',
-            'x',
-            'y',
-            'z',
-            'n',
-            'e',
-            'd',
-            'p',
-            'q',
-            'r',
-            'a',
-            'b',
-            'c',
-            'f',
-            'g',
-            'h',
-            'm',
-            's',
-            't',
-            'u',
-            'v',
-            'w',
-            'l',
-            'C',
-            'L',
-            'O',
-            'E',
-            'D',
-            'S',
-            'P',
-            'I',
-            'B'
-          ]
+          exceptions: ['i', 'j', 'k', 'x', 'y', 'z', 'n', 'e', 'd', 'p', 'q', 'r', 'a', 'b', 'c', 'f', 'g', 'h', 'm', 's', 't', 'u', 'v', 'w']
         }
       ],
+      'id-denylist': ['error', 'rval', 'tmp', 'obj', 'msg', 'res', 'ret', 'cap', 's2', 'b2'],
       '@typescript-eslint/naming-convention': [
         'error',
         {
           selector: 'variableLike',
           format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
           leadingUnderscore: 'allow',
+          trailingUnderscore: 'allow',
           filter: {
             regex:
-              '^(encode_rsa_oaep|decode_rsa_oaep|bad_certificate|unknown_ca|certificate_expired|unsupported_certificate|certificate_revoked|certificate_unknown|salt_|m_|h_|sha512_256|sha512_224)$',
+              '^(encode_rsa_oaep|decode_rsa_oaep|bad_certificate|unknown_ca|certificate_expired|unsupported_certificate|certificate_revoked|certificate_unknown)$',
             match: false
           }
         },
         {
           selector: 'parameter',
           format: ['camelCase'],
-          leadingUnderscore: 'allow'
+          leadingUnderscore: 'allow',
+          trailingUnderscore: 'allow'
         }
       ],
       'no-shadow': 'error',
       '@typescript-eslint/no-shadow': 'error'
+    }
+  },
+  {
+    files: ['src/domain/pki/x509/X509Asn1.ts'],
+    rules: {
+      'id-length': [
+        'error',
+        {
+          min: 2,
+          exceptions: ['i', 'j', 'k', 'x', 'y', 'z', 'n', 'e', 'd', 'p', 'q', 'r', 'a', 'b', 'c', 'f', 'g', 'h', 'm', 's', 't', 'u', 'v', 'w', 'C', 'L', 'O', 'E']
+        }
+      ]
+    }
+  },
+  {
+    files: ['src/domain/pki/PbeService.ts'],
+    rules: {
+      'id-length': [
+        'error',
+        {
+          min: 2,
+          exceptions: ['i', 'j', 'k', 'x', 'y', 'z', 'n', 'e', 'd', 'p', 'q', 'r', 'a', 'b', 'c', 'f', 'g', 'h', 'm', 's', 't', 'u', 'v', 'w', 'D', 'S', 'P', 'I', 'B']
+        }
+      ]
     }
   },
   {
@@ -200,7 +192,12 @@ export default tseslint.config(
     rules: {
       eqeqeq: 'error',
       'prefer-template': 'error',
-      'prefer-arrow-callback': 'error'
+      'prefer-arrow-callback': 'error',
+      'id-length': 'off',
+      'id-denylist': 'off',
+      '@typescript-eslint/naming-convention': 'off',
+      'no-shadow': 'off',
+      '@typescript-eslint/no-shadow': 'off'
     }
   }
 );
