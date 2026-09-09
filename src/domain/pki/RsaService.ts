@@ -102,38 +102,38 @@ export class RsaService {
     const self = this;
     return {
       privateKeyFromPem(pem: string) {
-        const msg = PemCodec.decode(pem)[0]!;
-        if (msg.type !== 'PRIVATE KEY' && msg.type !== 'RSA PRIVATE KEY') {
+        const pemMessage = PemCodec.decode(pem)[0]!;
+        if (pemMessage.type !== 'PRIVATE KEY' && pemMessage.type !== 'RSA PRIVATE KEY') {
           const error = new Error(
             'Could not convert private key from PEM; PEM header type is not "PRIVATE KEY" or "RSA PRIVATE KEY".'
           ) as Error & {
             headerType?: string;
           };
-          error.headerType = msg.type;
+          error.headerType = pemMessage.type;
           throw error;
         }
-        if (msg.procType?.type === 'ENCRYPTED') {
+        if (pemMessage.procType?.type === 'ENCRYPTED') {
           throw new Error('Could not convert private key from PEM; PEM is encrypted.');
         }
-        const obj = self.#asn1.fromDer(msg.body, {});
-        return self.privateKeyFromAsn1(obj);
+        const asn1Object = self.#asn1.fromDer(pemMessage.body, {});
+        return self.privateKeyFromAsn1(asn1Object);
       },
       publicKeyFromPem(pem: string) {
-        const msg = PemCodec.decode(pem)[0]!;
-        if (msg.type !== 'PUBLIC KEY' && msg.type !== 'RSA PUBLIC KEY') {
+        const pemMessage = PemCodec.decode(pem)[0]!;
+        if (pemMessage.type !== 'PUBLIC KEY' && pemMessage.type !== 'RSA PUBLIC KEY') {
           const error = new Error(
             'Could not convert public key from PEM; PEM header type is not "PUBLIC KEY" or "RSA PUBLIC KEY".'
           ) as Error & {
             headerType?: string;
           };
-          error.headerType = msg.type;
+          error.headerType = pemMessage.type;
           throw error;
         }
-        if (msg.procType?.type === 'ENCRYPTED') {
+        if (pemMessage.procType?.type === 'ENCRYPTED') {
           throw new Error('Could not convert public key from PEM; PEM is encrypted.');
         }
-        const obj = self.#asn1.fromDer(msg.body, {});
-        return self.publicKeyFromAsn1(obj);
+        const asn1Object = self.#asn1.fromDer(pemMessage.body, {});
+        return self.publicKeyFromAsn1(asn1Object);
       }
     };
   }
@@ -438,13 +438,13 @@ export class RsaService {
         schemeObj = {
           verify(dig, d) {
             d = service.#decodePkcs1v15(d, key, true, undefined, verifyOptions);
-            const obj = service.#asn1.fromDer(d, { parseAllBytes: verifyOptions._parseAllDigestBytes });
+            const asn1Object = service.#asn1.fromDer(d, { parseAllBytes: verifyOptions._parseAllDigestBytes });
             const capture: Record<string, string> = {};
             const errors: string[] = [];
             if (
-              !service.#asn1.validate(obj, service.digestInfoValidator, capture, errors) ||
-              !Array.isArray((obj as Asn1Object).value) ||
-              ((obj as Asn1Object).value as Asn1Object[]).length !== 2
+              !service.#asn1.validate(asn1Object, service.digestInfoValidator, capture, errors) ||
+              !Array.isArray((asn1Object as Asn1Object).value) ||
+              ((asn1Object as Asn1Object).value as Asn1Object[]).length !== 2
             ) {
               const error = new Error(
                 'ASN.1 object does not contain a valid RSASSA-PKCS1-v1_5 DigestInfo value.'
@@ -874,9 +874,9 @@ export class RsaService {
       state.q = num;
 
       if ((state.p as BigInteger).compareTo(state.q as BigInteger) < 0) {
-        const tmp = state.p;
+        const swappedPrime = state.p;
         state.p = state.q;
-        state.q = tmp;
+        state.q = swappedPrime;
       }
 
       if (
@@ -1011,8 +1011,8 @@ export class RsaService {
       obj = capture.rsaPublicKey as Asn1Object;
     }
 
-    const cap: Record<string, string> = {};
-    if (!asn1.validate(obj, this.rsaPublicKeyValidator, cap, errors)) {
+    const rsaKeyCapture: Record<string, string> = {};
+    if (!asn1.validate(obj, this.rsaPublicKeyValidator, rsaKeyCapture, errors)) {
       const error = new Error('Cannot read public key. ASN.1 object does not contain an RSAPublicKey.') as Error & {
         errors?: string[];
       };
@@ -1021,8 +1021,8 @@ export class RsaService {
     }
 
     return this.setPublicKey(
-      new BigInteger(new ByteStringBuffer(cap.publicKeyModulus!).toHex(), 16),
-      new BigInteger(new ByteStringBuffer(cap.publicKeyExponent!).toHex(), 16)
+      new BigInteger(new ByteStringBuffer(rsaKeyCapture.publicKeyModulus!).toHex(), 16),
+      new BigInteger(new ByteStringBuffer(rsaKeyCapture.publicKeyExponent!).toHex(), 16)
     );
   }
 

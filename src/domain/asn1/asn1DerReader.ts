@@ -17,22 +17,22 @@ export function getValueLength(bytes: ByteStringBuffer, remaining: number): numb
   // TODO: move this function and related DER/BER functions to a der.js
   // file; better abstract ASN.1 away from der/ber.
   // fromDer already checked that this byte exists
-  const b2 = bytes.getByte();
+  const lengthOctet = bytes.getByte();
   remaining--;
-  if (b2 === 0x80) {
+  if (lengthOctet === 0x80) {
     return undefined;
   }
 
   // see if the length is "short form" or "long form" (bit 8 set)
   let length;
-  const longForm = b2 & 0x80;
+  const longForm = lengthOctet & 0x80;
   if (!longForm) {
     // length is just the first byte
-    length = b2;
+    length = lengthOctet;
   } else {
     // the number of bytes the length is specified in bits 7 through 1
     // and each length byte is in big-endian base-256
-    const longFormBytes = b2 & 0x7f;
+    const longFormBytes = lengthOctet & 0x7f;
     checkBufferLength(bytes, remaining, longFormBytes);
     length = bytes.getInt(longFormBytes << 3);
   }

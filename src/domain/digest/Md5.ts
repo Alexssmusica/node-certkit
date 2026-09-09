@@ -125,18 +125,18 @@ export class Md5 {
       finalBlock.putInt32Le(bits >>> 0);
     }
 
-    const s2 = {
+    const finalState = {
       h0: this.#state!.h0,
       h1: this.#state!.h1,
       h2: this.#state!.h2,
       h3: this.#state!.h3
     };
-    Md5.#updateState(s2, this.#w, finalBlock);
+    Md5.#updateState(finalState, this.#w, finalBlock);
     const digestBuffer = new ByteStringBuffer();
-    digestBuffer.putInt32Le(s2.h0);
-    digestBuffer.putInt32Le(s2.h1);
-    digestBuffer.putInt32Le(s2.h2);
-    digestBuffer.putInt32Le(s2.h3);
+    digestBuffer.putInt32Le(finalState.h0);
+    digestBuffer.putInt32Le(finalState.h1);
+    digestBuffer.putInt32Le(finalState.h2);
+    digestBuffer.putInt32Le(finalState.h3);
     return digestBuffer;
   }
 

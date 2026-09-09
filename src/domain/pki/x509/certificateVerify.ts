@@ -10,8 +10,7 @@ import type {
 
 export class CertificateVerify {
   static attach(ctx: X509Runtime): void {
-    const c = ctx;
-    const pki = c.pki;
+    const pki = ctx.pki;
 
     const certificateError: CertificateErrorMap = {
       bad_certificate: 'certkit.pki.BadCertificate',
@@ -72,7 +71,7 @@ export class CertificateVerify {
 
           if (parent) {
             let parents: X509Certificate | X509Certificate[] = parent;
-            if (!c.util.isArray(parents)) {
+            if (!ctx.util.isArray(parents)) {
               parents = [parents];
             }
 
@@ -187,7 +186,7 @@ export class CertificateVerify {
           }
 
           if (ret || ret === 0) {
-            if (typeof ret === 'object' && !c.util.isArray(ret)) {
+            if (typeof ret === 'object' && !ctx.util.isArray(ret)) {
               if (ret.message) {
                 error!.message = ret.message;
               }

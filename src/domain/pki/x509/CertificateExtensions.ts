@@ -65,8 +65,8 @@ export function certificateExtensionsFromAsn1(
   for (let i = 0; i < sequences.length; ++i) {
     const extseq = sequences[i]!;
     const extensionList = extseq.value as Asn1Object[];
-    for (let ei = 0; ei < extensionList.length; ++ei) {
-      parsedExtensions.push(certificateExtensionFromAsn1(extensionList[ei]!, options));
+    for (let extensionIndex = 0; extensionIndex < extensionList.length; ++extensionIndex) {
+      parsedExtensions.push(certificateExtensionFromAsn1(extensionList[extensionIndex]!, options));
     }
   }
 
@@ -110,20 +110,20 @@ export function certificateExtensionFromAsn1(
     if (e.name === 'keyUsage') {
       const ev = asn1.fromDer(rawValue);
       const bits = ev.value as string;
-      let b2 = 0x00;
+      let bitStringByte2 = 0x00;
       let b3 = 0x00;
       if (bits.length > 1) {
-        b2 = bits.charCodeAt(1);
+        bitStringByte2 = bits.charCodeAt(1);
         b3 = bits.length > 2 ? bits.charCodeAt(2) : 0;
       }
-      e.digitalSignature = (b2 & 0x80) === 0x80;
-      e.nonRepudiation = (b2 & 0x40) === 0x40;
-      e.keyEncipherment = (b2 & 0x20) === 0x20;
-      e.dataEncipherment = (b2 & 0x10) === 0x10;
-      e.keyAgreement = (b2 & 0x08) === 0x08;
-      e.keyCertSign = (b2 & 0x04) === 0x04;
-      e.cRLSign = (b2 & 0x02) === 0x02;
-      e.encipherOnly = (b2 & 0x01) === 0x01;
+      e.digitalSignature = (bitStringByte2 & 0x80) === 0x80;
+      e.nonRepudiation = (bitStringByte2 & 0x40) === 0x40;
+      e.keyEncipherment = (bitStringByte2 & 0x20) === 0x20;
+      e.dataEncipherment = (bitStringByte2 & 0x10) === 0x10;
+      e.keyAgreement = (bitStringByte2 & 0x08) === 0x08;
+      e.keyCertSign = (bitStringByte2 & 0x04) === 0x04;
+      e.cRLSign = (bitStringByte2 & 0x02) === 0x02;
+      e.encipherOnly = (bitStringByte2 & 0x01) === 0x01;
       e.decipherOnly = (b3 & 0x80) === 0x80;
     } else if (e.name === 'basicConstraints') {
       const ev = asn1.fromDer(rawValue);
@@ -156,18 +156,18 @@ export function certificateExtensionFromAsn1(
     } else if (e.name === 'nsCertType') {
       const ev = asn1.fromDer(rawValue);
       const bits = ev.value as string;
-      let b2 = 0x00;
+      let bitStringByte2 = 0x00;
       if (bits.length > 1) {
-        b2 = bits.charCodeAt(1);
+        bitStringByte2 = bits.charCodeAt(1);
       }
-      e.client = (b2 & 0x80) === 0x80;
-      e.server = (b2 & 0x40) === 0x40;
-      e.email = (b2 & 0x20) === 0x20;
-      e.objsign = (b2 & 0x10) === 0x10;
-      e.reserved = (b2 & 0x08) === 0x08;
-      e.sslCA = (b2 & 0x04) === 0x04;
-      e.emailCA = (b2 & 0x02) === 0x02;
-      e.objCA = (b2 & 0x01) === 0x01;
+      e.client = (bitStringByte2 & 0x80) === 0x80;
+      e.server = (bitStringByte2 & 0x40) === 0x40;
+      e.email = (bitStringByte2 & 0x20) === 0x20;
+      e.objsign = (bitStringByte2 & 0x10) === 0x10;
+      e.reserved = (bitStringByte2 & 0x08) === 0x08;
+      e.sslCA = (bitStringByte2 & 0x04) === 0x04;
+      e.emailCA = (bitStringByte2 & 0x02) === 0x02;
+      e.objCA = (bitStringByte2 & 0x01) === 0x01;
     } else if (e.name === 'subjectAltName' || e.name === 'issuerAltName') {
       e.altNames = [];
 

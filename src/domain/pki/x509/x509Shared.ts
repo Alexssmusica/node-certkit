@@ -18,10 +18,9 @@ export type { X509Helpers } from './X509Types.js';
 
 export class X509Shared {
   static attach(ctx: X509Runtime, validators: X509Validators): X509Helpers {
-    const c = ctx;
-    const asn1 = c.asn1;
-    const oids = c.oids;
-    const pki = c.pki as CertkitPki;
+    const asn1 = ctx.asn1;
+    const oids = ctx.oids;
+    const pki = ctx.pki as CertkitPki;
 
     pki.RDNAttributesAsArray = function (rdn: Asn1Object, md?: MessageDigest) {
       const attributes: DnAttribute[] = [];
@@ -137,7 +136,7 @@ export class X509Shared {
           valueTagClass = attr.valueTagClass;
 
           if (valueTagClass === asn1.Type.UTF8) {
-            value = c.util.encodeUtf8(value as string);
+            value = ctx.util.encodeUtf8(value as string);
           }
         }
 
@@ -173,11 +172,11 @@ export class X509Shared {
         ) {
           let value = attr.value;
           if (attr.valueTagClass === asn1.Type.UTF8) {
-            value = c.util.encodeUtf8(attr.value as string);
+            value = ctx.util.encodeUtf8(attr.value as string);
           }
           if (!(attr.shortName in attributeMap)) {
             attributeMap[attr.shortName] = value;
-          } else if (c.util.isArray(attributeMap[attr.shortName])) {
+          } else if (ctx.util.isArray(attributeMap[attr.shortName])) {
             (attributeMap[attr.shortName] as unknown[]).push(value);
           } else {
             attributeMap[attr.shortName] = [attributeMap[attr.shortName], value];
@@ -190,7 +189,7 @@ export class X509Shared {
     const fillMissingExtensionFields = createFillMissingExtensionFields({
       asn1,
       oids,
-      util: c.util,
+      util: ctx.util,
       dnToAsn1
     });
 
@@ -254,9 +253,9 @@ export class X509Shared {
         {
           asn1,
           oids,
-          md: c.md,
-          pss: c.pss,
-          mgf: c.mgf
+          md: ctx.md,
+          pss: ctx.pss,
+          mgf: ctx.mgf
         },
         validators
       );
@@ -286,7 +285,7 @@ export class X509Shared {
           valueTagClass = attr.valueTagClass;
         }
         if (valueTagClass === asn1.Type.UTF8) {
-          value = c.util.encodeUtf8(value as string);
+          value = ctx.util.encodeUtf8(value as string);
         }
         let valueConstructed = false;
         if ('valueConstructed' in attr) {

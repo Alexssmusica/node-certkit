@@ -115,20 +115,20 @@ export class Sha1 {
     }
     finalBlock.putInt32(bits);
 
-    const s2 = {
+    const finalState = {
       h0: this.#state!.h0,
       h1: this.#state!.h1,
       h2: this.#state!.h2,
       h3: this.#state!.h3,
       h4: this.#state!.h4
     };
-    Sha1.#updateState(s2, this.#w, finalBlock);
+    Sha1.#updateState(finalState, this.#w, finalBlock);
     const digestBuffer = new ByteStringBuffer();
-    digestBuffer.putInt32(s2.h0);
-    digestBuffer.putInt32(s2.h1);
-    digestBuffer.putInt32(s2.h2);
-    digestBuffer.putInt32(s2.h3);
-    digestBuffer.putInt32(s2.h4);
+    digestBuffer.putInt32(finalState.h0);
+    digestBuffer.putInt32(finalState.h1);
+    digestBuffer.putInt32(finalState.h2);
+    digestBuffer.putInt32(finalState.h3);
+    digestBuffer.putInt32(finalState.h4);
     return digestBuffer;
   }
 

@@ -253,7 +253,7 @@ export class PbeService {
      */
     pkiMethods.encryptedPrivateKeyToPem = function (epki: Asn1Object, maxline?: number) {
       // convert to DER, then PEM-encode
-      const msg: PemMessage = {
+      const pemMessage: PemMessage = {
         type: 'ENCRYPTED PRIVATE KEY',
         procType: null,
         contentDomain: null,
@@ -261,7 +261,7 @@ export class PbeService {
         headers: [],
         body: asn1.toDer(epki).getBytes()
       };
-      return deps.pem.encode(msg, { maxline: maxline });
+      return deps.pem.encode(pemMessage, { maxline: maxline });
     };
 
     /**
@@ -273,21 +273,21 @@ export class PbeService {
      * @return the ASN.1 EncryptedPrivateKeyInfo.
      */
     pkiMethods.encryptedPrivateKeyFromPem = function (pem: string) {
-      const msg = deps.pem.decode(pem)[0]!;
+      const pemMessage = deps.pem.decode(pem)[0]!;
 
-      if (msg.type !== 'ENCRYPTED PRIVATE KEY') {
+      if (pemMessage.type !== 'ENCRYPTED PRIVATE KEY') {
         const error = new Error(
           'Could not convert encrypted private key from PEM; ' + 'PEM header type is "ENCRYPTED PRIVATE KEY".'
         ) as Error & { headerType?: string };
-        error.headerType = msg.type;
+        error.headerType = pemMessage.type;
         throw error;
       }
-      if (msg.procType && msg.procType.type === 'ENCRYPTED') {
+      if (pemMessage.procType && pemMessage.procType.type === 'ENCRYPTED') {
         throw new Error('Could not convert encrypted private key from PEM; ' + 'PEM is encrypted.');
       }
 
       // convert DER to ASN.1 object
-      return asn1.fromDer(msg.body);
+      return asn1.fromDer(pemMessage.body);
     };
 
     /**
@@ -382,7 +382,7 @@ export class PbeService {
       cipher.update(asn1.toDer(pki.privateKeyToAsn1!(rsaKey)));
       cipher.finish();
 
-      const msg: PemMessage = {
+      const pemMessage: PemMessage = {
         type: 'RSA PRIVATE KEY',
         procType: {
           version: '4',
@@ -396,7 +396,7 @@ export class PbeService {
         headers: [],
         body: cipher.output!.getBytes()
       };
-      return deps.pem.encode(msg);
+      return deps.pem.encode(pemMessage);
     };
 
     /**
@@ -410,21 +410,21 @@ export class PbeService {
     pkiMethods.decryptRsaPrivateKey = function (pem: string, password: string): RsaPrivateKey | null {
       let body = '';
 
-      const msg = deps.pem.decode(pem)[0]!;
+      const pemMessage = deps.pem.decode(pem)[0]!;
 
-      if (msg.type !== 'ENCRYPTED PRIVATE KEY' && msg.type !== 'PRIVATE KEY' && msg.type !== 'RSA PRIVATE KEY') {
+      if (pemMessage.type !== 'ENCRYPTED PRIVATE KEY' && pemMessage.type !== 'PRIVATE KEY' && pemMessage.type !== 'RSA PRIVATE KEY') {
         const error = new Error(
           'Could not convert private key from PEM; PEM header type ' +
             'is not "ENCRYPTED PRIVATE KEY", "PRIVATE KEY", or "RSA PRIVATE KEY".'
         ) as Error & { headerType?: string };
-        error.headerType = msg.type;
+        error.headerType = pemMessage.type;
         throw error;
       }
 
-      if (msg.procType && msg.procType.type === 'ENCRYPTED') {
+      if (pemMessage.procType && pemMessage.procType.type === 'ENCRYPTED') {
         let dkLen;
         let cipherFn;
-        switch (msg.dekInfo!.algorithm) {
+        switch (pemMessage.dekInfo!.algorithm) {
           case 'DES-CBC':
             dkLen = 8;
             cipherFn = deps.des.createDecryptionCipher;
@@ -465,30 +465,30 @@ export class PbeService {
             break;
           default: {
             const error = new Error(
-              'Could not decrypt private key; unsupported ' + 'encryption algorithm "' + msg.dekInfo!.algorithm + '".'
+              'Could not decrypt private key; unsupported ' + 'encryption algorithm "' + pemMessage.dekInfo!.algorithm + '".'
             ) as Error & { algorithm?: string };
-            error.algorithm = msg.dekInfo!.algorithm;
+            error.algorithm = pemMessage.dekInfo!.algorithm;
             throw error;
           }
         }
 
         // use OpenSSL legacy key derivation
-        const iv = deps.util.hexToBytes(msg.dekInfo!.parameters!);
+        const iv = deps.util.hexToBytes(pemMessage.dekInfo!.parameters!);
         const dk = pbe.opensslDeriveBytes!(password, iv.substr(0, 8), dkLen);
         const cipher = cipherFn(dk) as PbeDecryptCipher;
         cipher.start(iv);
-        cipher.update(deps.util.createBuffer(msg.body));
+        cipher.update(deps.util.createBuffer(pemMessage.body));
         if (cipher.finish()) {
           body = cipher.output!.getBytes();
         } else {
           return null;
         }
       } else {
-        body = msg.body;
+        body = pemMessage.body;
       }
 
       let keyObj: Asn1Object;
-      if (msg.type === 'ENCRYPTED PRIVATE KEY') {
+      if (pemMessage.type === 'ENCRYPTED PRIVATE KEY') {
         const decrypted = pkiMethods.decryptPrivateKeyInfo!(asn1.fromDer(body), password);
         if (decrypted === null) {
           return null;

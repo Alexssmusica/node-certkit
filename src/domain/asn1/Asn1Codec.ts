@@ -230,16 +230,16 @@ export class Asn1Codec {
 
     // remove undefined values
     if (isArray(value)) {
-      const tmp = [];
+      const filteredChildren = [];
       for (let i = 0; i < value.length; ++i) {
         if (value[i] !== undefined) {
-          tmp.push(value[i]);
+          filteredChildren.push(value[i]);
         }
       }
-      value = tmp;
+      value = filteredChildren;
     }
 
-    const obj: Asn1Object = {
+    const asn1Object: Asn1Object = {
       tagClass: tagClass,
       type: type,
       constructed: constructed,
@@ -248,12 +248,12 @@ export class Asn1Codec {
     };
     if (options && 'bitStringContents' in options) {
       // TODO: copy byte buffer if it's a buffer not a string
-      obj.bitStringContents = options.bitStringContents;
+      asn1Object.bitStringContents = options.bitStringContents;
       // TODO: add readonly flag to avoid this overhead
       // save copy to detect changes
-      obj.original = Asn1Codec.copy(obj) as Asn1Object;
+      asn1Object.original = Asn1Codec.copy(asn1Object) as Asn1Object;
     }
-    return obj;
+    return asn1Object;
   }
 
   /**
@@ -361,21 +361,21 @@ export class Asn1Codec {
   static getBerValueLength(b: ByteStringBuffer) {
     // TODO: move this function and related DER/BER functions to a der.js
     // file; better abstract ASN.1 away from der/ber.
-    const b2 = b.getByte();
-    if (b2 === 0x80) {
+    const lengthOctet = b.getByte();
+    if (lengthOctet === 0x80) {
       return undefined;
     }
 
     // see if the length is "short form" or "long form" (bit 8 set)
     let length;
-    const longForm = b2 & 0x80;
+    const longForm = lengthOctet & 0x80;
     if (!longForm) {
       // length is just the first byte
-      length = b2;
+      length = lengthOctet;
     } else {
       // the number of bytes the length is specified in bits 7 through 1
       // and each length byte is in big-endian base-256
-      length = b.getInt((b2 & 0x7f) << 3);
+      length = b.getInt((lengthOctet & 0x7f) << 3);
     }
     return length;
   }

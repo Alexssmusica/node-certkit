@@ -132,7 +132,7 @@ export class Sha256 {
     }
     finalBlock.putInt32(bits);
 
-    const s2 = {
+    const finalState = {
       h0: this.#state!.h0,
       h1: this.#state!.h1,
       h2: this.#state!.h2,
@@ -142,16 +142,16 @@ export class Sha256 {
       h6: this.#state!.h6,
       h7: this.#state!.h7
     };
-    Sha256.#updateState(s2, this.#w, finalBlock);
+    Sha256.#updateState(finalState, this.#w, finalBlock);
     const digestBuffer = new ByteStringBuffer();
-    digestBuffer.putInt32(s2.h0);
-    digestBuffer.putInt32(s2.h1);
-    digestBuffer.putInt32(s2.h2);
-    digestBuffer.putInt32(s2.h3);
-    digestBuffer.putInt32(s2.h4);
-    digestBuffer.putInt32(s2.h5);
-    digestBuffer.putInt32(s2.h6);
-    digestBuffer.putInt32(s2.h7);
+    digestBuffer.putInt32(finalState.h0);
+    digestBuffer.putInt32(finalState.h1);
+    digestBuffer.putInt32(finalState.h2);
+    digestBuffer.putInt32(finalState.h3);
+    digestBuffer.putInt32(finalState.h4);
+    digestBuffer.putInt32(finalState.h5);
+    digestBuffer.putInt32(finalState.h6);
+    digestBuffer.putInt32(finalState.h7);
     return digestBuffer;
   }
 

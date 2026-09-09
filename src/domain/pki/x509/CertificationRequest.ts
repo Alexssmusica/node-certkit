@@ -15,11 +15,10 @@ import type {
 } from './X509Types.js';
 
 export class CertificationRequest {
-  static attach(ctx: X509Runtime, validators: X509Validators, h: X509Helpers): void {
-    const c = ctx;
-    const asn1 = c.asn1;
-    const oids = c.oids;
-    const pki = c.pki as CertkitPki;
+  static attach(ctx: X509Runtime, validators: X509Validators, helpers: X509Helpers): void {
+    const asn1 = ctx.asn1;
+    const oids = ctx.oids;
+    const pki = ctx.pki as CertkitPki;
     const {
       getAttribute,
       readSignatureParameters,
@@ -28,7 +27,7 @@ export class CertificationRequest {
       dnToAsn1,
       fillMissingFields,
       CRIAttributesToAsn1
-    } = h;
+    } = helpers;
 
     pki.certificationRequestFromAsn1 = function (obj: Asn1Object, computeHash?: boolean) {
       const capture: Record<string, unknown> = {};
@@ -74,7 +73,7 @@ export class CertificationRequest {
         csr.md.update(bytes.getBytes());
       }
 
-      const smd = c.md.sha1.create();
+      const smd = ctx.md.sha1.create();
       csr.subject.getField = function (sn: string | AttributeLookup) {
         return getAttribute(csr.subject, sn);
       };
@@ -140,7 +139,7 @@ export class CertificationRequest {
       };
 
       csr.sign = function (key: PrivateKey, md?: MessageDigest) {
-        csr.md = md || c.md.sha1.create();
+        csr.md = md || ctx.md.sha1.create();
         const algorithmOid = oids[csr.md.algorithm + 'WithRSAEncryption'];
         if (!algorithmOid) {
           const error = new Error(

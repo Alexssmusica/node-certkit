@@ -21,11 +21,10 @@ import type {
 } from './X509Types.js';
 
 export class Certificate {
-  static attach(runtime: X509Runtime, validators: X509Validators, h: X509Helpers): void {
-    const c = runtime;
-    const asn1 = c.asn1;
-    const oids = c.oids;
-    const pki = c.pki as CertkitPki;
+  static attach(runtime: X509Runtime, validators: X509Validators, _helpers: X509Helpers): void {
+    const asn1 = runtime.asn1;
+    const oids = runtime.oids;
+    const pki = runtime.pki as CertkitPki;
     const {
       getAttribute,
       readSignatureParameters,
@@ -36,26 +35,26 @@ export class Certificate {
       fillMissingExtensionFields,
       signatureParametersToAsn1,
       dateToAsn1
-    } = h;
+    } = _helpers;
 
     pki.certificateFromPem = function (pem: string, computeHash?: boolean, strict?: boolean) {
-      const msg = c.pem.decode(pem)[0]!;
+      const pemMessage = runtime.pem.decode(pem)[0]!;
 
-      if (msg.type !== 'CERTIFICATE' && msg.type !== 'X509 CERTIFICATE' && msg.type !== 'TRUSTED CERTIFICATE') {
+      if (pemMessage.type !== 'CERTIFICATE' && pemMessage.type !== 'X509 CERTIFICATE' && pemMessage.type !== 'TRUSTED CERTIFICATE') {
         const error = new Error(
           'Could not convert certificate from PEM; PEM header type ' +
             'is not "CERTIFICATE", "X509 CERTIFICATE", or "TRUSTED CERTIFICATE".'
         ) as DerError;
-        error.headerType = msg.type;
+        error.headerType = pemMessage.type;
         throw error;
       }
-      if (msg.procType && msg.procType.type === 'ENCRYPTED') {
+      if (pemMessage.procType && pemMessage.procType.type === 'ENCRYPTED') {
         throw new Error('Could not convert certificate from PEM; PEM is encrypted.');
       }
 
-      const obj = asn1.fromDer(msg.body, strict);
+      const asn1Object = asn1.fromDer(pemMessage.body, strict);
 
-      return pki.certificateFromAsn1(obj, computeHash);
+      return pki.certificateFromAsn1(asn1Object, computeHash);
     };
 
     /**
@@ -67,11 +66,11 @@ export class Certificate {
      * @return the PEM-formatted certificate.
      */
     pki.certificateToPem = function (cert: X509Certificate, maxline?: number) {
-      const msg = {
+      const pemMessage = {
         type: 'CERTIFICATE',
         body: asn1.toDer(pki.certificateToAsn1(cert)).getBytes()
       };
-      return c.pem.encode(msg as PemMessage, { maxline: maxline });
+      return runtime.pem.encode(pemMessage as PemMessage, { maxline: maxline });
     };
 
     /**
@@ -82,22 +81,22 @@ export class Certificate {
      * @return the public key.
      */
     pki.publicKeyFromPem = function (pem: string) {
-      const msg = c.pem.decode(pem)[0];
+      const pemMessage = runtime.pem.decode(pem)[0];
 
-      if (msg.type !== 'PUBLIC KEY' && msg.type !== 'RSA PUBLIC KEY') {
+      if (pemMessage.type !== 'PUBLIC KEY' && pemMessage.type !== 'RSA PUBLIC KEY') {
         const error = new Error(
           'Could not convert public key from PEM; PEM header ' + 'type is not "PUBLIC KEY" or "RSA PUBLIC KEY".'
         ) as DerError;
-        error.headerType = msg.type;
+        error.headerType = pemMessage.type;
         throw error;
       }
-      if (msg.procType && msg.procType.type === 'ENCRYPTED') {
+      if (pemMessage.procType && pemMessage.procType.type === 'ENCRYPTED') {
         throw new Error('Could not convert public key from PEM; PEM is encrypted.');
       }
 
-      const obj = asn1.fromDer(msg.body);
+      const asn1Object = asn1.fromDer(pemMessage.body);
 
-      return pki.publicKeyFromAsn1(obj);
+      return pki.publicKeyFromAsn1(asn1Object);
     };
 
     /**
@@ -109,11 +108,11 @@ export class Certificate {
      * @return the PEM-formatted public key.
      */
     pki.publicKeyToPem = function (key: RsaPublicKey, maxline?: number) {
-      const msg = {
+      const pemMessage = {
         type: 'PUBLIC KEY',
         body: asn1.toDer(pki.publicKeyToAsn1(key)).getBytes()
       };
-      return c.pem.encode(msg as PemMessage, { maxline: maxline });
+      return runtime.pem.encode(pemMessage as PemMessage, { maxline: maxline });
     };
 
     /**
@@ -125,18 +124,18 @@ export class Certificate {
      * @return the PEM-formatted public key.
      */
     pki.publicKeyToRSAPublicKeyPem = function (key: RsaPublicKey, maxline?: number) {
-      const msg = {
+      const pemMessage = {
         type: 'RSA PUBLIC KEY',
         body: asn1.toDer(pki.publicKeyToRSAPublicKey(key)).getBytes()
       };
-      return c.pem.encode(msg as PemMessage, { maxline: maxline });
+      return runtime.pem.encode(pemMessage as PemMessage, { maxline: maxline });
     };
 
     /**
      * Gets a fingerprint for the given public key.
      *
      * @param options the options to use.
-     *          [md] the message digest object to use (defaults to c.md.sha1).
+     *          [md] the message digest object to use (defaults to runtime.md.sha1).
      *          [type] the type of fingerprint, such as 'RSAPublicKey',
      *            'SubjectPublicKeyInfo' (defaults to 'RSAPublicKey').
      *          [encoding] an alternative output encoding, such as 'hex'
@@ -156,7 +155,7 @@ export class Certificate {
     ): string;
     function getPublicKeyFingerprint(key: RsaPublicKey, options?: PublicKeyFingerprintOptions) {
       options = options || {};
-      const md = options.md || c.md.sha1.create();
+      const md = options.md || runtime.md.sha1.create();
       const type = options.type || 'RSAPublicKey';
 
       let bytes;
@@ -206,22 +205,22 @@ export class Certificate {
      * @return the certification request (CSR).
      */
     pki.certificationRequestFromPem = function (pem: string, computeHash?: boolean, strict?: boolean) {
-      const msg = c.pem.decode(pem)[0];
+      const pemMessage = runtime.pem.decode(pem)[0];
 
-      if (msg.type !== 'CERTIFICATE REQUEST') {
+      if (pemMessage.type !== 'CERTIFICATE REQUEST') {
         const error = new Error(
           'Could not convert certification request from PEM; ' + 'PEM header type is not "CERTIFICATE REQUEST".'
         ) as DerError;
-        error.headerType = msg.type;
+        error.headerType = pemMessage.type;
         throw error;
       }
-      if (msg.procType && msg.procType.type === 'ENCRYPTED') {
+      if (pemMessage.procType && pemMessage.procType.type === 'ENCRYPTED') {
         throw new Error('Could not convert certification request from PEM; ' + 'PEM is encrypted.');
       }
 
-      const obj = asn1.fromDer(msg.body, strict);
+      const asn1Object = asn1.fromDer(pemMessage.body, strict);
 
-      return pki.certificationRequestFromAsn1(obj, computeHash);
+      return pki.certificationRequestFromAsn1(asn1Object, computeHash);
     };
 
     /**
@@ -233,11 +232,11 @@ export class Certificate {
      * @return the PEM-formatted certification request.
      */
     pki.certificationRequestToPem = function (csr: X509CertificationRequest, maxline?: number) {
-      const msg = {
+      const pemMessage = {
         type: 'CERTIFICATE REQUEST',
         body: asn1.toDer(pki.certificationRequestToAsn1(csr)).getBytes()
       };
-      return c.pem.encode(msg as PemMessage, { maxline: maxline });
+      return runtime.pem.encode(pemMessage as PemMessage, { maxline: maxline });
     };
 
     /**
@@ -363,11 +362,11 @@ export class Certificate {
        * Signs this certificate using the given private key.
        *
        * @param key the private key to sign with.
-       * @param md the message digest object to use (defaults to c.md.sha1).
+       * @param md the message digest object to use (defaults to runtime.md.sha1).
        */
       cert.sign = function (key: PrivateKey, md?: MessageDigest) {
         // TODO: get signature OID from private key
-        cert.md = md || c.md.sha1.create();
+        cert.md = md || runtime.md.sha1.create();
         const algorithmOid = oids[cert.md.algorithm + 'WithRSAEncryption'];
         if (!algorithmOid) {
           const error = new Error(
@@ -507,7 +506,7 @@ export class Certificate {
           const ext = cert.extensions[i];
           if (ext.id === oid) {
             const ski = cert.generateSubjectKeyIdentifier().getBytes();
-            return c.util.hexToBytes(ext.subjectKeyIdentifier!) === ski;
+            return runtime.util.hexToBytes(ext.subjectKeyIdentifier!) === ski;
           }
         }
         return false;
@@ -551,7 +550,7 @@ export class Certificate {
       // create certificate
       const cert = pki.createCertificate();
       cert.version = capture.certVersion ? (capture.certVersion as string).charCodeAt(0) : 0;
-      const serial = c.util.createBuffer(capture.certSerialNumber as string);
+      const serial = runtime.util.createBuffer(capture.certSerialNumber as string);
       cert.serialNumber = serial.toHex();
       cert.signatureOid = asn1.derToOid(capture.certSignatureOid as string);
       cert.signatureParameters = readSignatureParameters(
@@ -613,7 +612,7 @@ export class Certificate {
       }
 
       // handle issuer, build issuer message digest
-      const imd = c.md.sha1.create();
+      const imd = runtime.md.sha1.create();
       const ibytes = asn1.toDer(capture.certIssuer as Asn1Object);
       imd.update(ibytes.getBytes());
       cert.issuer.getField = function (sn: string | AttributeLookup) {
@@ -630,7 +629,7 @@ export class Certificate {
       cert.issuer.hash = imd.digest().toHex();
 
       // handle subject, build subject message digest
-      const smd = c.md.sha1.create();
+      const smd = runtime.md.sha1.create();
       const sbytes = asn1.toDer(capture.certSubject as Asn1Object);
       smd.update(sbytes.getBytes());
       cert.subject.getField = function (sn: string | AttributeLookup) {
@@ -659,7 +658,7 @@ export class Certificate {
       return cert;
     };
 
-    const extensionOptions = { ctx: c };
+    const extensionOptions = { ctx: runtime };
 
     pki.certificateExtensionsFromAsn1 = function (exts: Asn1Object) {
       return certificateExtensionsFromAsn1(exts, extensionOptions);
@@ -694,7 +693,7 @@ export class Certificate {
           asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, asn1.integerToDer(cert.version).getBytes())
         ]),
         // serialNumber
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, c.util.hexToBytes(cert.serialNumber)),
+        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, runtime.util.hexToBytes(cert.serialNumber)),
         // signature
         asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
           // algorithm

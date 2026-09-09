@@ -86,33 +86,33 @@ export class PkiFacade {
     const asn1 = deps.asn1;
 
     pki.pemToDer = function (pem: string) {
-      const msg = deps.pem.decode(pem)[0]!;
-      if (msg.procType?.type === 'ENCRYPTED') {
+      const pemMessage = deps.pem.decode(pem)[0]!;
+      if (pemMessage.procType?.type === 'ENCRYPTED') {
         throw new Error('Could not convert PEM to DER; PEM is encrypted.');
       }
-      return deps.util.createBuffer(msg.body);
+      return deps.util.createBuffer(pemMessage.body);
     };
 
     pki.privateKeyFromPem = function (pem: string) {
-      const msg = deps.pem.decode(pem)[0]!;
-      if (msg.type !== 'PRIVATE KEY' && msg.type !== 'RSA PRIVATE KEY') {
+      const pemMessage = deps.pem.decode(pem)[0]!;
+      if (pemMessage.type !== 'PRIVATE KEY' && pemMessage.type !== 'RSA PRIVATE KEY') {
         const error = new Error(
           'Could not convert private key from PEM; PEM header type is not "PRIVATE KEY" or "RSA PRIVATE KEY".'
         ) as Error & {
           headerType?: string;
         };
-        error.headerType = msg.type;
+        error.headerType = pemMessage.type;
         throw error;
       }
-      if (msg.procType?.type === 'ENCRYPTED') {
+      if (pemMessage.procType?.type === 'ENCRYPTED') {
         throw new Error('Could not convert private key from PEM; PEM is encrypted.');
       }
-      const obj = asn1.fromDer(msg.body);
-      return pki.privateKeyFromAsn1!(obj);
+      const asn1Object = asn1.fromDer(pemMessage.body);
+      return pki.privateKeyFromAsn1!(asn1Object);
     };
 
     pki.privateKeyToPem = function (key: RsaPrivateKey, maxline?: number) {
-      const msg: PemMessage = {
+      const pemMessage: PemMessage = {
         type: 'RSA PRIVATE KEY',
         procType: null,
         contentDomain: null,
@@ -120,11 +120,11 @@ export class PkiFacade {
         headers: [],
         body: asn1.toDer(pki.privateKeyToAsn1!(key)).getBytes()
       };
-      return deps.pem.encode(msg, { maxline });
+      return deps.pem.encode(pemMessage, { maxline });
     };
 
     pki.privateKeyInfoToPem = function (keyInfo: Asn1Object, maxline?: number) {
-      const msg: PemMessage = {
+      const pemMessage: PemMessage = {
         type: 'PRIVATE KEY',
         procType: null,
         contentDomain: null,
@@ -132,7 +132,7 @@ export class PkiFacade {
         headers: [],
         body: asn1.toDer(keyInfo).getBytes()
       };
-      return deps.pem.encode(msg, { maxline });
+      return deps.pem.encode(pemMessage, { maxline });
     };
   }
 }

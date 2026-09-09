@@ -319,7 +319,7 @@ export class Pkcs12Service {
           throw error;
         }
 
-        const obj: { encrypted: boolean; safeBags: Pkcs12Bag[] } = {
+        const safeContentEntry: { encrypted: boolean; safeBags: Pkcs12Bag[] } = {
           encrypted: false,
           safeBags: []
         };
@@ -334,7 +334,7 @@ export class Pkcs12Service {
             break;
           case pkiOids.encryptedData:
             safeContents = _decryptSafeContents(data, password);
-            obj.encrypted = true;
+            safeContentEntry.encrypted = true;
             break;
           default: {
             const error = new Error('Unsupported PKCS#12 contentType.') as Error & { contentType?: string };
@@ -343,8 +343,8 @@ export class Pkcs12Service {
           }
         }
 
-        obj.safeBags = _decodeSafeContents(safeContents!, strict, password);
-        pfx.safeContents.push(obj);
+        safeContentEntry.safeBags = _decodeSafeContents(safeContents!, strict, password);
+        pfx.safeContents.push(safeContentEntry);
       }
     }
 

@@ -4,11 +4,10 @@ import type { X509Helpers } from './X509Types.js';
 import type { DistinguishedName, X509CaStore, X509Certificate } from './X509Types.js';
 
 export class CaStore {
-  static attach(ctx: X509Runtime, h: X509Helpers): void {
-    const c = ctx;
-    const asn1 = c.asn1;
-    const pki = c.pki as CertkitPki;
-    const dnToAsn1 = h.dnToAsn1;
+  static attach(ctx: X509Runtime, helpers: X509Helpers): void {
+    const asn1 = ctx.asn1;
+    const pki = ctx.pki as CertkitPki;
+    const dnToAsn1 = helpers.dnToAsn1;
 
     pki.createCaStore = function (certs?: Array<X509Certificate | string>): X509CaStore {
       const caStore = {
@@ -16,7 +15,7 @@ export class CaStore {
       } as X509CaStore;
 
       caStore.getIssuer = function (cert: X509Certificate) {
-        return CaStore.#getBySubject(caStore, cert.issuer, c, pki, dnToAsn1);
+        return CaStore.#getBySubject(caStore, cert.issuer, ctx, pki, dnToAsn1);
       };
 
       caStore.addCertificate = function (cert: X509Certificate | string) {
@@ -24,17 +23,17 @@ export class CaStore {
           cert = pki.certificateFromPem(cert);
         }
 
-        CaStore.#ensureSubjectHasHash(cert.subject, c, pki, dnToAsn1);
+        CaStore.#ensureSubjectHasHash(cert.subject, ctx, pki, dnToAsn1);
 
         if (!caStore.hasCertificate(cert)) {
           const hash = cert.subject.hash!;
           if (hash in caStore.certs) {
-            let tmp = caStore.certs[hash];
-            if (!c.util.isArray(tmp)) {
-              tmp = [tmp as X509Certificate];
+            let existingCerts = caStore.certs[hash];
+            if (!ctx.util.isArray(existingCerts)) {
+              existingCerts = [existingCerts as X509Certificate];
             }
-            (tmp as X509Certificate[]).push(cert);
-            caStore.certs[hash] = tmp;
+            (existingCerts as X509Certificate[]).push(cert);
+            caStore.certs[hash] = existingCerts;
           } else {
             caStore.certs[hash] = cert;
           }
@@ -46,11 +45,11 @@ export class CaStore {
           cert = pki.certificateFromPem(cert);
         }
 
-        let match = CaStore.#getBySubject(caStore, cert.subject, c, pki, dnToAsn1);
+        let match = CaStore.#getBySubject(caStore, cert.subject, ctx, pki, dnToAsn1);
         if (!match) {
           return false;
         }
-        if (!c.util.isArray(match)) {
+        if (!ctx.util.isArray(match)) {
           match = [match as X509Certificate];
         }
         const matchArr = match as X509Certificate[];
@@ -70,7 +69,7 @@ export class CaStore {
         for (const hash in caStore.certs) {
           if (Object.prototype.hasOwnProperty.call(caStore.certs, hash)) {
             const value = caStore.certs[hash]!;
-            if (!c.util.isArray(value)) {
+            if (!ctx.util.isArray(value)) {
               certList.push(value as X509Certificate);
             } else {
               for (let i = 0; i < (value as X509Certificate[]).length; ++i) {
@@ -89,14 +88,14 @@ export class CaStore {
         if (typeof cert === 'string') {
           cert = pki.certificateFromPem(cert);
         }
-        CaStore.#ensureSubjectHasHash(cert.subject, c, pki, dnToAsn1);
+        CaStore.#ensureSubjectHasHash(cert.subject, ctx, pki, dnToAsn1);
         if (!caStore.hasCertificate(cert)) {
           return null;
         }
 
-        const match = CaStore.#getBySubject(caStore, cert.subject, c, pki, dnToAsn1);
+        const match = CaStore.#getBySubject(caStore, cert.subject, ctx, pki, dnToAsn1);
 
-        if (!c.util.isArray(match)) {
+        if (!ctx.util.isArray(match)) {
           result = caStore.certs[cert.subject.hash!] as X509Certificate;
           delete caStore.certs[cert.subject.hash!];
           return result;
