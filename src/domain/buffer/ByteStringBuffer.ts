@@ -162,68 +162,68 @@ export class ByteStringBuffer {
     if (this.strictReads && this.read + 2 > this.data.length) {
       throw new RangeError('ByteStringBuffer read past end of buffer.');
     }
-    const rval = (this.data.charCodeAt(this.read) << 8) ^ this.data.charCodeAt(this.read + 1);
+    const value = (this.data.charCodeAt(this.read) << 8) ^ this.data.charCodeAt(this.read + 1);
     this.read += 2;
-    return rval;
+    return value;
   }
 
   getInt24(): number {
     if (this.strictReads && this.read + 3 > this.data.length) {
       throw new RangeError('ByteStringBuffer read past end of buffer.');
     }
-    const rval =
+    const value =
       (this.data.charCodeAt(this.read) << 16) ^
       (this.data.charCodeAt(this.read + 1) << 8) ^
       this.data.charCodeAt(this.read + 2);
     this.read += 3;
-    return rval;
+    return value;
   }
 
   getInt32(): number {
     if (this.strictReads && this.read + 4 > this.data.length) {
       throw new RangeError('ByteStringBuffer read past end of buffer.');
     }
-    const rval =
+    const value =
       (this.data.charCodeAt(this.read) << 24) ^
       (this.data.charCodeAt(this.read + 1) << 16) ^
       (this.data.charCodeAt(this.read + 2) << 8) ^
       this.data.charCodeAt(this.read + 3);
     this.read += 4;
-    return rval;
+    return value;
   }
 
   getInt16Le(): number {
     if (this.strictReads && this.read + 2 > this.data.length) {
       throw new RangeError('ByteStringBuffer read past end of buffer.');
     }
-    const rval = this.data.charCodeAt(this.read) ^ (this.data.charCodeAt(this.read + 1) << 8);
+    const value = this.data.charCodeAt(this.read) ^ (this.data.charCodeAt(this.read + 1) << 8);
     this.read += 2;
-    return rval;
+    return value;
   }
 
   getInt24Le(): number {
     if (this.strictReads && this.read + 3 > this.data.length) {
       throw new RangeError('ByteStringBuffer read past end of buffer.');
     }
-    const rval =
+    const value =
       this.data.charCodeAt(this.read) ^
       (this.data.charCodeAt(this.read + 1) << 8) ^
       (this.data.charCodeAt(this.read + 2) << 16);
     this.read += 3;
-    return rval;
+    return value;
   }
 
   getInt32Le(): number {
     if (this.strictReads && this.read + 4 > this.data.length) {
       throw new RangeError('ByteStringBuffer read past end of buffer.');
     }
-    const rval =
+    const value =
       this.data.charCodeAt(this.read) ^
       (this.data.charCodeAt(this.read + 1) << 8) ^
       (this.data.charCodeAt(this.read + 2) << 16) ^
       (this.data.charCodeAt(this.read + 3) << 24);
     this.read += 4;
-    return rval;
+    return value;
   }
 
   getInt(n: number): number {
@@ -232,12 +232,12 @@ export class ByteStringBuffer {
     if (this.strictReads && this.read + byteCount > this.data.length) {
       throw new RangeError('ByteStringBuffer read past end of buffer.');
     }
-    let rval = 0;
+    let value = 0;
     do {
-      rval = (rval << 8) + this.data.charCodeAt(this.read++);
+      value = (value << 8) + this.data.charCodeAt(this.read++);
       n -= 8;
     } while (n > 0);
-    return rval;
+    return value;
   }
 
   getSignedInt(n: number): number {
@@ -250,18 +250,18 @@ export class ByteStringBuffer {
   }
 
   getBytes(count?: number | null): string {
-    let rval: string;
+    let value: string;
     if (count) {
       count = Math.min(this.length(), count);
-      rval = this.data.slice(this.read, this.read + count);
+      value = this.data.slice(this.read, this.read + count);
       this.read += count;
     } else if (count === 0) {
-      rval = '';
+      value = '';
     } else {
-      rval = this.read === 0 ? this.data : this.data.slice(this.read);
+      value = this.read === 0 ? this.data : this.data.slice(this.read);
       this.clear();
     }
-    return rval;
+    return value;
   }
 
   bytes(count?: number): string {
@@ -312,15 +312,15 @@ export class ByteStringBuffer {
   }
 
   toHex(): string {
-    let rval = '';
+    let value = '';
     for (let i = this.read; i < this.data.length; ++i) {
       const b = this.data.charCodeAt(i);
       if (b < 16) {
-        rval += '0';
+        value += '0';
       }
-      rval += b.toString(16);
+      value += b.toString(16);
     }
-    return rval;
+    return value;
   }
 
   toString(): string {

@@ -7,7 +7,7 @@ export class PemCodec {
 
   static encode(msg: PemMessage, options?: PemEncodeOptions): string {
     options = options || {};
-    let rval = '-----BEGIN ' + msg.type + '-----\r\n';
+    let pemText = '-----BEGIN ' + msg.type + '-----\r\n';
 
     let header: PemHeader;
     if (msg.procType) {
@@ -15,33 +15,33 @@ export class PemCodec {
         name: 'Proc-Type',
         values: [String(msg.procType.version), msg.procType.type]
       };
-      rval += PemCodec.foldHeader(header);
+      pemText += PemCodec.foldHeader(header);
     }
     if (msg.contentDomain) {
       header = { name: 'Content-Domain', values: [msg.contentDomain] };
-      rval += PemCodec.foldHeader(header);
+      pemText += PemCodec.foldHeader(header);
     }
     if (msg.dekInfo) {
       header = { name: 'DEK-Info', values: [msg.dekInfo.algorithm] };
       if (msg.dekInfo.parameters) {
         header.values.push(msg.dekInfo.parameters);
       }
-      rval += PemCodec.foldHeader(header);
+      pemText += PemCodec.foldHeader(header);
     }
 
     if (msg.headers) {
       for (let i = 0; i < msg.headers.length; ++i) {
-        rval += PemCodec.foldHeader(msg.headers[i]!);
+        pemText += PemCodec.foldHeader(msg.headers[i]!);
       }
     }
 
     if (msg.procType) {
-      rval += '\r\n';
+      pemText += '\r\n';
     }
 
-    rval += Base64Codec.encodeString(msg.body, options.maxline || 64) + '\r\n';
-    rval += '-----END ' + msg.type + '-----\r\n';
-    return rval;
+    pemText += Base64Codec.encodeString(msg.body, options.maxline || 64) + '\r\n';
+    pemText += '-----END ' + msg.type + '-----\r\n';
+    return pemText;
   }
 
   static decode(str: string): PemMessage[] {
@@ -49,7 +49,7 @@ export class PemCodec {
       throw new Error('PEM input exceeds maximum allowed size.');
     }
 
-    const rval: PemMessage[] = [];
+    const pemMessages: PemMessage[] = [];
     const BEGIN_MARKER = '-----BEGIN ';
     const END_PREFIX = '-----END ';
     let pos = 0;
@@ -111,7 +111,7 @@ export class PemCodec {
         headers: [],
         body: Base64Codec.decodeString(bodyPart)
       };
-      rval.push(msg);
+      pemMessages.push(msg);
 
       if (headerPart.length > 0) {
         PemCodec.parseHeaders(msg, headerPart);
@@ -120,11 +120,11 @@ export class PemCodec {
       pos = endIdx + endMarker.length;
     }
 
-    if (rval.length === 0) {
+    if (pemMessages.length === 0) {
       throw new Error('Invalid PEM formatted message.');
     }
 
-    return rval;
+    return pemMessages;
   }
 
   private static parseHeaders(msg: PemMessage, headerPart: string): void {
@@ -191,7 +191,7 @@ export class PemCodec {
   }
 
   private static foldHeader(header: PemHeader): string {
-    let rval = header.name + ': ';
+    let headerLine = header.name + ': ';
 
     const values: string[] = [];
     const insertSpace = (_match: string, $1: string) => {
@@ -200,28 +200,28 @@ export class PemCodec {
     for (let i = 0; i < header.values.length; ++i) {
       values.push(header.values[i]!.replace(/^(\S+\r\n)/, insertSpace));
     }
-    rval += values.join(',') + '\r\n';
+    headerLine += values.join(',') + '\r\n';
 
     let length = 0;
     let candidate = -1;
-    for (let i = 0; i < rval.length; ++i, ++length) {
+    for (let i = 0; i < headerLine.length; ++i, ++length) {
       if (length > 65 && candidate !== -1) {
-        const insert = rval[candidate];
+        const insert = headerLine[candidate];
         if (insert === ',') {
           ++candidate;
-          rval = rval.substr(0, candidate) + '\r\n ' + rval.substr(candidate);
+          headerLine = headerLine.substr(0, candidate) + '\r\n ' + headerLine.substr(candidate);
         } else {
-          rval = rval.substr(0, candidate) + '\r\n' + insert + rval.substr(candidate + 1);
+          headerLine = headerLine.substr(0, candidate) + '\r\n' + insert + headerLine.substr(candidate + 1);
         }
         length = i - candidate - 1;
         candidate = -1;
         ++i;
-      } else if (rval[i] === ' ' || rval[i] === '\t' || rval[i] === ',') {
+      } else if (headerLine[i] === ' ' || headerLine[i] === '\t' || headerLine[i] === ',') {
         candidate = i;
       }
     }
 
-    return rval;
+    return headerLine;
   }
 
   private static ltrim(str: string): string {

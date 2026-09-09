@@ -192,7 +192,7 @@ export class GcmMode {
   }
 
   afterFinish(output: ByteStringBuffer, options: PadOptions): boolean {
-    let rval = true;
+    let isValid = true;
 
     if (options.decrypt && options.overflow) {
       output.truncate(this.blockSize - options.overflow);
@@ -212,10 +212,10 @@ export class GcmMode {
 
     if (options.decrypt && !constantTimeEquals(this.tag.bytes(), this._tag!)) {
       output.clear();
-      rval = false;
+      isValid = false;
     }
 
-    return rval;
+    return isValid;
   }
 
   multiply(x: number[], y: number[]): number[] {

@@ -822,7 +822,7 @@ export class Asn1Codec {
       return date;
     }
 
-    let rval = '';
+    let formattedTime = '';
 
     // create format YYMMDDhhmmssZ
     const format = [];
@@ -836,13 +836,13 @@ export class Asn1Codec {
     // ensure 2 digits are used for each format entry
     for (let i = 0; i < format.length; ++i) {
       if (format[i].length < 2) {
-        rval += '0';
+        formattedTime += '0';
       }
-      rval += format[i];
+      formattedTime += format[i];
     }
-    rval += 'Z';
+    formattedTime += 'Z';
 
-    return rval;
+    return formattedTime;
   }
 
   /**
@@ -858,7 +858,7 @@ export class Asn1Codec {
       return date;
     }
 
-    let rval = '';
+    let formattedTime = '';
 
     // create format YYYYMMDDHHMMSSZ
     const format = [];
@@ -872,13 +872,13 @@ export class Asn1Codec {
     // ensure 2 digits are used for each format entry
     for (let i = 0; i < format.length; ++i) {
       if (format[i].length < 2) {
-        rval += '0';
+        formattedTime += '0';
       }
-      rval += format[i];
+      formattedTime += format[i];
     }
-    rval += 'Z';
+    formattedTime += 'Z';
 
-    return rval;
+    return formattedTime;
   }
 
   /**
@@ -890,18 +890,18 @@ export class Asn1Codec {
    * @return the byte buffer.
    */
   static integerToDer(x: number) {
-    const rval = new ByteStringBuffer();
+    const integerBuffer = new ByteStringBuffer();
     if (x >= -0x80 && x < 0x80) {
-      return rval.putSignedInt(x, 8);
+      return integerBuffer.putSignedInt(x, 8);
     }
     if (x >= -0x8000 && x < 0x8000) {
-      return rval.putSignedInt(x, 16);
+      return integerBuffer.putSignedInt(x, 16);
     }
     if (x >= -0x800000 && x < 0x800000) {
-      return rval.putSignedInt(x, 24);
+      return integerBuffer.putSignedInt(x, 24);
     }
     if (x >= -0x80000000 && x < 0x80000000) {
-      return rval.putSignedInt(x, 32);
+      return integerBuffer.putSignedInt(x, 32);
     }
     const error = new Error('Integer too large; max is 32-bits.') as DerError;
     error.integer = x;
@@ -959,7 +959,7 @@ export class Asn1Codec {
       }
       return false;
     }
-    let rval = false;
+    let isValid = false;
 
     // ensure tag class and type are the same if specified
     if (
@@ -968,23 +968,23 @@ export class Asn1Codec {
     ) {
       // ensure constructed flag is the same if specified
       if (obj.constructed === v.constructed || typeof v.constructed === 'undefined') {
-        rval = true;
+        isValid = true;
 
         // handle sub values
         if (v.value && isArray(v.value)) {
           let j = 0;
-          for (let i = 0; rval && i < v.value.length; ++i) {
+          for (let i = 0; isValid && i < v.value.length; ++i) {
             const schemaItem = v.value[i];
-            rval = !!schemaItem.optional;
+            isValid = !!schemaItem.optional;
 
             // current child in the object
             const objChild = (obj.value as Asn1Object[])[j];
 
             // if there is no child left to match
             if (!objChild) {
-              // if optional, ok (rval already true), else fail below
+              // if optional, ok (isValid already true), else fail below
               if (!schemaItem.optional) {
-                rval = false;
+                isValid = false;
                 if (errors) {
                   errors.push(
                     '[' +
@@ -1009,11 +1009,11 @@ export class Asn1Codec {
               // Tags do not match.
               if (schemaItem.optional) {
                 // Skip this schema element (don't consume objChild; don't call recursive validate).
-                rval = true;
+                isValid = true;
                 continue;
               } else {
                 // Required schema item mismatched - fail.
-                rval = false;
+                isValid = false;
                 if (errors) {
                   errors.push(
                     '[' +
@@ -1039,20 +1039,20 @@ export class Asn1Codec {
             if (childRval) {
               // consume this child
               ++j;
-              rval = true;
+              isValid = true;
             } else if (schemaItem.optional) {
               // validation failed but element is optional => skip schema item (don't consume child)
-              rval = true;
+              isValid = true;
             } else {
               // required item failed
-              rval = false;
+              isValid = false;
               // errors should already be populated by recursive call; keep failing
               break;
             }
           }
         }
 
-        if (rval && capture) {
+        if (isValid && capture) {
           if (v.capture) {
             capture[v.capture] = obj.value;
           }
@@ -1089,7 +1089,7 @@ export class Asn1Codec {
         errors.push('[' + v.name + '] ' + 'Expected type "' + v.type + '", got "' + obj.type + '"');
       }
     }
-    return rval;
+    return isValid;
   }
 
   /**

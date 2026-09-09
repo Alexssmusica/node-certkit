@@ -211,34 +211,34 @@ export class Rc2Cipher {
         }
       },
       finish(pad?) {
-        let rval = true;
+        let success = true;
 
         if (encrypt) {
           if (pad) {
-            rval = pad(8, _input!, !encrypt);
+            success = pad(8, _input!, !encrypt);
           } else {
             const padding = _input!.length() === 8 ? 8 : 8 - _input!.length();
             _input!.fillWithByte(padding, padding);
           }
         }
 
-        if (rval) {
+        if (success) {
           _finish = true;
           cipher.update(new ByteStringBuffer());
         }
 
         if (!encrypt) {
-          rval = _input!.length() === 0;
-          if (rval) {
+          success = _input!.length() === 0;
+          if (success) {
             if (pad) {
-              rval = pad(8, _output!, !encrypt);
+              success = pad(8, _output!, !encrypt);
             } else {
-              rval = validatePkcs7Padding(_output!, 8);
+              success = validatePkcs7Padding(_output!, 8);
             }
           }
         }
 
-        return rval;
+        return success;
       }
     };
 

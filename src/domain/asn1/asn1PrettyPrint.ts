@@ -17,12 +17,12 @@ export function prettyPrintAsn1(obj: Asn1Object, level?: number, indentation?: n
     throw new Error('ASN.1 pretty print error: Max depth exceeded.');
   }
 
-  let rval = '';
+  let output = '';
   const indentSize = indentation || 2;
 
   // start new line for deep levels
   if (indentLevel > 0) {
-    rval += '\n';
+    output += '\n';
   }
 
   // create indent
@@ -32,97 +32,97 @@ export function prettyPrintAsn1(obj: Asn1Object, level?: number, indentation?: n
   }
 
   // print class:type
-  rval += indent + 'Tag: ';
+  output += indent + 'Tag: ';
   switch (obj.tagClass) {
     case Asn1Codec.Class.UNIVERSAL:
-      rval += 'Universal:';
+      output += 'Universal:';
       break;
     case Asn1Codec.Class.APPLICATION:
-      rval += 'Application:';
+      output += 'Application:';
       break;
     case Asn1Codec.Class.CONTEXT_SPECIFIC:
-      rval += 'Context-Specific:';
+      output += 'Context-Specific:';
       break;
     case Asn1Codec.Class.PRIVATE:
-      rval += 'Private:';
+      output += 'Private:';
       break;
   }
 
   if (obj.tagClass === Asn1Codec.Class.UNIVERSAL) {
-    rval += obj.type;
+    output += obj.type;
 
     // known types
     switch (obj.type) {
       case Asn1Codec.Type.NONE:
-        rval += ' (None)';
+        output += ' (None)';
         break;
       case Asn1Codec.Type.BOOLEAN:
-        rval += ' (Boolean)';
+        output += ' (Boolean)';
         break;
       case Asn1Codec.Type.INTEGER:
-        rval += ' (Integer)';
+        output += ' (Integer)';
         break;
       case Asn1Codec.Type.BITSTRING:
-        rval += ' (Bit string)';
+        output += ' (Bit string)';
         break;
       case Asn1Codec.Type.OCTETSTRING:
-        rval += ' (Octet string)';
+        output += ' (Octet string)';
         break;
       case Asn1Codec.Type.NULL:
-        rval += ' (Null)';
+        output += ' (Null)';
         break;
       case Asn1Codec.Type.OID:
-        rval += ' (Object Identifier)';
+        output += ' (Object Identifier)';
         break;
       case Asn1Codec.Type.ODESC:
-        rval += ' (Object Descriptor)';
+        output += ' (Object Descriptor)';
         break;
       case Asn1Codec.Type.EXTERNAL:
-        rval += ' (External or Instance of)';
+        output += ' (External or Instance of)';
         break;
       case Asn1Codec.Type.REAL:
-        rval += ' (Real)';
+        output += ' (Real)';
         break;
       case Asn1Codec.Type.ENUMERATED:
-        rval += ' (Enumerated)';
+        output += ' (Enumerated)';
         break;
       case Asn1Codec.Type.EMBEDDED:
-        rval += ' (Embedded PDV)';
+        output += ' (Embedded PDV)';
         break;
       case Asn1Codec.Type.UTF8:
-        rval += ' (UTF8)';
+        output += ' (UTF8)';
         break;
       case Asn1Codec.Type.ROID:
-        rval += ' (Relative Object Identifier)';
+        output += ' (Relative Object Identifier)';
         break;
       case Asn1Codec.Type.SEQUENCE:
-        rval += ' (Sequence)';
+        output += ' (Sequence)';
         break;
       case Asn1Codec.Type.SET:
-        rval += ' (Set)';
+        output += ' (Set)';
         break;
       case Asn1Codec.Type.PRINTABLESTRING:
-        rval += ' (Printable String)';
+        output += ' (Printable String)';
         break;
       case Asn1Codec.Type.IA5STRING:
-        rval += ' (IA5String (ASCII))';
+        output += ' (IA5String (ASCII))';
         break;
       case Asn1Codec.Type.UTCTIME:
-        rval += ' (UTC time)';
+        output += ' (UTC time)';
         break;
       case Asn1Codec.Type.GENERALIZEDTIME:
-        rval += ' (Generalized time)';
+        output += ' (Generalized time)';
         break;
       case Asn1Codec.Type.BMPSTRING:
-        rval += ' (BMP String)';
+        output += ' (BMP String)';
         break;
     }
   } else {
-    rval += obj.type;
+    output += obj.type;
   }
 
-  rval += '\n';
-  rval += indent + 'Constructed: ' + obj.constructed + '\n';
+  output += '\n';
+  output += indent + 'Constructed: ' + obj.constructed + '\n';
 
   if (obj.composed) {
     let subvalues = 0;
@@ -137,65 +137,65 @@ export function prettyPrintAsn1(obj: Asn1Object, level?: number, indentation?: n
         }
       }
     }
-    rval += indent + 'Sub values: ' + subvalues + sub;
+    output += indent + 'Sub values: ' + subvalues + sub;
   } else {
-    rval += indent + 'Value: ';
+    output += indent + 'Value: ';
     const primitive = obj.value as string;
     if (obj.type === Asn1Codec.Type.OID) {
       const oid = Asn1Codec.derToOid(primitive);
-      rval += oid;
+      output += oid;
       if (pkiOids && oid in pkiOids) {
-        rval += ' (' + pkiOids[oid] + ') ';
+        output += ' (' + pkiOids[oid] + ') ';
       }
     }
     if (obj.type === Asn1Codec.Type.INTEGER) {
       try {
-        rval += Asn1Codec.derToInteger(primitive);
+        output += Asn1Codec.derToInteger(primitive);
       } catch {
-        rval += '0x' + UtilNamespace.bytesToHex(primitive);
+        output += '0x' + UtilNamespace.bytesToHex(primitive);
       }
     } else if (obj.type === Asn1Codec.Type.BITSTRING) {
       // TODO: shift bits as needed to display without padding
       if (primitive.length > 1) {
         // remove unused bits field
-        rval += '0x' + UtilNamespace.bytesToHex(primitive.slice(1));
+        output += '0x' + UtilNamespace.bytesToHex(primitive.slice(1));
       } else {
-        rval += '(none)';
+        output += '(none)';
       }
       // show unused bit count
       if (primitive.length > 0) {
         const unused = primitive.charCodeAt(0);
         if (unused == 1) {
-          rval += ' (1 unused bit shown)';
+          output += ' (1 unused bit shown)';
         } else if (unused > 1) {
-          rval += ' (' + unused + ' unused bits shown)';
+          output += ' (' + unused + ' unused bits shown)';
         }
       }
     } else if (obj.type === Asn1Codec.Type.OCTETSTRING) {
       if (!nonLatinRegex.test(primitive)) {
-        rval += '(' + primitive + ') ';
+        output += '(' + primitive + ') ';
       }
-      rval += '0x' + UtilNamespace.bytesToHex(primitive);
+      output += '0x' + UtilNamespace.bytesToHex(primitive);
     } else if (obj.type === Asn1Codec.Type.UTF8) {
       try {
-        rval += decodeUtf8(primitive);
+        output += decodeUtf8(primitive);
       } catch (e: unknown) {
         if (e instanceof Error && e.message === 'URI malformed') {
-          rval += '0x' + UtilNamespace.bytesToHex(primitive) + ' (malformed UTF8)';
+          output += '0x' + UtilNamespace.bytesToHex(primitive) + ' (malformed UTF8)';
         } else {
           throw e;
         }
       }
     } else if (obj.type === Asn1Codec.Type.PRINTABLESTRING || obj.type === Asn1Codec.Type.IA5STRING) {
-      rval += primitive;
+      output += primitive;
     } else if (nonLatinRegex.test(primitive)) {
-      rval += '0x' + UtilNamespace.bytesToHex(primitive);
+      output += '0x' + UtilNamespace.bytesToHex(primitive);
     } else if (primitive.length === 0) {
-      rval += '[null]';
+      output += '[null]';
     } else {
-      rval += primitive;
+      output += primitive;
     }
   }
 
-  return rval;
+  return output;
 }

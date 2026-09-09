@@ -143,16 +143,16 @@ export class Sha256 {
       h7: this.#state!.h7
     };
     Sha256.#updateState(s2, this.#w, finalBlock);
-    const rval = new ByteStringBuffer();
-    rval.putInt32(s2.h0);
-    rval.putInt32(s2.h1);
-    rval.putInt32(s2.h2);
-    rval.putInt32(s2.h3);
-    rval.putInt32(s2.h4);
-    rval.putInt32(s2.h5);
-    rval.putInt32(s2.h6);
-    rval.putInt32(s2.h7);
-    return rval;
+    const digestBuffer = new ByteStringBuffer();
+    digestBuffer.putInt32(s2.h0);
+    digestBuffer.putInt32(s2.h1);
+    digestBuffer.putInt32(s2.h2);
+    digestBuffer.putInt32(s2.h3);
+    digestBuffer.putInt32(s2.h4);
+    digestBuffer.putInt32(s2.h5);
+    digestBuffer.putInt32(s2.h6);
+    digestBuffer.putInt32(s2.h7);
+    return digestBuffer;
   }
 
   static #updateState(s: Sha256State, w: number[], bytes: ByteStringBuffer): void {

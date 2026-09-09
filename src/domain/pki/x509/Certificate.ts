@@ -346,17 +346,17 @@ export class Certificate {
           options = { name: options };
         }
 
-        let rval = null;
+        let foundExtension = null;
         let ext;
-        for (let i = 0; rval === null && i < cert.extensions.length; ++i) {
+        for (let i = 0; foundExtension === null && i < cert.extensions.length; ++i) {
           ext = cert.extensions[i];
           if (options.id && ext.id === options.id) {
-            rval = ext;
+            foundExtension = ext;
           } else if (options.name && ext.name === options.name) {
-            rval = ext;
+            foundExtension = ext;
           }
         }
-        return rval;
+        return foundExtension;
       };
 
       /**
@@ -396,7 +396,7 @@ export class Certificate {
        * @return true if verified, false if not.
        */
       cert.verify = function (child: X509Certificate) {
-        let rval = false;
+        let signatureValid = false;
 
         if (!cert.issued(child)) {
           const issuer = child.issuer;
@@ -426,7 +426,7 @@ export class Certificate {
         }
 
         if (md !== null) {
-          rval = verifySignature({
+          signatureValid = verifySignature({
             certificate: cert,
             subject: child,
             md: md,
@@ -434,7 +434,7 @@ export class Certificate {
           });
         }
 
-        return rval;
+        return signatureValid;
       };
 
       /**
@@ -447,29 +447,29 @@ export class Certificate {
        *         subject.
        */
       cert.isIssuer = function (parent: X509Certificate) {
-        let rval = false;
+        let issuerMatches = false;
 
         const i = cert.issuer;
         const s = parent.subject;
 
         // compare hashes if present
         if (i.hash && s.hash) {
-          rval = i.hash === s.hash;
+          issuerMatches = i.hash === s.hash;
         } else if (i.attributes.length === s.attributes.length) {
           // all attributes are the same so issuer matches subject
-          rval = true;
+          issuerMatches = true;
           let iattr, sattr;
-          for (let n = 0; rval && n < i.attributes.length; ++n) {
+          for (let n = 0; issuerMatches && n < i.attributes.length; ++n) {
             iattr = i.attributes[n];
             sattr = s.attributes[n];
             if (iattr.type !== sattr.type || iattr.value !== sattr.value) {
               // attribute mismatch
-              rval = false;
+              issuerMatches = false;
             }
           }
         }
 
-        return rval;
+        return issuerMatches;
       };
 
       /**
@@ -796,17 +796,17 @@ export class Certificate {
      */
     pki.certificateExtensionsToAsn1 = function (exts: X509Extension[]) {
       // create top-level extension container
-      const rval = asn1.create(asn1.Class.CONTEXT_SPECIFIC, 3, true, []);
+      const extensionsWrapper = asn1.create(asn1.Class.CONTEXT_SPECIFIC, 3, true, []);
 
       // create extension sequence (stores a sequence for each extension)
       const seq = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
-      (rval.value as Asn1Object[]).push(seq);
+      (extensionsWrapper.value as Asn1Object[]).push(seq);
 
       for (let i = 0; i < exts.length; ++i) {
         (seq.value as Asn1Object[]).push(pki.certificateExtensionToAsn1(exts[i]));
       }
 
-      return rval;
+      return extensionsWrapper;
     };
 
     /**

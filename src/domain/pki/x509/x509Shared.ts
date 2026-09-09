@@ -24,7 +24,7 @@ export class X509Shared {
     const pki = c.pki as CertkitPki;
 
     pki.RDNAttributesAsArray = function (rdn: Asn1Object, md?: MessageDigest) {
-      const rval: DnAttribute[] = [];
+      const attributes: DnAttribute[] = [];
 
       let set, attr, obj: DnAttribute;
       for (let si = 0; si < (rdn.value as Asn1Object[]).length; ++si) {
@@ -46,11 +46,11 @@ export class X509Shared {
             md.update(obj.type);
             md.update(obj.value);
           }
-          rval.push(obj);
+          attributes.push(obj);
         }
       }
 
-      return rval;
+      return attributes;
     };
 
     /**
@@ -60,7 +60,7 @@ export class X509Shared {
      * @param attributes the CRIAttributes to convert.
      */
     pki.CRIAttributesAsArray = function (attributes: Asn1Object[]) {
-      const rval: DnAttribute[] = [];
+      const criAttributes: DnAttribute[] = [];
 
       for (let si = 0; si < attributes.length; ++si) {
         const seq = attributes[si]!;
@@ -85,11 +85,11 @@ export class X509Shared {
               obj.extensions.push(pki.certificateExtensionFromAsn1(extValues[ei]!));
             }
           }
-          rval.push(obj);
+          criAttributes.push(obj);
         }
       }
 
-      return rval;
+      return criAttributes;
     };
 
     /**
@@ -108,23 +108,23 @@ export class X509Shared {
         options = { shortName: options };
       }
 
-      let rval: DnAttribute | null = null;
+      let foundAttribute: DnAttribute | null = null;
       let attr: DnAttribute;
-      for (let i = 0; rval === null && i < obj.attributes.length; ++i) {
+      for (let i = 0; foundAttribute === null && i < obj.attributes.length; ++i) {
         attr = obj.attributes[i]!;
         if (options!.type && options!.type === attr.type) {
-          rval = attr;
+          foundAttribute = attr;
         } else if (options!.name && options!.name === attr.name) {
-          rval = attr;
+          foundAttribute = attr;
         } else if (options!.shortName && options!.shortName === attr.shortName) {
-          rval = attr;
+          foundAttribute = attr;
         }
       }
-      return rval;
+      return foundAttribute;
     }
 
     function dnToAsn1(obj: { attributes: DnAttribute[] }) {
-      const rval = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
+      const rdnSequence = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
 
       let attr, set;
       const attrs = obj.attributes;
@@ -147,10 +147,10 @@ export class X509Shared {
             asn1.create(asn1.Class.UNIVERSAL, valueTagClass, false, value)
           ])
         ]);
-        (rval.value as Asn1Object[]).push(set);
+        (rdnSequence.value as Asn1Object[]).push(set);
       }
 
-      return rval;
+      return rdnSequence;
     }
 
     /**
@@ -162,7 +162,7 @@ export class X509Shared {
      * @return the JSON for display.
      */
     function getAttributesAsJson(attrs: DnAttribute[]) {
-      const rval: Record<string, unknown> = {};
+      const attributeMap: Record<string, unknown> = {};
       for (let i = 0; i < attrs.length; ++i) {
         const attr = attrs[i];
         if (
@@ -175,16 +175,16 @@ export class X509Shared {
           if (attr.valueTagClass === asn1.Type.UTF8) {
             value = c.util.encodeUtf8(attr.value as string);
           }
-          if (!(attr.shortName in rval)) {
-            rval[attr.shortName] = value;
-          } else if (c.util.isArray(rval[attr.shortName])) {
-            (rval[attr.shortName] as unknown[]).push(value);
+          if (!(attr.shortName in attributeMap)) {
+            attributeMap[attr.shortName] = value;
+          } else if (c.util.isArray(attributeMap[attr.shortName])) {
+            (attributeMap[attr.shortName] as unknown[]).push(value);
           } else {
-            rval[attr.shortName] = [rval[attr.shortName], value];
+            attributeMap[attr.shortName] = [attributeMap[attr.shortName], value];
           }
         }
       }
-      return rval;
+      return attributeMap;
     }
 
     const fillMissingExtensionFields = createFillMissingExtensionFields({
@@ -270,10 +270,10 @@ export class X509Shared {
      * @return the ASN.1 set of CRIAttributes.
      */
     function CRIAttributesToAsn1(csr: X509CertificationRequest) {
-      const rval = asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, []);
+      const criAttributesSet = asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, []);
 
       if (csr.attributes.length === 0) {
-        return rval;
+        return criAttributesSet;
       }
 
       const attrs = csr.attributes;
@@ -299,10 +299,10 @@ export class X509Shared {
             asn1.create(asn1.Class.UNIVERSAL, valueTagClass, valueConstructed, value)
           ])
         ]);
-        (rval.value as Asn1Object[]).push(seq);
+        (criAttributesSet.value as Asn1Object[]).push(seq);
       }
 
-      return rval;
+      return criAttributesSet;
     }
 
     const jan_1_1950 = new Date('1950-01-01T00:00:00Z');

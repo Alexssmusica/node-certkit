@@ -595,7 +595,7 @@ export class RsaService {
 
     const algorithm = options.algorithm || 'PRIMEINC';
     if (algorithm === 'PRIMEINC') {
-      const rval: KeyPairGenerationState = {
+      const generationState: KeyPairGenerationState = {
         algorithm,
         state: 0,
         bits,
@@ -610,8 +610,8 @@ export class RsaService {
         num: null,
         keys: null
       };
-      (rval.e as BigInteger).fromInt(rval.eInt as number);
-      return rval;
+      (generationState.e as BigInteger).fromInt(generationState.eInt as number);
+      return generationState;
     }
     throw new Error('Invalid key generation algorithm: ' + algorithm);
   }

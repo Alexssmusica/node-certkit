@@ -132,12 +132,12 @@ export class Md5 {
       h3: this.#state!.h3
     };
     Md5.#updateState(s2, this.#w, finalBlock);
-    const rval = new ByteStringBuffer();
-    rval.putInt32Le(s2.h0);
-    rval.putInt32Le(s2.h1);
-    rval.putInt32Le(s2.h2);
-    rval.putInt32Le(s2.h3);
-    return rval;
+    const digestBuffer = new ByteStringBuffer();
+    digestBuffer.putInt32Le(s2.h0);
+    digestBuffer.putInt32Le(s2.h1);
+    digestBuffer.putInt32Le(s2.h2);
+    digestBuffer.putInt32Le(s2.h3);
+    return digestBuffer;
   }
 
   static #updateState(s: Md5State, w: number[], bytes: ByteStringBuffer): void {

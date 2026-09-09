@@ -131,7 +131,7 @@ export class Pkcs12Service {
          *           bag type.
          */
         getBags: function (filter: Pkcs12BagsFilter) {
-          const rval: Pkcs12Bags = {};
+          const bags: Pkcs12Bags = {};
 
           let localKeyId;
           if ('localKeyId' in filter) {
@@ -142,14 +142,14 @@ export class Pkcs12Service {
 
           // filter on bagType only
           if (localKeyId === undefined && !('friendlyName' in filter) && filter.bagType) {
-            rval[filter.bagType] = _getBagsByAttribute(pfx.safeContents, null, null, filter.bagType);
+            bags[filter.bagType] = _getBagsByAttribute(pfx.safeContents, null, null, filter.bagType);
           }
 
           if (localKeyId !== undefined) {
-            rval.localKeyId = _getBagsByAttribute(pfx.safeContents, 'localKeyId', localKeyId, filter.bagType);
+            bags.localKeyId = _getBagsByAttribute(pfx.safeContents, 'localKeyId', localKeyId, filter.bagType);
           }
           if ('friendlyName' in filter) {
-            rval.friendlyName = _getBagsByAttribute(
+            bags.friendlyName = _getBagsByAttribute(
               pfx.safeContents,
               'friendlyName',
               filter.friendlyName!,
@@ -157,7 +157,7 @@ export class Pkcs12Service {
             );
           }
 
-          return rval;
+          return bags;
         },
 
         /**

@@ -60,17 +60,17 @@ export function certificateExtensionsFromAsn1(
   exts: Asn1Object,
   options?: CertificateExtensionFromAsn1Options
 ): X509Extension[] {
-  const rval: X509Extension[] = [];
+  const parsedExtensions: X509Extension[] = [];
   const sequences = exts.value as Asn1Object[];
   for (let i = 0; i < sequences.length; ++i) {
     const extseq = sequences[i]!;
-    const extensions = extseq.value as Asn1Object[];
-    for (let ei = 0; ei < extensions.length; ++ei) {
-      rval.push(certificateExtensionFromAsn1(extensions[ei]!, options));
+    const extensionList = extseq.value as Asn1Object[];
+    for (let ei = 0; ei < extensionList.length; ++ei) {
+      parsedExtensions.push(certificateExtensionFromAsn1(extensionList[ei]!, options));
     }
   }
 
-  return rval;
+  return parsedExtensions;
 }
 
 /**

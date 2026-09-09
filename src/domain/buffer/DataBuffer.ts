@@ -271,49 +271,49 @@ export class DataBuffer {
   }
 
   getInt16(): number {
-    const rval = this.data.getInt16(this.read);
+    const value = this.data.getInt16(this.read);
     this.read += 2;
-    return rval;
+    return value;
   }
 
   getInt24(): number {
-    const rval = (this.data.getInt16(this.read) << 8) ^ this.data.getInt8(this.read + 2);
+    const value = (this.data.getInt16(this.read) << 8) ^ this.data.getInt8(this.read + 2);
     this.read += 3;
-    return rval;
+    return value;
   }
 
   getInt32(): number {
-    const rval = this.data.getInt32(this.read);
+    const value = this.data.getInt32(this.read);
     this.read += 4;
-    return rval;
+    return value;
   }
 
   getInt16Le(): number {
-    const rval = this.data.getInt16(this.read, true);
+    const value = this.data.getInt16(this.read, true);
     this.read += 2;
-    return rval;
+    return value;
   }
 
   getInt24Le(): number {
-    const rval = this.data.getInt8(this.read) ^ (this.data.getInt16(this.read + 1, true) << 8);
+    const value = this.data.getInt8(this.read) ^ (this.data.getInt16(this.read + 1, true) << 8);
     this.read += 3;
-    return rval;
+    return value;
   }
 
   getInt32Le(): number {
-    const rval = this.data.getInt32(this.read, true);
+    const value = this.data.getInt32(this.read, true);
     this.read += 4;
-    return rval;
+    return value;
   }
 
   getInt(n: number): number {
     checkBitsParam(n);
-    let rval = 0;
+    let value = 0;
     do {
-      rval = (rval << 8) + this.data.getInt8(this.read++);
+      value = (value << 8) + this.data.getInt8(this.read++);
       n -= 8;
     } while (n > 0);
-    return rval;
+    return value;
   }
 
   getSignedInt(n: number): number {
@@ -327,18 +327,18 @@ export class DataBuffer {
 
   getBytes(count?: number | null): DataView | string {
     const data = this.data as DataViewWithSlice;
-    let rval: DataView | string;
+    let value: DataView | string;
     if (count) {
       count = Math.min(this.length(), count);
-      rval = data.slice(this.read, this.read + count);
+      value = data.slice(this.read, this.read + count);
       this.read += count;
     } else if (count === 0) {
-      rval = '';
+      value = '';
     } else {
-      rval = this.read === 0 ? data : data.slice(this.read);
+      value = this.read === 0 ? data : data.slice(this.read);
       this.clear();
     }
-    return rval;
+    return value;
   }
 
   bytes(count?: number): DataView {
@@ -388,15 +388,15 @@ export class DataBuffer {
   }
 
   toHex(): string {
-    let rval = '';
+    let value = '';
     for (let i = this.read; i < this.data.byteLength; ++i) {
       const b = this.data.getUint8(i);
       if (b < 16) {
-        rval += '0';
+        value += '0';
       }
-      rval += b.toString(16);
+      value += b.toString(16);
     }
-    return rval;
+    return value;
   }
 
   toString(encoding?: string): string {

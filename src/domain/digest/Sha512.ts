@@ -258,7 +258,7 @@ export class Sha512 {
 
     const h = this.#h!.map((word) => word.slice(0) as Sha512StateWord);
     Sha512.#updateState(h, this.#w, finalBlock);
-    const rval = new ByteStringBuffer();
+    const digestBuffer = new ByteStringBuffer();
     let hlen: number;
     if (this.#algorithm === 'SHA-512') {
       hlen = h.length;
@@ -268,12 +268,12 @@ export class Sha512 {
       hlen = h.length - 4;
     }
     for (let i = 0; i < hlen; ++i) {
-      rval.putInt32(h[i]![0]!);
+      digestBuffer.putInt32(h[i]![0]!);
       if (i !== hlen - 1 || this.#algorithm !== 'SHA-512/224') {
-        rval.putInt32(h[i]![1]!);
+        digestBuffer.putInt32(h[i]![1]!);
       }
     }
-    return rval;
+    return digestBuffer;
   }
 
   static #updateState(s: Sha512State, w: Sha512StateWord[], bytes: ByteStringBuffer): void {

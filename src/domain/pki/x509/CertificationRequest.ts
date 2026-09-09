@@ -159,7 +159,7 @@ export class CertificationRequest {
       };
 
       csr.verify = function () {
-        let rval = false;
+        let signatureValid = false;
 
         let md = csr.md;
         if (md === null) {
@@ -174,14 +174,14 @@ export class CertificationRequest {
         }
 
         if (md !== null) {
-          rval = verifySignature({
+          signatureValid = verifySignature({
             certificate: csr,
             md: md,
             signature: csr.signature
           });
         }
 
-        return rval;
+        return signatureValid;
       };
 
       return csr;

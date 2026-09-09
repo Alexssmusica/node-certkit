@@ -197,13 +197,13 @@ export class PbeService {
       }
 
       // EncryptedPrivateKeyInfo
-      const rval = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
+      const encryptedPrivateKeyInfo = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
         // encryptionAlgorithm
         encryptionAlgorithm,
         // encryptedData
         asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, encryptedData)
       ]);
-      return rval;
+      return encryptedPrivateKeyInfo;
     };
 
     /**
@@ -215,7 +215,7 @@ export class PbeService {
      * @return the ASN.1 PrivateKeyInfo on success, null on failure.
      */
     pkiMethods.decryptPrivateKeyInfo = function (obj: Asn1Object, password: string) {
-      let rval = null;
+      let privateKeyInfo = null;
 
       // get PBE params
       const capture: Record<string, unknown> = {};
@@ -237,10 +237,10 @@ export class PbeService {
 
       cipher.update(encrypted);
       if (cipher.finish()) {
-        rval = asn1.fromDer(cipher.output!);
+        privateKeyInfo = asn1.fromDer(cipher.output!);
       }
 
-      return rval;
+      return privateKeyInfo;
     };
 
     /**
@@ -325,9 +325,9 @@ export class PbeService {
       options = options || {};
       if (!options.legacy) {
         // encrypt PrivateKeyInfo
-        let rval = pki.wrapRsaPrivateKey!(pki.privateKeyToAsn1!(rsaKey));
-        rval = pkiMethods.encryptPrivateKeyInfo!(rval, password, options);
-        return pkiMethods.encryptedPrivateKeyToPem!(rval);
+        let encryptedKeyInfo = pki.wrapRsaPrivateKey!(pki.privateKeyToAsn1!(rsaKey));
+        encryptedKeyInfo = pkiMethods.encryptPrivateKeyInfo!(encryptedKeyInfo, password, options);
+        return pkiMethods.encryptedPrivateKeyToPem!(encryptedKeyInfo);
       }
 
       // legacy non-PKCS#8
