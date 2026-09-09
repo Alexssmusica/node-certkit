@@ -72,16 +72,16 @@ export function wireCrossNamespaceAliases(certkit: MutableCertkit): void {
       algorithms.sha384 = algorithms.sha384 || sha384;
     }
 
-    const sha512_256 = certkit.sha512.sha256;
-    if (sha512_256) {
-      md['sha512/256'] = md['sha512/256'] || sha512_256;
-      algorithms['sha512/256'] = algorithms['sha512/256'] || sha512_256;
+    const sha512Trunc256 = certkit.sha512.sha256;
+    if (sha512Trunc256) {
+      md['sha512/256'] = md['sha512/256'] || sha512Trunc256;
+      algorithms['sha512/256'] = algorithms['sha512/256'] || sha512Trunc256;
     }
 
-    const sha512_224 = certkit.sha512.sha224;
-    if (sha512_224) {
-      md['sha512/224'] = md['sha512/224'] || sha512_224;
-      algorithms['sha512/224'] = algorithms['sha512/224'] || sha512_224;
+    const sha512Trunc224 = certkit.sha512.sha224;
+    if (sha512Trunc224) {
+      md['sha512/224'] = md['sha512/224'] || sha512Trunc224;
+      algorithms['sha512/224'] = algorithms['sha512/224'] || sha512Trunc224;
     }
   }
 }

@@ -259,40 +259,40 @@ export class Asn1Codec {
   /**
    * Copies an asn1 object.
    *
-   * @param obj the asn1 object.
+   * @param asn1Object the asn1 object.
    * @param [options] copy options:
    *          [excludeBitStringContents] true to not copy bitStringContents
    *
    * @return the a copy of the asn1 object.
    */
-  static copy(obj: Asn1Value, options?: { excludeBitStringContents?: boolean }, depth = 0): Asn1Value {
+  static copy(asn1Object: Asn1Value, options?: { excludeBitStringContents?: boolean }, depth = 0): Asn1Value {
     if (depth >= Asn1Codec.maxDepth) {
       throw new Error('ASN.1 copy error: Max depth exceeded.');
     }
 
-    if (isArray(obj)) {
+    if (isArray(asn1Object)) {
       const copied: Asn1Value[] = [];
-      for (let i = 0; i < obj.length; ++i) {
-        copied.push(Asn1Codec.copy(obj[i]!, options, depth + 1));
+      for (let i = 0; i < asn1Object.length; ++i) {
+        copied.push(Asn1Codec.copy(asn1Object[i]!, options, depth + 1));
       }
       return copied as Asn1Object[];
     }
 
-    if (typeof obj === 'string') {
+    if (typeof asn1Object === 'string') {
       // TODO: copy byte buffer if it's a buffer not a string
-      return obj;
+      return asn1Object;
     }
 
     const copy: Asn1Object = {
-      tagClass: obj.tagClass,
-      type: obj.type,
-      constructed: obj.constructed,
-      composed: obj.composed,
-      value: Asn1Codec.copy(obj.value, options, depth + 1)
+      tagClass: asn1Object.tagClass,
+      type: asn1Object.type,
+      constructed: asn1Object.constructed,
+      composed: asn1Object.composed,
+      value: Asn1Codec.copy(asn1Object.value, options, depth + 1)
     };
     if (options && !options.excludeBitStringContents) {
       // TODO: copy byte buffer if it's a buffer not a string
-      copy.bitStringContents = obj.bitStringContents;
+      copy.bitStringContents = asn1Object.bitStringContents;
     }
     return copy;
   }
@@ -436,34 +436,34 @@ export class Asn1Codec {
     return value;
   }
 
-  static toDer(obj: Asn1Object, depth = 0) {
+  static toDer(asn1Object: Asn1Object, depth = 0) {
     if (depth >= Asn1Codec.maxDepth) {
       throw new Error('ASN.1 serialization error: Max depth exceeded.');
     }
     const bytes = new ByteStringBuffer();
 
     // build the first byte
-    let b1 = obj.tagClass | obj.type;
+    let b1 = asn1Object.tagClass | asn1Object.type;
 
     // for storing the ASN.1 value
     const value = new ByteStringBuffer();
 
     // use BIT STRING contents if available and data not changed
     let useBitStringContents = false;
-    if ('bitStringContents' in obj) {
+    if ('bitStringContents' in asn1Object) {
       useBitStringContents = true;
-      if (obj.original) {
-        useBitStringContents = Asn1Codec.equals(obj, obj.original);
+      if (asn1Object.original) {
+        useBitStringContents = Asn1Codec.equals(asn1Object, asn1Object.original);
       }
     }
 
     if (useBitStringContents) {
-      value.putBytes(obj.bitStringContents!);
-    } else if (obj.composed) {
+      value.putBytes(asn1Object.bitStringContents!);
+    } else if (asn1Object.composed) {
       // if composed, use each child asn1 object's DER bytes as value
       // turn on 6th bit (0x20 = 32) to indicate asn1 is constructed
       // from other asn1 objects
-      if (obj.constructed) {
+      if (asn1Object.constructed) {
         b1 |= 0x20;
       } else {
         // type is a bit string, add unused bits of 0x00
@@ -471,16 +471,16 @@ export class Asn1Codec {
       }
 
       // add all of the child DER bytes together
-      const children = obj.value as Asn1Object[];
+      const children = asn1Object.value as Asn1Object[];
       for (let i = 0; i < children.length; ++i) {
         if (children[i] !== undefined) {
           value.putBuffer(Asn1Codec.toDer(children[i]!, depth + 1));
         }
       }
     } else {
-      const primitive = obj.value as string;
+      const primitive = asn1Object.value as string;
       // use Asn1Codec.value directly
-      if (obj.type === Asn1Codec.Type.BMPSTRING) {
+      if (asn1Object.type === Asn1Codec.Type.BMPSTRING) {
         for (let i = 0; i < primitive.length; ++i) {
           value.putInt16(primitive.charCodeAt(i));
         }
@@ -489,7 +489,7 @@ export class Asn1Codec {
         // TODO: should all leading bytes be stripped vs just one?
         // .. ex '00 00 01' => '01'?
         if (
-          obj.type === Asn1Codec.Type.INTEGER &&
+          asn1Object.type === Asn1Codec.Type.INTEGER &&
           primitive.length > 1 &&
           // leading 0x00 for positive integer
           ((primitive.charCodeAt(0) === 0 && (primitive.charCodeAt(1) & 0x80) === 0) ||
@@ -945,14 +945,14 @@ export class Asn1Codec {
    * Objects in the validator may set a field 'optional' to true to indicate
    * that it isn't necessary to pass validation.
    *
-   * @param obj the ASN.1 object to validate.
+   * @param asn1Object the ASN.1 object to validate.
    * @param v the ASN.1 structure validator.
    * @param capture an optional map to capture values in.
    * @param errors an optional array for storing validation errors.
    *
    * @return true on success, false on failure.
    */
-  static validate(obj: Asn1Object, v: Asn1Validator, capture?: Record<string, unknown>, errors?: string[], depth = 0) {
+  static validate(asn1Object: Asn1Object, v: Asn1Validator, capture?: Record<string, unknown>, errors?: string[], depth = 0) {
     if (depth >= Asn1Codec.maxDepth) {
       if (errors) {
         errors.push('ASN.1 validation error: Max depth exceeded.');
@@ -963,11 +963,11 @@ export class Asn1Codec {
 
     // ensure tag class and type are the same if specified
     if (
-      (obj.tagClass === v.tagClass || typeof v.tagClass === 'undefined') &&
-      (obj.type === v.type || typeof v.type === 'undefined')
+      (asn1Object.tagClass === v.tagClass || typeof v.tagClass === 'undefined') &&
+      (asn1Object.type === v.type || typeof v.type === 'undefined')
     ) {
       // ensure constructed flag is the same if specified
-      if (obj.constructed === v.constructed || typeof v.constructed === 'undefined') {
+      if (asn1Object.constructed === v.constructed || typeof v.constructed === 'undefined') {
         isValid = true;
 
         // handle sub values
@@ -978,7 +978,7 @@ export class Asn1Codec {
             isValid = !!schemaItem.optional;
 
             // current child in the object
-            const objChild = (obj.value as Asn1Object[])[j];
+            const objChild = (asn1Object.value as Asn1Object[])[j];
 
             // if there is no child left to match
             if (!objChild) {
@@ -1054,16 +1054,16 @@ export class Asn1Codec {
 
         if (isValid && capture) {
           if (v.capture) {
-            capture[v.capture] = obj.value;
+            capture[v.capture] = asn1Object.value;
           }
           if (v.captureAsn1) {
-            capture[v.captureAsn1] = obj;
+            capture[v.captureAsn1] = asn1Object;
           }
-          if (v.captureBitStringContents && 'bitStringContents' in obj) {
-            capture[v.captureBitStringContents] = obj.bitStringContents;
+          if (v.captureBitStringContents && 'bitStringContents' in asn1Object) {
+            capture[v.captureBitStringContents] = asn1Object.bitStringContents;
           }
-          if (v.captureBitStringValue && 'bitStringContents' in obj) {
-            const bitStringContents = obj.bitStringContents!;
+          if (v.captureBitStringValue && 'bitStringContents' in asn1Object) {
+            const bitStringContents = asn1Object.bitStringContents!;
             if (bitStringContents.length < 2) {
               capture[v.captureBitStringValue] = '';
             } else {
@@ -1078,15 +1078,15 @@ export class Asn1Codec {
         }
       } else if (errors) {
         errors.push(
-          '[' + v.name + '] ' + 'Expected constructed "' + v.constructed + '", got "' + obj.constructed + '"'
+          '[' + v.name + '] ' + 'Expected constructed "' + v.constructed + '", got "' + asn1Object.constructed + '"'
         );
       }
     } else if (errors) {
-      if (obj.tagClass !== v.tagClass) {
-        errors.push('[' + v.name + '] ' + 'Expected tag class "' + v.tagClass + '", got "' + obj.tagClass + '"');
+      if (asn1Object.tagClass !== v.tagClass) {
+        errors.push('[' + v.name + '] ' + 'Expected tag class "' + v.tagClass + '", got "' + asn1Object.tagClass + '"');
       }
-      if (obj.type !== v.type) {
-        errors.push('[' + v.name + '] ' + 'Expected type "' + v.type + '", got "' + obj.type + '"');
+      if (asn1Object.type !== v.type) {
+        errors.push('[' + v.name + '] ' + 'Expected type "' + v.type + '", got "' + asn1Object.type + '"');
       }
     }
     return isValid;
@@ -1095,14 +1095,14 @@ export class Asn1Codec {
   /**
    * Pretty prints an ASN.1 object to a string.
    *
-   * @param obj the object to write out.
+   * @param asn1Object the object to write out.
    * @param level the level in the tree.
    * @param indentation the indentation to use.
    *
    * @return the string.
    */
-  static prettyPrint(obj: Asn1Object, level?: number, indentation?: number): string {
-    return prettyPrintAsn1(obj, level, indentation);
+  static prettyPrint(asn1Object: Asn1Object, level?: number, indentation?: number): string {
+    return prettyPrintAsn1(asn1Object, level, indentation);
   }
 
   static createCertkitNamespace(oids?: Record<string, string>): Asn1NamespaceObject {

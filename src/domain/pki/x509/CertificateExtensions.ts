@@ -145,8 +145,8 @@ export function certificateExtensionFromAsn1(
     } else if (e.name === 'extKeyUsage') {
       const ev = asn1.fromDer(rawValue);
       const usages = ev.value as Asn1Object[];
-      for (let vi = 0; vi < usages.length; ++vi) {
-        const oid = asn1.derToOid(usages[vi]!.value as string);
+      for (let usageIndex = 0; usageIndex < usages.length; ++usageIndex) {
+        const oid = asn1.derToOid(usages[usageIndex]!.value as string);
         if (oid in oids) {
           e[oids[oid]] = true;
         } else {

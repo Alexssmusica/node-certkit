@@ -136,7 +136,7 @@ export type EncryptPrivateKeyInfoOptions = {
 };
 
 export type CertkitPkcs12Namespace = {
-  pkcs12FromAsn1: (obj: Asn1Object, strict?: boolean | string, password?: string) => Pkcs12Pfx;
+  pkcs12FromAsn1: (pfxAsn1: Asn1Object, strict?: boolean | string, password?: string) => Pkcs12Pfx;
   toPkcs12Asn1: (
     key: RsaPrivateKey | null,
     cert: X509Certificate | X509Certificate[] | string | string[] | null,
@@ -154,15 +154,15 @@ export type CertkitPki = {
   setRsaPublicKey: CertkitRsaNamespace['setPublicKey'];
   setRsaPrivateKey: CertkitRsaNamespace['setPrivateKey'];
   wrapRsaPrivateKey: (key: Asn1Object) => Asn1Object;
-  privateKeyFromAsn1: (obj: Asn1Object) => RsaPrivateKey;
+  privateKeyFromAsn1: (asn1Object: Asn1Object) => RsaPrivateKey;
   privateKeyToAsn1: (key: RsaPrivateKey) => Asn1Object;
   privateKeyToRSAPrivateKey: (key: RsaPrivateKey) => Asn1Object;
-  publicKeyFromAsn1: (obj: Asn1Object) => RsaPublicKey;
+  publicKeyFromAsn1: (asn1Object: Asn1Object) => RsaPublicKey;
   publicKeyToAsn1: (key: RsaPublicKey) => Asn1Object;
   publicKeyToSubjectPublicKeyInfo: (key: RsaPublicKey) => Asn1Object;
   publicKeyToRSAPublicKey: (key: RsaPublicKey) => Asn1Object;
-  encryptPrivateKeyInfo: (obj: Asn1Object, password: string, options?: EncryptPrivateKeyInfoOptions) => Asn1Object;
-  decryptPrivateKeyInfo: (obj: Asn1Object, password: string) => Asn1Object | null;
+  encryptPrivateKeyInfo: (asn1Object: Asn1Object, password: string, options?: EncryptPrivateKeyInfoOptions) => Asn1Object;
+  decryptPrivateKeyInfo: (asn1Object: Asn1Object, password: string) => Asn1Object | null;
   encryptedPrivateKeyToPem: (epki: Asn1Object, maxline?: number) => string;
   encryptedPrivateKeyFromPem: (pem: string) => Asn1Object;
   encryptRsaPrivateKey: (rsaKey: RsaPrivateKey, password: string, options?: EncryptPrivateKeyInfoOptions) => string;
@@ -179,7 +179,7 @@ export type CertkitPki = {
   certificationRequestFromPem: (pem: string, computeHash?: boolean, strict?: boolean) => X509CertificationRequest;
   certificationRequestToPem: (csr: X509CertificationRequest, maxline?: number) => string;
   createCertificate: () => X509Certificate;
-  certificateFromAsn1: (obj: Asn1Object, computeHash?: boolean) => X509Certificate;
+  certificateFromAsn1: (asn1Object: Asn1Object, computeHash?: boolean) => X509Certificate;
   certificateExtensionsFromAsn1: (exts: Asn1Object) => X509Extension[];
   certificateExtensionFromAsn1: (ext: Asn1Object) => X509Extension;
   getTBSCertificate: (cert: X509Certificate) => Asn1Object;
@@ -188,7 +188,7 @@ export type CertkitPki = {
   certificateExtensionsToAsn1: (exts: X509Extension[]) => Asn1Object;
   certificateExtensionToAsn1: (ext: X509Extension) => Asn1Object;
   certificationRequestToAsn1: (csr: X509CertificationRequest) => Asn1Object;
-  certificationRequestFromAsn1: (obj: Asn1Object, computeHash?: boolean) => X509CertificationRequest;
+  certificationRequestFromAsn1: (asn1Object: Asn1Object, computeHash?: boolean) => X509CertificationRequest;
   createCertificationRequest: () => X509CertificationRequest;
   getCertificationRequestInfo: (csr: X509CertificationRequest) => Asn1Object;
   createCaStore: (certs?: Array<X509Certificate | string>) => X509CaStore;

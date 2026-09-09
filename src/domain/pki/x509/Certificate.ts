@@ -523,17 +523,17 @@ export class Certificate {
      * a certificate back to ASN.1 so the TBSCertificate part of the ASN.1
      * object needs to be scanned before the cert object is created.
      *
-     * @param obj the asn1 representation of an X.509v3 RSA certificate.
+     * @param asn1Object the asn1 representation of an X.509v3 RSA certificate.
      * @param computeHash true to compute the hash for verification.
      *
      * @return the certificate.
      */
 
-    pki.certificateFromAsn1 = function (obj: Asn1Object, computeHash?: boolean) {
+    pki.certificateFromAsn1 = function (asn1Object: Asn1Object, computeHash?: boolean) {
       // validate certificate and capture data
       const capture: Record<string, unknown> = {};
       const errors: string[] = [];
-      if (!asn1.validate(obj, validators.x509CertificateValidator, capture, errors)) {
+      if (!asn1.validate(asn1Object, validators.x509CertificateValidator, capture, errors)) {
         const error = new Error(
           'Cannot read X.509 certificate. ' + 'ASN.1 object is not an X509v3 Certificate.'
         ) as DerError;
@@ -676,7 +676,7 @@ export class Certificate {
      * a certificate back to ASN.1 so the CertificationRequestInfo part of the
      * ASN.1 object needs to be scanned before the csr object is created.
      *
-     * @param obj the asn1 representation of a PKCS#10 certification request (CSR).
+     * @param asn1Object the asn1 representation of a PKCS#10 certification request (CSR).
      * @param computeHash true to compute the hash for verification.
      *
      * @return the certification request (CSR).

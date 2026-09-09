@@ -29,10 +29,10 @@ export class CertificationRequest {
       CRIAttributesToAsn1
     } = helpers;
 
-    pki.certificationRequestFromAsn1 = function (obj: Asn1Object, computeHash?: boolean) {
+    pki.certificationRequestFromAsn1 = function (asn1Object: Asn1Object, computeHash?: boolean) {
       const capture: Record<string, unknown> = {};
       const errors: string[] = [];
-      if (!asn1.validate(obj, validators.certificationRequestValidator, capture, errors)) {
+      if (!asn1.validate(asn1Object, validators.certificationRequestValidator, capture, errors)) {
         const error = new Error(
           'Cannot read PKCS#10 certificate request. ' + 'ASN.1 object is not a PKCS#10 CertificationRequest.'
         ) as DerError;

@@ -59,7 +59,7 @@ export class PbeService {
      *   prf AlgorithmIdentifier {{PBKDF2-PRFs}} DEFAULT algid-hmacWithSHA1
      * }
      *
-     * @param obj the ASN.1 PrivateKeyInfo object.
+     * @param asn1Object the ASN.1 PrivateKeyInfo object.
      * @param password the password to encrypt with.
      * @param options:
      *          algorithm the encryption algorithm to use
@@ -72,7 +72,7 @@ export class PbeService {
      * @return the ASN.1 EncryptedPrivateKeyInfo.
      */
     pkiMethods.encryptPrivateKeyInfo = function (
-      obj: Asn1Object,
+      asn1Object: Asn1Object,
       password: string,
       options?: EncryptPrivateKeyInfoOptions
     ) {
@@ -136,7 +136,7 @@ export class PbeService {
         const iv = deps.random.getBytesSync(ivLen);
         const cipher = cipherFn(dk) as PbeDecryptCipher;
         cipher.start(iv);
-        cipher.update(asn1.toDer(obj));
+        cipher.update(asn1.toDer(asn1Object));
         cipher.finish();
         encryptedData = cipher.output!.getBytes();
 
@@ -169,7 +169,7 @@ export class PbeService {
         const iv = pbe.generatePkcs12Key!(password, saltBytes, 2, count, dkLen);
         const cipher = deps.des.createEncryptionCipher(dk) as PbeDecryptCipher;
         cipher.start(iv);
-        cipher.update(asn1.toDer(obj));
+        cipher.update(asn1.toDer(asn1Object));
         cipher.finish();
         encryptedData = cipher.output!.getBytes();
 
@@ -209,18 +209,18 @@ export class PbeService {
     /**
      * Decrypts a ASN.1 PrivateKeyInfo object.
      *
-     * @param obj the ASN.1 EncryptedPrivateKeyInfo object.
+     * @param asn1Object the ASN.1 EncryptedPrivateKeyInfo object.
      * @param password the password to decrypt with.
      *
      * @return the ASN.1 PrivateKeyInfo on success, null on failure.
      */
-    pkiMethods.decryptPrivateKeyInfo = function (obj: Asn1Object, password: string) {
+    pkiMethods.decryptPrivateKeyInfo = function (asn1Object: Asn1Object, password: string) {
       let privateKeyInfo = null;
 
       // get PBE params
       const capture: Record<string, unknown> = {};
       const errors: string[] = [];
-      if (!asn1.validate(obj, encryptedPrivateKeyValidator, capture, errors)) {
+      if (!asn1.validate(asn1Object, encryptedPrivateKeyValidator, capture, errors)) {
         const error = new Error(
           'Cannot read encrypted private key. ' + 'ASN.1 object is not a supported EncryptedPrivateKeyInfo.'
         ) as Error & { errors?: string[] };
@@ -528,7 +528,6 @@ export class PbeService {
       md?: BlockDigest
     ) {
       let digest = md as PbeMessageDigest | undefined;
-      let j, l;
 
       if (typeof digest === 'undefined' || digest === null) {
         if (!('sha1' in deps.md)) {
@@ -544,8 +543,8 @@ export class PbeService {
       /* Convert password to Unicode byte buffer + trailing 0-byte. */
       const passBuf = new deps.util.ByteBuffer();
       if (password !== null && password !== undefined) {
-        for (l = 0; l < password.length; l++) {
-          passBuf.putInt16(password.charCodeAt(l));
+        for (let byteIndex = 0; byteIndex < password.length; byteIndex++) {
+          passBuf.putInt16(password.charCodeAt(byteIndex));
         }
         passBuf.putInt16(0);
       }
@@ -565,8 +564,8 @@ export class PbeService {
         Note that if the salt is the empty string, then so is S. */
       const Slen = v * Math.ceil(s / v);
       const S = new deps.util.ByteBuffer();
-      for (l = 0; l < Slen; l++) {
-        S.putByte(salt.at(l % s));
+      for (let byteIndex = 0; byteIndex < Slen; byteIndex++) {
+        S.putByte(salt.at(byteIndex % s));
       }
 
       /* 3. Concatenate copies of the password together to create a string P of
@@ -575,8 +574,8 @@ export class PbeService {
         Note that if the password is the empty string, then so is P. */
       const Plen = v * Math.ceil(p / v);
       const P = new deps.util.ByteBuffer();
-      for (l = 0; l < Plen; l++) {
-        P.putByte(passBuf.at(l % p));
+      for (let byteIndex = 0; byteIndex < Plen; byteIndex++) {
+        P.putByte(passBuf.at(byteIndex % p));
       }
 
       /* 4. Set I=S||P to be the concatenation of S and P. */
@@ -601,8 +600,8 @@ export class PbeService {
         /* b) Concatenate copies of Ai to create a string B of length v bytes (the
           final copy of Ai may be truncated to create B). */
         const B = new deps.util.ByteBuffer();
-        for (l = 0; l < v; l++) {
-          B.putByte(buf.at(l % u));
+        for (let byteIndex = 0; byteIndex < v; byteIndex++) {
+          B.putByte(buf.at(byteIndex % u));
         }
 
         /* c) Treating I as a concatenation I0, I1, ..., Ik-1 of v-byte blocks,
@@ -610,13 +609,13 @@ export class PbeService {
           Ij=(Ij+B+1) mod 2v for each j.  */
         const k = Math.ceil(s / v) + Math.ceil(p / v);
         const Inew = new deps.util.ByteBuffer();
-        for (j = 0; j < k; j++) {
+        for (let blockIndex = 0; blockIndex < k; blockIndex++) {
           const chunk = new deps.util.ByteBuffer(I.getBytes(v));
           let x = 0x1ff;
-          for (l = B.length() - 1; l >= 0; l--) {
+          for (let byteIndex = B.length() - 1; byteIndex >= 0; byteIndex--) {
             x = x >> 8;
-            x += B.at(l) + chunk.at(l);
-            chunk.setAt(l, x & 0xff);
+            x += B.at(byteIndex) + chunk.at(byteIndex);
+            chunk.setAt(byteIndex, x & 0xff);
           }
           Inew.putBuffer(chunk);
         }

@@ -959,17 +959,17 @@ export class RsaService {
     ]);
   }
 
-  privateKeyFromAsn1(obj: Asn1Object): RsaPrivateKey {
+  privateKeyFromAsn1(asn1Object: Asn1Object): RsaPrivateKey {
     const asn1 = this.#asn1;
     let capture: Record<string, string> = {};
     let errors: string[] = [];
-    if (asn1.validate(obj, this.privateKeyValidator, capture, errors)) {
-      obj = asn1.fromDer(new ByteStringBuffer(capture.privateKey!), {}) as Asn1Object;
+    if (asn1.validate(asn1Object, this.privateKeyValidator, capture, errors)) {
+      asn1Object = asn1.fromDer(new ByteStringBuffer(capture.privateKey!), {}) as Asn1Object;
     }
 
     capture = {};
     errors = [];
-    if (!asn1.validate(obj, this.rsaPrivateKeyValidator, capture, errors)) {
+    if (!asn1.validate(asn1Object, this.rsaPrivateKeyValidator, capture, errors)) {
       const error = new Error('Cannot read private key. ASN.1 object does not contain an RSAPrivateKey.') as Error & {
         errors?: string[];
       };
@@ -1004,22 +1004,22 @@ export class RsaService {
     ]);
   }
 
-  publicKeyFromAsn1(obj: Asn1Object): RsaPublicKey {
+  publicKeyFromAsn1(asn1Object: Asn1Object): RsaPublicKey {
     const asn1 = this.#asn1;
     const capture: Record<string, unknown> = {};
     const errors: string[] = [];
-    if (asn1.validate(obj, this.publicKeyValidator, capture, errors)) {
+    if (asn1.validate(asn1Object, this.publicKeyValidator, capture, errors)) {
       const oid = asn1.derToOid(capture.publicKeyOid as string);
       if (oid !== this.#oids.rsaEncryption) {
         const error = new Error('Cannot read public key. Unknown OID.') as Error & { oid?: string };
         error.oid = oid;
         throw error;
       }
-      obj = capture.rsaPublicKey as Asn1Object;
+      asn1Object = capture.rsaPublicKey as Asn1Object;
     }
 
     const rsaKeyCapture: Record<string, string> = {};
-    if (!asn1.validate(obj, this.rsaPublicKeyValidator, rsaKeyCapture, errors)) {
+    if (!asn1.validate(asn1Object, this.rsaPublicKeyValidator, rsaKeyCapture, errors)) {
       const error = new Error('Cannot read public key. ASN.1 object does not contain an RSAPublicKey.') as Error & {
         errors?: string[];
       };

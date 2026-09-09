@@ -87,13 +87,13 @@ export class Pkcs12Service {
     /**
      * Converts a PKCS#12 PFX in ASN.1 notation into a PFX object.
      *
-     * @param obj The PKCS#12 PFX in ASN.1 notation.
+     * @param pfxAsn1 The PKCS#12 PFX in ASN.1 notation.
      * @param strict true to use strict DER decoding, false not to (default: true).
      * @param {String} password Password to decrypt with (optional).
      *
      * @return PKCS#12 PFX object.
      */
-    p12.pkcs12FromAsn1 = function (obj: Asn1Object, strict?: boolean | string, password?: string) {
+    p12.pkcs12FromAsn1 = function (pfxAsn1: Asn1Object, strict?: boolean | string, password?: string) {
       // handle args
       if (typeof strict === 'string') {
         password = strict;
@@ -105,7 +105,7 @@ export class Pkcs12Service {
       // validate PFX and capture data
       const capture: Record<string, unknown> = {};
       const errors: string[] = [];
-      if (!asn1.validate(obj, pfxValidator, capture, errors)) {
+      if (!asn1.validate(pfxAsn1, pfxValidator, capture, errors)) {
         const error = new Error('Cannot read PKCS#12 PFX. ' + 'ASN.1 object is not an PKCS#12 PFX.') as Error & {
           errors?: string[];
         };
@@ -250,7 +250,7 @@ export class Pkcs12Service {
         if (macValue.getBytes() !== (capture.macDigest as string)) {
           throw new Error('PKCS#12 MAC could not be verified. Invalid password?');
         }
-      } else if (Array.isArray(obj.value) && obj.value.length > 2) {
+      } else if (Array.isArray(pfxAsn1.value) && pfxAsn1.value.length > 2) {
         /* This is pfx data that should have mac and verify macDigest */
         throw new Error('Invalid PKCS#12. macData field present but MAC was not validated.');
       }
@@ -416,7 +416,7 @@ export class Pkcs12Service {
         throw new Error('PKCS#12 SafeContents expected to be a SEQUENCE OF SafeBag.');
       }
 
-      const res: Pkcs12Bag[] = [];
+      const bags: Pkcs12Bag[] = [];
       for (let i = 0; i < (safeContentsAsn1.value as Asn1Object[]).length; i++) {
         const safeBag = (safeContentsAsn1.value as Asn1Object[])[i]!;
 
@@ -434,7 +434,7 @@ export class Pkcs12Service {
           type: asn1.derToOid(capture.bagId as string),
           attributes: _decodeBagAttributes(capture.bagAttributes as Asn1Object[] | undefined)
         };
-        res.push(bag);
+        bags.push(bag);
 
         let validator, decoder;
         let bagAsn1 = firstAsn1Child((capture.bagValue as Asn1Object).value);
@@ -508,7 +508,7 @@ export class Pkcs12Service {
         decoder();
       }
 
-      return res;
+      return bags;
     }
 
     /**

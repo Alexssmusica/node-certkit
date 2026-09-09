@@ -45,50 +45,50 @@ export function createFillMissingExtensionFields(deps: ExtensionFillDeps): FillM
 
     if (e.name === 'keyUsage') {
       let unused = 0;
-      let b2 = 0x00;
-      let b3 = 0x00;
+      let keyUsageByte1 = 0x00;
+      let keyUsageByte2 = 0x00;
       if (e.digitalSignature) {
-        b2 |= 0x80;
+        keyUsageByte1 |= 0x80;
         unused = 7;
       }
       if (e.nonRepudiation) {
-        b2 |= 0x40;
+        keyUsageByte1 |= 0x40;
         unused = 6;
       }
       if (e.keyEncipherment) {
-        b2 |= 0x20;
+        keyUsageByte1 |= 0x20;
         unused = 5;
       }
       if (e.dataEncipherment) {
-        b2 |= 0x10;
+        keyUsageByte1 |= 0x10;
         unused = 4;
       }
       if (e.keyAgreement) {
-        b2 |= 0x08;
+        keyUsageByte1 |= 0x08;
         unused = 3;
       }
       if (e.keyCertSign) {
-        b2 |= 0x04;
+        keyUsageByte1 |= 0x04;
         unused = 2;
       }
       if (e.cRLSign) {
-        b2 |= 0x02;
+        keyUsageByte1 |= 0x02;
         unused = 1;
       }
       if (e.encipherOnly) {
-        b2 |= 0x01;
+        keyUsageByte1 |= 0x01;
         unused = 0;
       }
       if (e.decipherOnly) {
-        b3 |= 0x80;
+        keyUsageByte2 |= 0x80;
         unused = 7;
       }
 
       let value = String.fromCharCode(unused);
-      if (b3 !== 0) {
-        value += String.fromCharCode(b2) + String.fromCharCode(b3);
-      } else if (b2 !== 0) {
-        value += String.fromCharCode(b2);
+      if (keyUsageByte2 !== 0) {
+        value += String.fromCharCode(keyUsageByte1) + String.fromCharCode(keyUsageByte2);
+      } else if (keyUsageByte1 !== 0) {
+        value += String.fromCharCode(keyUsageByte1);
       }
       e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false, value);
     } else if (e.name === 'basicConstraints') {
@@ -122,44 +122,44 @@ export function createFillMissingExtensionFields(deps: ExtensionFillDeps): FillM
       }
     } else if (e.name === 'nsCertType') {
       let unused = 0;
-      let b2 = 0x00;
+      let certTypeByte = 0x00;
 
       if (e.client) {
-        b2 |= 0x80;
+        certTypeByte |= 0x80;
         unused = 7;
       }
       if (e.server) {
-        b2 |= 0x40;
+        certTypeByte |= 0x40;
         unused = 6;
       }
       if (e.email) {
-        b2 |= 0x20;
+        certTypeByte |= 0x20;
         unused = 5;
       }
       if (e.objsign) {
-        b2 |= 0x10;
+        certTypeByte |= 0x10;
         unused = 4;
       }
       if (e.reserved) {
-        b2 |= 0x08;
+        certTypeByte |= 0x08;
         unused = 3;
       }
       if (e.sslCA) {
-        b2 |= 0x04;
+        certTypeByte |= 0x04;
         unused = 2;
       }
       if (e.emailCA) {
-        b2 |= 0x02;
+        certTypeByte |= 0x02;
         unused = 1;
       }
       if (e.objCA) {
-        b2 |= 0x01;
+        certTypeByte |= 0x01;
         unused = 0;
       }
 
       let value = String.fromCharCode(unused);
-      if (b2 !== 0) {
-        value += String.fromCharCode(b2);
+      if (certTypeByte !== 0) {
+        value += String.fromCharCode(certTypeByte);
       }
       e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false, value);
     } else if (e.name === 'subjectAltName' || e.name === 'issuerAltName') {

@@ -11,7 +11,7 @@ export function setPrettyPrintPkiOids(oids?: Record<string, string>): void {
   pkiOids = oids;
 }
 
-export function prettyPrintAsn1(obj: Asn1Object, level?: number, indentation?: number): string {
+export function prettyPrintAsn1(asn1Object: Asn1Object, level?: number, indentation?: number): string {
   const indentLevel = level || 0;
   if (indentLevel >= Asn1Codec.maxDepth) {
     throw new Error('ASN.1 pretty print error: Max depth exceeded.');
@@ -33,7 +33,7 @@ export function prettyPrintAsn1(obj: Asn1Object, level?: number, indentation?: n
 
   // print class:type
   output += indent + 'Tag: ';
-  switch (obj.tagClass) {
+  switch (asn1Object.tagClass) {
     case Asn1Codec.Class.UNIVERSAL:
       output += 'Universal:';
       break;
@@ -48,11 +48,11 @@ export function prettyPrintAsn1(obj: Asn1Object, level?: number, indentation?: n
       break;
   }
 
-  if (obj.tagClass === Asn1Codec.Class.UNIVERSAL) {
-    output += obj.type;
+  if (asn1Object.tagClass === Asn1Codec.Class.UNIVERSAL) {
+    output += asn1Object.type;
 
     // known types
-    switch (obj.type) {
+    switch (asn1Object.type) {
       case Asn1Codec.Type.NONE:
         output += ' (None)';
         break;
@@ -118,16 +118,16 @@ export function prettyPrintAsn1(obj: Asn1Object, level?: number, indentation?: n
         break;
     }
   } else {
-    output += obj.type;
+    output += asn1Object.type;
   }
 
   output += '\n';
-  output += indent + 'Constructed: ' + obj.constructed + '\n';
+  output += indent + 'Constructed: ' + asn1Object.constructed + '\n';
 
-  if (obj.composed) {
+  if (asn1Object.composed) {
     let subvalues = 0;
     let sub = '';
-    const children = obj.value as Asn1Object[];
+    const children = asn1Object.value as Asn1Object[];
     for (let i = 0; i < children.length; ++i) {
       if (children[i] !== undefined) {
         subvalues += 1;
@@ -140,21 +140,21 @@ export function prettyPrintAsn1(obj: Asn1Object, level?: number, indentation?: n
     output += indent + 'Sub values: ' + subvalues + sub;
   } else {
     output += indent + 'Value: ';
-    const primitive = obj.value as string;
-    if (obj.type === Asn1Codec.Type.OID) {
+    const primitive = asn1Object.value as string;
+    if (asn1Object.type === Asn1Codec.Type.OID) {
       const oid = Asn1Codec.derToOid(primitive);
       output += oid;
       if (pkiOids && oid in pkiOids) {
         output += ' (' + pkiOids[oid] + ') ';
       }
     }
-    if (obj.type === Asn1Codec.Type.INTEGER) {
+    if (asn1Object.type === Asn1Codec.Type.INTEGER) {
       try {
         output += Asn1Codec.derToInteger(primitive);
       } catch {
         output += '0x' + UtilNamespace.bytesToHex(primitive);
       }
-    } else if (obj.type === Asn1Codec.Type.BITSTRING) {
+    } else if (asn1Object.type === Asn1Codec.Type.BITSTRING) {
       // TODO: shift bits as needed to display without padding
       if (primitive.length > 1) {
         // remove unused bits field
@@ -171,12 +171,12 @@ export function prettyPrintAsn1(obj: Asn1Object, level?: number, indentation?: n
           output += ' (' + unused + ' unused bits shown)';
         }
       }
-    } else if (obj.type === Asn1Codec.Type.OCTETSTRING) {
+    } else if (asn1Object.type === Asn1Codec.Type.OCTETSTRING) {
       if (!nonLatinRegex.test(primitive)) {
         output += '(' + primitive + ') ';
       }
       output += '0x' + UtilNamespace.bytesToHex(primitive);
-    } else if (obj.type === Asn1Codec.Type.UTF8) {
+    } else if (asn1Object.type === Asn1Codec.Type.UTF8) {
       try {
         output += decodeUtf8(primitive);
       } catch (e: unknown) {
@@ -186,7 +186,7 @@ export function prettyPrintAsn1(obj: Asn1Object, level?: number, indentation?: n
           throw e;
         }
       }
-    } else if (obj.type === Asn1Codec.Type.PRINTABLESTRING || obj.type === Asn1Codec.Type.IA5STRING) {
+    } else if (asn1Object.type === Asn1Codec.Type.PRINTABLESTRING || asn1Object.type === Asn1Codec.Type.IA5STRING) {
       output += primitive;
     } else if (nonLatinRegex.test(primitive)) {
       output += '0x' + UtilNamespace.bytesToHex(primitive);

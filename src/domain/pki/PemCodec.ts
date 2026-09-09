@@ -5,42 +5,42 @@ export class PemCodec {
   /** Maximum PEM input size accepted by decode (16 MiB). */
   static MAX_DECODE_INPUT_LENGTH = 16 * 1024 * 1024;
 
-  static encode(msg: PemMessage, options?: PemEncodeOptions): string {
+  static encode(pemMessage: PemMessage, options?: PemEncodeOptions): string {
     options = options || {};
-    let pemText = '-----BEGIN ' + msg.type + '-----\r\n';
+    let pemText = '-----BEGIN ' + pemMessage.type + '-----\r\n';
 
     let header: PemHeader;
-    if (msg.procType) {
+    if (pemMessage.procType) {
       header = {
         name: 'Proc-Type',
-        values: [String(msg.procType.version), msg.procType.type]
+        values: [String(pemMessage.procType.version), pemMessage.procType.type]
       };
       pemText += PemCodec.foldHeader(header);
     }
-    if (msg.contentDomain) {
-      header = { name: 'Content-Domain', values: [msg.contentDomain] };
+    if (pemMessage.contentDomain) {
+      header = { name: 'Content-Domain', values: [pemMessage.contentDomain] };
       pemText += PemCodec.foldHeader(header);
     }
-    if (msg.dekInfo) {
-      header = { name: 'DEK-Info', values: [msg.dekInfo.algorithm] };
-      if (msg.dekInfo.parameters) {
-        header.values.push(msg.dekInfo.parameters);
+    if (pemMessage.dekInfo) {
+      header = { name: 'DEK-Info', values: [pemMessage.dekInfo.algorithm] };
+      if (pemMessage.dekInfo.parameters) {
+        header.values.push(pemMessage.dekInfo.parameters);
       }
       pemText += PemCodec.foldHeader(header);
     }
 
-    if (msg.headers) {
-      for (let i = 0; i < msg.headers.length; ++i) {
-        pemText += PemCodec.foldHeader(msg.headers[i]!);
+    if (pemMessage.headers) {
+      for (let i = 0; i < pemMessage.headers.length; ++i) {
+        pemText += PemCodec.foldHeader(pemMessage.headers[i]!);
       }
     }
 
-    if (msg.procType) {
+    if (pemMessage.procType) {
       pemText += '\r\n';
     }
 
-    pemText += Base64Codec.encodeString(msg.body, options.maxline || 64) + '\r\n';
-    pemText += '-----END ' + msg.type + '-----\r\n';
+    pemText += Base64Codec.encodeString(pemMessage.body, options.maxline || 64) + '\r\n';
+    pemText += '-----END ' + pemMessage.type + '-----\r\n';
     return pemText;
   }
 
@@ -103,7 +103,7 @@ export class PemCodec {
         bodyPart = blockContent.substring(headerBodySplit.index + headerBodySplit[0].length);
       }
 
-      const msg: PemMessage = {
+      const pemMessage: PemMessage = {
         type,
         procType: null,
         contentDomain: null,
@@ -111,10 +111,10 @@ export class PemCodec {
         headers: [],
         body: Base64Codec.decodeString(bodyPart)
       };
-      pemMessages.push(msg);
+      pemMessages.push(pemMessage);
 
       if (headerPart.length > 0) {
-        PemCodec.parseHeaders(msg, headerPart);
+        PemCodec.parseHeaders(pemMessage, headerPart);
       }
 
       pos = endIdx + endMarker.length;
@@ -127,56 +127,56 @@ export class PemCodec {
     return pemMessages;
   }
 
-  private static parseHeaders(msg: PemMessage, headerPart: string): void {
+  private static parseHeaders(pemMessage: PemMessage, headerPart: string): void {
     const rHeader = /^([\x21-\x7e]+):\s*([\x21-\x7e\s^:]+)/;
     const lines = headerPart.split(/\r?\n/);
-    let li = 0;
+    let lineIndex = 0;
 
-    while (li < lines.length) {
-      let line = lines[li]!.replace(/\s+$/, '');
+    while (lineIndex < lines.length) {
+      let line = lines[lineIndex]!.replace(/\s+$/, '');
 
-      for (let nl = li + 1; nl < lines.length; ++nl) {
-        const next = lines[nl]!;
+      for (let nextLineIndex = lineIndex + 1; nextLineIndex < lines.length; ++nextLineIndex) {
+        const next = lines[nextLineIndex]!;
         if (!/\s/.test(next.charAt(0))) {
           break;
         }
         line += next;
-        li = nl;
+        lineIndex = nextLineIndex;
       }
 
       const match = rHeader.exec(line);
       if (match) {
         const header: PemHeader = { name: match[1]!, values: [] };
         const values = match[2]!.split(',');
-        for (let vi = 0; vi < values.length; ++vi) {
-          header.values.push(PemCodec.ltrim(values[vi]!));
+        for (let valueIndex = 0; valueIndex < values.length; ++valueIndex) {
+          header.values.push(PemCodec.ltrim(values[valueIndex]!));
         }
 
-        if (!msg.procType) {
+        if (!pemMessage.procType) {
           if (header.name !== 'Proc-Type') {
             throw new Error('Invalid PEM formatted message. The first ' + 'encapsulated header must be "Proc-Type".');
           } else if (header.values.length !== 2) {
             throw new Error('Invalid PEM formatted message. The "Proc-Type" ' + 'header must have two subfields.');
           }
-          msg.procType = { version: values[0]!, type: values[1]! };
-        } else if (!msg.contentDomain && header.name === 'Content-Domain') {
-          msg.contentDomain = values[0] || '';
-        } else if (!msg.dekInfo && header.name === 'DEK-Info') {
+          pemMessage.procType = { version: values[0]!, type: values[1]! };
+        } else if (!pemMessage.contentDomain && header.name === 'Content-Domain') {
+          pemMessage.contentDomain = values[0] || '';
+        } else if (!pemMessage.dekInfo && header.name === 'DEK-Info') {
           if (header.values.length === 0) {
             throw new Error(
               'Invalid PEM formatted message. The "DEK-Info" ' + 'header must have at least one subfield.'
             );
           }
-          msg.dekInfo = { algorithm: values[0]!, parameters: values[1] || null };
+          pemMessage.dekInfo = { algorithm: values[0]!, parameters: values[1] || null };
         } else {
-          msg.headers.push(header);
+          pemMessage.headers.push(header);
         }
       }
 
-      ++li;
+      ++lineIndex;
     }
 
-    if ((msg.procType as unknown) === 'ENCRYPTED' && !msg.dekInfo) {
+    if ((pemMessage.procType as unknown) === 'ENCRYPTED' && !pemMessage.dekInfo) {
       throw new Error(
         'Invalid PEM formatted message. The "DEK-Info" ' + 'header must be present if "Proc-Type" is "ENCRYPTED".'
       );

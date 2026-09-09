@@ -45,7 +45,7 @@ export type SignatureDeps = {
 };
 
 export type X509SignatureHelpers = {
-  readSignatureParameters: (oid: string, obj: Asn1Object, fillDefaults: boolean) => SignatureParameters;
+  readSignatureParameters: (oid: string, asn1Object: Asn1Object, fillDefaults: boolean) => SignatureParameters;
   createSignatureDigest: (options: { signatureOid: string; type: string }) => MessageDigest;
   verifySignature: (options: {
     certificate: X509Certificate | X509CertificationRequest;
@@ -60,7 +60,7 @@ export type ExtensionFillDeps = {
   asn1: Asn1NamespaceObject;
   oids: Record<string, string>;
   util: UtilNamespaceObject;
-  dnToAsn1: (obj: { attributes: DnAttribute[] }) => Asn1Object;
+  dnToAsn1: (dnEntity: { attributes: DnAttribute[] }) => Asn1Object;
 };
 
 export type FillMissingExtensionFields = (e: X509Extension, options?: { cert?: X509Certificate }) => X509Extension;
@@ -274,8 +274,8 @@ export type AttributeLookup = {
 };
 
 export type X509Helpers = {
-  getAttribute: (obj: { attributes: DnAttribute[] }, options: string | AttributeLookup) => DnAttribute | null;
-  readSignatureParameters: (oid: string, obj: Asn1Object, fillDefaults: boolean) => SignatureParameters;
+  getAttribute: (dnEntity: { attributes: DnAttribute[] }, options: string | AttributeLookup) => DnAttribute | null;
+  readSignatureParameters: (oid: string, asn1Object: Asn1Object, fillDefaults: boolean) => SignatureParameters;
   createSignatureDigest: (options: { signatureOid: string; type: string }) => MessageDigest;
   verifySignature: (options: {
     certificate: X509Certificate | X509CertificationRequest;
@@ -283,7 +283,7 @@ export type X509Helpers = {
     md: MessageDigest;
     signature: string | null;
   }) => boolean;
-  dnToAsn1: (obj: { attributes: DnAttribute[] }) => Asn1Object;
+  dnToAsn1: (dnEntity: { attributes: DnAttribute[] }) => Asn1Object;
   getAttributesAsJson: (attrs: DnAttribute[]) => Record<string, unknown>;
   fillMissingFields: (attrs: DnAttributeInput[]) => void;
   fillMissingExtensionFields: (e: X509Extension, options?: { cert?: X509Certificate }) => void;

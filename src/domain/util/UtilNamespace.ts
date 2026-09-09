@@ -48,14 +48,14 @@ export class UtilNamespace {
     return s;
   }
 
-  static xorBytes(s1: string, s2: string, n: number): string {
+  static xorBytes(firstBytes: string, secondBytes: string, n: number): string {
     let s3 = '';
     let b = '';
     let t = '';
     let i = 0;
     let c = 0;
     for (; n > 0; --n, ++i) {
-      b = String.fromCharCode(s1.charCodeAt(i) ^ s2.charCodeAt(i));
+      b = String.fromCharCode(firstBytes.charCodeAt(i) ^ secondBytes.charCodeAt(i));
       if (c >= 10) {
         s3 += t;
         t = '';
@@ -97,9 +97,9 @@ export class UtilNamespace {
 
   static decodeUtf8 = decodeUtf8;
 
-  static isEmpty(obj: object): boolean {
-    for (const prop in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, prop)) {
+  static isEmpty(record: object): boolean {
+    for (const prop in record) {
+      if (Object.prototype.hasOwnProperty.call(record, prop)) {
         return false;
       }
     }

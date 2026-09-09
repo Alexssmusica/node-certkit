@@ -56,15 +56,15 @@ export function assembleSha512(certkit: MutableCertkit): void {
       });
   md.sha384 = algorithms.sha384 = sha384;
 
-  const sha512_256 = (certkit.sha512.sha256 = certkit.sha512.sha256 || {
+  const sha512Trunc256 = (certkit.sha512.sha256 = certkit.sha512.sha256 || {
     create: () => Sha512.create('SHA-512/256')
   });
-  md['sha512/256'] = algorithms['sha512/256'] = sha512_256;
+  md['sha512/256'] = algorithms['sha512/256'] = sha512Trunc256;
 
-  const sha512_224 = (certkit.sha512.sha224 = certkit.sha512.sha224 || {
+  const sha512Trunc224 = (certkit.sha512.sha224 = certkit.sha512.sha224 || {
     create: () => Sha512.create('SHA-512/224')
   });
-  md['sha512/224'] = algorithms['sha512/224'] = sha512_224;
+  md['sha512/224'] = algorithms['sha512/224'] = sha512Trunc224;
 }
 
 export function assembleHmac(certkit: MutableCertkit): void {

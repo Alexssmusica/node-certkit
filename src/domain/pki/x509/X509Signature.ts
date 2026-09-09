@@ -80,11 +80,15 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
    * }
    *
    * @param oid The OID specifying the signature algorithm
-   * @param obj The ASN.1 structure holding the parameters
+   * @param asn1Object The ASN.1 structure holding the parameters
    * @param fillDefaults Whether to use return default values where omitted
    * @return signature parameter object
    */
-  const readSignatureParameters = function (oid: string, obj: Asn1Object, fillDefaults: boolean): SignatureParameters {
+  const readSignatureParameters = function (
+    oid: string,
+    asn1Object: Asn1Object,
+    fillDefaults: boolean
+  ): SignatureParameters {
     let params: SignatureParameters = {};
 
     if (oid !== oids['RSASSA-PSS']) {
@@ -108,7 +112,7 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
 
     const capture: Record<string, unknown> = {};
     const errors: string[] = [];
-    if (!asn1.validate(obj, validators.rsassaPssParameterValidator, capture, errors)) {
+    if (!asn1.validate(asn1Object, validators.rsassaPssParameterValidator, capture, errors)) {
       const error = new Error('Cannot read RSASSA-PSS parameter block.') as DerError;
       error.errors = errors;
       throw error;
