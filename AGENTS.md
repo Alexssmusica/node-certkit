@@ -52,6 +52,8 @@ Narrow `id-length` exceptions exist only where spec notation requires them: `C`/
 
 Naming rules are off in `tests/` so spec-mirrored vectors do not drown out real warnings.
 
+`src/index.ts` disables `@typescript-eslint/no-shadow` because nested namespace type aliases (`certkit.pki.rsa.PrivateKey` mirroring `certkit.pki.PrivateKey`) are intentional public API for node-forge migration — do not rename them.
+
 ### Safety net before merging naming changes
 
 ```bash

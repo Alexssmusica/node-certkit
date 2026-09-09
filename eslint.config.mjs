@@ -96,7 +96,7 @@ export default tseslint.config(
           leadingUnderscore: 'allow'
         }
       ],
-      'no-shadow': 'warn',
+      'no-shadow': 'off',
       '@typescript-eslint/no-shadow': 'warn'
     }
   },
@@ -105,7 +105,6 @@ export default tseslint.config(
     rules: {
       'id-length': 'off',
       '@typescript-eslint/naming-convention': 'off',
-      'no-shadow': 'off',
       '@typescript-eslint/no-shadow': 'off'
     }
   },
@@ -146,8 +145,15 @@ export default tseslint.config(
           trailingUnderscore: 'allow'
         }
       ],
-      'no-shadow': 'error',
       '@typescript-eslint/no-shadow': 'error'
+    }
+  },
+  {
+    // certkit.pki.rsa.PrivateKey intentionally mirrors certkit.pki.PrivateKey
+    // to keep the node-forge compatible namespace surface (see README migration table).
+    files: ['src/index.ts'],
+    rules: {
+      '@typescript-eslint/no-shadow': 'off'
     }
   },
   {
@@ -196,7 +202,6 @@ export default tseslint.config(
       'id-length': 'off',
       'id-denylist': 'off',
       '@typescript-eslint/naming-convention': 'off',
-      'no-shadow': 'off',
       '@typescript-eslint/no-shadow': 'off'
     }
   }
