@@ -767,9 +767,9 @@ export class Pkcs12Service {
         const macSalt = new deps.util.ByteBuffer(deps.random.getBytesSync(options.saltSize));
         const count = options.count;
         // 160-bit key
-        const key = p12.generateKey!(password, macSalt, 3, count, 20);
+        const macKey = p12.generateKey!(password, macSalt, 3, count, 20);
         const mac = deps.hmac.create();
-        mac.start(sha1, key);
+        mac.start(sha1, macKey);
         mac.update(asn1.toDer(safe).getBytes());
         const macValue = mac.getMac();
         macData = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [

@@ -448,19 +448,19 @@ export class Certificate {
       cert.isIssuer = function (parent: X509Certificate) {
         let issuerMatches = false;
 
-        const i = cert.issuer;
-        const s = parent.subject;
+        const issuerDn = cert.issuer;
+        const subjectDn = parent.subject;
 
         // compare hashes if present
-        if (i.hash && s.hash) {
-          issuerMatches = i.hash === s.hash;
-        } else if (i.attributes.length === s.attributes.length) {
+        if (issuerDn.hash && subjectDn.hash) {
+          issuerMatches = issuerDn.hash === subjectDn.hash;
+        } else if (issuerDn.attributes.length === subjectDn.attributes.length) {
           // all attributes are the same so issuer matches subject
           issuerMatches = true;
           let iattr, sattr;
-          for (let n = 0; issuerMatches && n < i.attributes.length; ++n) {
-            iattr = i.attributes[n];
-            sattr = s.attributes[n];
+          for (let n = 0; issuerMatches && n < issuerDn.attributes.length; ++n) {
+            iattr = issuerDn.attributes[n];
+            sattr = subjectDn.attributes[n];
             if (iattr.type !== sattr.type || iattr.value !== sattr.value) {
               // attribute mismatch
               issuerMatches = false;

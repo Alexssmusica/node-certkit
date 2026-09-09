@@ -158,10 +158,10 @@ export class Pkcs1Codec {
     const db = UtilNamespace.xorBytes(maskedDB, dbMask, maskedDB.length);
     const lHashPrime = db.substring(0, md.digestLength);
 
-    let error: number = y !== '\x00' ? 1 : 0;
+    let failureFlags: number = y !== '\x00' ? 1 : 0;
 
     for (let i = 0; i < md.digestLength; ++i) {
-      error |= lHash.charAt(i) !== lHashPrime.charAt(i) ? 1 : 0;
+      failureFlags |= lHash.charAt(i) !== lHashPrime.charAt(i) ? 1 : 0;
     }
 
     let insidePaddingString = 1;
@@ -170,12 +170,12 @@ export class Pkcs1Codec {
       const code = db.charCodeAt(j);
       const isZeroBit = (code & 0x1) ^ 0x1;
       const errorMask = insidePaddingString ? 0xfffe : 0x0000;
-      error |= code & errorMask ? 1 : 0;
+      failureFlags |= code & errorMask ? 1 : 0;
       insidePaddingString = insidePaddingString & isZeroBit;
       index += insidePaddingString;
     }
 
-    if (error || db.charCodeAt(index) !== 0x1) {
+    if (failureFlags || db.charCodeAt(index) !== 0x1) {
       throw new Error('Invalid RSAES-OAEP padding.');
     }
 

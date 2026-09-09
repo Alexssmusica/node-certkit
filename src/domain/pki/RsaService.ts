@@ -311,22 +311,23 @@ export class RsaService {
     return eb.getBytes();
   }
 
-  encrypt(m: string, key: RsaKeyMaterial, bt: boolean | number): string {
-    let pub = bt;
+  encrypt(m: string, key: RsaKeyMaterial, blockType: boolean | number): string {
+    let usePublicKey: boolean;
     let eb: ByteStringBuffer;
 
     const k = Math.ceil(key.n.bitLength() / 8);
 
-    if (bt !== false && bt !== true) {
-      pub = bt === 0x02;
-      eb = this.#encodePkcs1v15(m, key, bt as number);
+    if (blockType !== false && blockType !== true) {
+      usePublicKey = blockType === 0x02;
+      eb = this.#encodePkcs1v15(m, key, blockType as number);
     } else {
+      usePublicKey = blockType as boolean;
       eb = new ByteStringBuffer();
       eb.putBytes(m);
     }
 
     const x = new BigInteger(eb.toHex(), 16);
-    const y = this.#modPow(x, key, pub as boolean);
+    const y = this.#modPow(x, key, usePublicKey);
     const yhex = y.toString(16);
     const ed = new ByteStringBuffer();
     let zeros = k - Math.ceil(yhex.length / 2);
@@ -338,7 +339,7 @@ export class RsaService {
     return ed.getBytes();
   }
 
-  decrypt(ed: string, key: RsaKeyMaterial, pub: boolean, ml?: boolean | number): string {
+  decrypt(ed: string, key: RsaKeyMaterial, pub: boolean, decodePadding?: boolean | number): string {
     const k = Math.ceil(key.n.bitLength() / 8);
 
     if (ed.length !== k) {
@@ -366,7 +367,7 @@ export class RsaService {
     }
     eb.putBytes(UtilNamespace.hexToBytes(xhex));
 
-    if (ml !== false) {
+    if (decodePadding !== false) {
       return this.#decodePkcs1v15(eb.getBytes(), key, pub);
     }
     return eb.getBytes();
@@ -616,7 +617,7 @@ export class RsaService {
     throw new Error('Invalid key generation algorithm: ' + algorithm);
   }
 
-  stepKeyPairGenerationState(state: KeyPairGenerationState, n: number): boolean {
+  stepKeyPairGenerationState(state: KeyPairGenerationState, timeBudgetMs: number): boolean {
     if (!('algorithm' in state)) {
       state.algorithm = 'PRIMEINC';
     }
@@ -629,7 +630,7 @@ export class RsaService {
     let t1 = +new Date();
     let t2: number;
     let total = 0;
-    while (state.keys === null && (n <= 0 || total < n)) {
+    while (state.keys === null && (timeBudgetMs <= 0 || total < timeBudgetMs)) {
       if (state.state === 0) {
         const bits = state.p === null ? state.pBits : state.qBits;
         const bits1 = (bits as number) - 1;

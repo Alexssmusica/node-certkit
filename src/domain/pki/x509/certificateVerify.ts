@@ -173,28 +173,28 @@ export class CertificateVerify {
           }
         }
 
-        const vfd = error === null ? true : error.error;
-        const ret = options.verify ? options.verify(vfd, depth, certs) : vfd;
-        if (ret === true) {
+        const verificationOutcome = error === null ? true : error.error;
+        const callbackResult = options.verify ? options.verify(verificationOutcome, depth, certs) : verificationOutcome;
+        if (callbackResult === true) {
           error = null;
         } else {
-          if (vfd === true) {
+          if (verificationOutcome === true) {
             error = {
               message: 'The application rejected the certificate.',
               error: certificateError.bad_certificate
             };
           }
 
-          if (ret || ret === 0) {
-            if (typeof ret === 'object' && !ctx.util.isArray(ret)) {
-              if (ret.message) {
-                error!.message = ret.message;
+          if (callbackResult || callbackResult === 0) {
+            if (typeof callbackResult === 'object' && !ctx.util.isArray(callbackResult)) {
+              if (callbackResult.message) {
+                error!.message = callbackResult.message;
               }
-              if (ret.error) {
-                error!.error = ret.error as VerifyErrorObject['error'];
+              if (callbackResult.error) {
+                error!.error = callbackResult.error as VerifyErrorObject['error'];
               }
-            } else if (typeof ret === 'string') {
-              error!.error = ret as VerifyErrorObject['error'];
+            } else if (typeof callbackResult === 'string') {
+              error!.error = callbackResult as VerifyErrorObject['error'];
             }
           }
 
