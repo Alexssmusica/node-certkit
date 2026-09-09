@@ -412,7 +412,11 @@ export class PbeService {
 
       const pemMessage = deps.pem.decode(pem)[0]!;
 
-      if (pemMessage.type !== 'ENCRYPTED PRIVATE KEY' && pemMessage.type !== 'PRIVATE KEY' && pemMessage.type !== 'RSA PRIVATE KEY') {
+      if (
+        pemMessage.type !== 'ENCRYPTED PRIVATE KEY' &&
+        pemMessage.type !== 'PRIVATE KEY' &&
+        pemMessage.type !== 'RSA PRIVATE KEY'
+      ) {
         const error = new Error(
           'Could not convert private key from PEM; PEM header type ' +
             'is not "ENCRYPTED PRIVATE KEY", "PRIVATE KEY", or "RSA PRIVATE KEY".'
@@ -465,7 +469,10 @@ export class PbeService {
             break;
           default: {
             const error = new Error(
-              'Could not decrypt private key; unsupported ' + 'encryption algorithm "' + pemMessage.dekInfo!.algorithm + '".'
+              'Could not decrypt private key; unsupported ' +
+                'encryption algorithm "' +
+                pemMessage.dekInfo!.algorithm +
+                '".'
             ) as Error & { algorithm?: string };
             error.algorithm = pemMessage.dekInfo!.algorithm;
             throw error;
@@ -502,7 +509,9 @@ export class PbeService {
     };
 
     /**
-     * Derives a PKCS#12 key.
+     * Derives a PKCS#12 key (RFC 7292 appendix B.2).
+     *
+     * Spec notation preserved: `D`, `S`, `P`, `I`, `B`, `u` (hash length), `v` (block size).
      *
      * @param password the password to derive the key material from, null or
      *          undefined for none.
@@ -513,11 +522,6 @@ export class PbeService {
      * @param md the message digest to use, defaults to SHA-1.
      *
      * @return a ByteBuffer with the bytes derived from the password.
-     */
-    /**
-     * PKCS#12 key derivation (RFC 7292 appendix B.2).
-     *
-     * Spec notation preserved: `D`, `S`, `P`, `I`, `B`, `u` (hash length), `v` (block size).
      */
     pbe.generatePkcs12Key = function (
       password: string | null | undefined,

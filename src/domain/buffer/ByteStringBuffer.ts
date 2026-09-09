@@ -45,6 +45,11 @@ export class ByteStringBuffer {
     }
   }
 
+  /**
+   * Tracks repeated string concatenation and periodically flattens the internal
+   * buffer. The discarded `substr(0, 1)` call is intentional: it nudges the
+   * JS engine to flatten cons strings (node-forge legacy heuristic).
+   */
   _optimizeConstructedString(x: number): void {
     this._constructedStringLength += x;
     if (this._constructedStringLength > MAX_CONSTRUCTED_STRING_LENGTH) {

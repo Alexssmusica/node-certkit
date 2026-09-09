@@ -161,7 +161,11 @@ export type CertkitPki = {
   publicKeyToAsn1: (key: RsaPublicKey) => Asn1Object;
   publicKeyToSubjectPublicKeyInfo: (key: RsaPublicKey) => Asn1Object;
   publicKeyToRSAPublicKey: (key: RsaPublicKey) => Asn1Object;
-  encryptPrivateKeyInfo: (asn1Object: Asn1Object, password: string, options?: EncryptPrivateKeyInfoOptions) => Asn1Object;
+  encryptPrivateKeyInfo: (
+    asn1Object: Asn1Object,
+    password: string,
+    options?: EncryptPrivateKeyInfoOptions
+  ) => Asn1Object;
   decryptPrivateKeyInfo: (asn1Object: Asn1Object, password: string) => Asn1Object | null;
   encryptedPrivateKeyToPem: (epki: Asn1Object, maxline?: number) => string;
   encryptedPrivateKeyFromPem: (pem: string) => Asn1Object;

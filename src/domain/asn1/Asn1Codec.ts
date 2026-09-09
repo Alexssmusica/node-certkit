@@ -952,7 +952,13 @@ export class Asn1Codec {
    *
    * @return true on success, false on failure.
    */
-  static validate(asn1Object: Asn1Object, v: Asn1Validator, capture?: Record<string, unknown>, errors?: string[], depth = 0) {
+  static validate(
+    asn1Object: Asn1Object,
+    v: Asn1Validator,
+    capture?: Record<string, unknown>,
+    errors?: string[],
+    depth = 0
+  ) {
     if (depth >= Asn1Codec.maxDepth) {
       if (errors) {
         errors.push('ASN.1 validation error: Max depth exceeded.');

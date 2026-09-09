@@ -40,7 +40,11 @@ export class Certificate {
     pki.certificateFromPem = function (pem: string, computeHash?: boolean, strict?: boolean) {
       const pemMessage = runtime.pem.decode(pem)[0]!;
 
-      if (pemMessage.type !== 'CERTIFICATE' && pemMessage.type !== 'X509 CERTIFICATE' && pemMessage.type !== 'TRUSTED CERTIFICATE') {
+      if (
+        pemMessage.type !== 'CERTIFICATE' &&
+        pemMessage.type !== 'X509 CERTIFICATE' &&
+        pemMessage.type !== 'TRUSTED CERTIFICATE'
+      ) {
         const error = new Error(
           'Could not convert certificate from PEM; PEM header type ' +
             'is not "CERTIFICATE", "X509 CERTIFICATE", or "TRUSTED CERTIFICATE".'
