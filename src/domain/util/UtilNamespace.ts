@@ -140,11 +140,11 @@ export class UtilNamespace {
     return parts.join('');
   }
 
-  static formatNumber(number: number, decimals?: number, dec_point?: string, thousands_sep?: string): string {
+  static formatNumber(number: number, decimals?: number, decimalPoint?: string, thousandsSeparator?: string): string {
     const n = number;
     const c = isNaN((decimals = Math.abs(decimals!))) ? 2 : decimals!;
-    const d = dec_point === undefined ? ',' : dec_point;
-    const t = thousands_sep === undefined ? '.' : thousands_sep;
+    const d = decimalPoint === undefined ? ',' : decimalPoint;
+    const t = thousandsSeparator === undefined ? '.' : thousandsSeparator;
     const s = n < 0 ? '-' : '';
     const i = parseInt(String(Math.abs(+n || 0).toFixed(c)), 10) + '';
     const j = i.length > 3 ? i.length % 3 : 0;

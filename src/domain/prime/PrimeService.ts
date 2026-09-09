@@ -6,7 +6,7 @@ import type { PrimeGenerateOptions } from './PrimeTypes.js';
 const GCD_30_DELTA = [6, 4, 2, 4, 2, 4, 6, 2];
 const THIRTY = new BigInteger(null);
 THIRTY.fromInt(30);
-const op_or = (x: number, y: number) => x | y;
+const bitwiseOr = (x: number, y: number) => x | y;
 
 function getMillerRabinTests(bits: number): number {
   if (bits <= 100) return 27;
@@ -27,7 +27,7 @@ function generateRandom(bits: number, rng: BigIntegerRandomSource): BigInteger {
   const num = new BigInteger(bits, rng);
   const bits1 = bits - 1;
   if (!num.testBit(bits1)) {
-    num.bitwiseTo(BigInteger.ONE.shiftLeft(bits1), op_or, num);
+    num.bitwiseTo(BigInteger.ONE.shiftLeft(bits1), bitwiseOr, num);
   }
   num.dAddOffset(31 - num.mod(THIRTY).byteValue(), 0);
   return num;

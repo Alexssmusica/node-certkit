@@ -115,22 +115,22 @@ export class Pbkdf2 {
       prf.start(mdObj as unknown as Parameters<HmacContext['start']>[0], p);
       let dk = '';
       let xor: string;
-      let u_c: string;
-      let u_c1: string;
+      let currentU: string;
+      let previousU: string;
 
       if (!callback) {
         for (let i = 1; i <= len; ++i) {
           prf.start(null, null);
           prf.update(s);
           prf.update(UtilNamespace.int32ToBytes(i));
-          xor = u_c1 = prf.digest().getBytes();
+          xor = previousU = prf.digest().getBytes();
 
           for (let j = 2; j <= c; ++j) {
             prf.start(null, null);
-            prf.update(u_c1);
-            u_c = prf.digest().getBytes();
-            xor = UtilNamespace.xorBytes(xor, u_c, hLen);
-            u_c1 = u_c;
+            prf.update(previousU);
+            currentU = prf.digest().getBytes();
+            xor = UtilNamespace.xorBytes(xor, currentU, hLen);
+            previousU = currentU;
           }
 
           dk += i < len ? xor : xor.substr(0, r);
@@ -149,7 +149,7 @@ export class Pbkdf2 {
         prf.start(null, null);
         prf.update(s);
         prf.update(UtilNamespace.int32ToBytes(i));
-        xor = u_c1 = prf.digest().getBytes();
+        xor = previousU = prf.digest().getBytes();
 
         j = 2;
         inner();
@@ -158,10 +158,10 @@ export class Pbkdf2 {
       function inner(): void {
         if (j <= c) {
           prf.start(null, null);
-          prf.update(u_c1);
-          u_c = prf.digest().getBytes();
-          xor = UtilNamespace.xorBytes(xor, u_c, hLen);
-          u_c1 = u_c;
+          prf.update(previousU);
+          currentU = prf.digest().getBytes();
+          xor = UtilNamespace.xorBytes(xor, currentU, hLen);
+          previousU = currentU;
           ++j;
           EnvInfo.setImmediate(inner);
           return;

@@ -164,15 +164,15 @@ export class Pkcs1Codec {
       error |= lHash.charAt(i) !== lHashPrime.charAt(i) ? 1 : 0;
     }
 
-    let in_ps = 1;
+    let insidePaddingString = 1;
     let index = md.digestLength;
     for (let j = md.digestLength; j < db.length; j++) {
       const code = db.charCodeAt(j);
-      const is_0 = (code & 0x1) ^ 0x1;
-      const error_mask = in_ps ? 0xfffe : 0x0000;
-      error |= code & error_mask ? 1 : 0;
-      in_ps = in_ps & is_0;
-      index += in_ps;
+      const isZeroBit = (code & 0x1) ^ 0x1;
+      const errorMask = insidePaddingString ? 0xfffe : 0x0000;
+      error |= code & errorMask ? 1 : 0;
+      insidePaddingString = insidePaddingString & isZeroBit;
+      index += insidePaddingString;
     }
 
     if (error || db.charCodeAt(index) !== 0x1) {

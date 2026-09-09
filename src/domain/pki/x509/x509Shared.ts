@@ -305,8 +305,8 @@ export class X509Shared {
       return criAttributesSet;
     }
 
-    const jan_1_1950 = new Date('1950-01-01T00:00:00Z');
-    const jan_1_2050 = new Date('2050-01-01T00:00:00Z');
+    const jan1Cutoff1950 = new Date('1950-01-01T00:00:00Z');
+    const jan1Cutoff2050 = new Date('2050-01-01T00:00:00Z');
 
     /**
      * Converts a Date object to ASN.1
@@ -317,7 +317,7 @@ export class X509Shared {
      * @return the ASN.1 object representing the date.
      */
     function dateToAsn1(date: Date) {
-      if (date >= jan_1_1950 && date < jan_1_2050) {
+      if (date >= jan1Cutoff1950 && date < jan1Cutoff2050) {
         return asn1.create(asn1.Class.UNIVERSAL, asn1.Type.UTCTIME, false, asn1.dateToUtcTime(date));
       } else {
         return asn1.create(asn1.Class.UNIVERSAL, asn1.Type.GENERALIZEDTIME, false, asn1.dateToGeneralizedTime(date));

@@ -624,7 +624,7 @@ export class RsaService {
     const THIRTY = new BigInteger(null);
     THIRTY.fromInt(30);
     let deltaIdx = 0;
-    const op_or = (x: number, y: number) => x | y;
+    const bitwiseOr = (x: number, y: number) => x | y;
 
     let t1 = +new Date();
     let t2: number;
@@ -637,7 +637,7 @@ export class RsaService {
         if (state.pqState === 0) {
           state.num = new BigInteger(bits as number, state.rng as BigIntegerRandomSource);
           if (!(state.num as BigInteger).testBit(bits1)) {
-            (state.num as BigInteger).bitwiseTo(BigInteger.ONE.shiftLeft(bits1), op_or, state.num as BigInteger);
+            (state.num as BigInteger).bitwiseTo(BigInteger.ONE.shiftLeft(bits1), bitwiseOr, state.num as BigInteger);
           }
           (state.num as BigInteger).dAddOffset(31 - (state.num as BigInteger).mod(THIRTY).byteValue(), 0);
           deltaIdx = 0;

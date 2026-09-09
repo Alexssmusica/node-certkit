@@ -219,21 +219,22 @@ export class GcmMode {
   }
 
   multiply(x: number[], y: number[]): number[] {
-    const z_i = [0, 0, 0, 0];
-    const v_i = y.slice(0);
+    // NIST SP 800-38D GHASH field multiply
+    const zAccumulator = [0, 0, 0, 0];
+    const vMultiplier = y.slice(0);
 
     for (let i = 0; i < 128; ++i) {
-      const x_i = x[(i / 32) | 0]! & (1 << (31 - (i % 32)));
-      if (x_i) {
-        z_i[0] ^= v_i[0]!;
-        z_i[1] ^= v_i[1]!;
-        z_i[2] ^= v_i[2]!;
-        z_i[3] ^= v_i[3]!;
+      const bitMask = x[(i / 32) | 0]! & (1 << (31 - (i % 32)));
+      if (bitMask) {
+        zAccumulator[0] ^= vMultiplier[0]!;
+        zAccumulator[1] ^= vMultiplier[1]!;
+        zAccumulator[2] ^= vMultiplier[2]!;
+        zAccumulator[3] ^= vMultiplier[3]!;
       }
-      this.pow(v_i, v_i);
+      this.pow(vMultiplier, vMultiplier);
     }
 
-    return z_i;
+    return zAccumulator;
   }
 
   pow(x: number[], out: number[]): void {
@@ -253,8 +254,8 @@ export class GcmMode {
     const z = [0, 0, 0, 0];
     for (let i = 0; i < 32; ++i) {
       const idx = (i / 8) | 0;
-      const x_i = (x[idx]! >>> ((7 - (i % 8)) * 4)) & 0xf;
-      const ah = this._m![i]![x_i]!;
+      const nibbleIndex = (x[idx]! >>> ((7 - (i % 8)) * 4)) & 0xf;
+      const ah = this._m![i]![nibbleIndex]!;
       z[0] ^= ah[0]!;
       z[1] ^= ah[1]!;
       z[2] ^= ah[2]!;
@@ -299,9 +300,9 @@ export class GcmMode {
     i = 2;
     while (i < half) {
       for (let j = 1; j < i; ++j) {
-        const m_i = m[i]!;
-        const m_j = m[j]!;
-        m[i + j] = [m_i[0]! ^ m_j[0]!, m_i[1]! ^ m_j[1]!, m_i[2]! ^ m_j[2]!, m_i[3]! ^ m_j[3]!];
+        const rowI = m[i]!;
+        const rowJ = m[j]!;
+        m[i + j] = [rowI[0]! ^ rowJ[0]!, rowI[1]! ^ rowJ[1]!, rowI[2]! ^ rowJ[2]!, rowI[3]! ^ rowJ[3]!];
       }
       i *= 2;
     }
