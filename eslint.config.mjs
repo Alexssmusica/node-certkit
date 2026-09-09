@@ -71,7 +71,42 @@ export default tseslint.config(
       'no-case-declarations': 'off',
       'no-fallthrough': 'off',
       'no-useless-escape': 'off',
-      'prefer-rest-params': 'off'
+      'prefer-rest-params': 'off',
+      'id-length': [
+        'warn',
+        {
+          min: 2,
+          exceptions: ['i', 'j', 'k', 'x', 'y', 'z', 'n', 'e', 'd', 'p', 'q', 'r', 'a', 'b', 'c', 'f', 'g', 'h', 'm', 's', 't', 'u', 'v', 'w']
+        }
+      ],
+      '@typescript-eslint/naming-convention': [
+        'warn',
+        {
+          selector: 'variableLike',
+          format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
+          leadingUnderscore: 'allow',
+          filter: {
+            regex: '^(encode_rsa_oaep|decode_rsa_oaep|bad_certificate|unknown_ca|certificate_expired|unsupported_certificate|certificate_revoked|certificate_unknown)$',
+            match: false
+          }
+        },
+        {
+          selector: 'parameter',
+          format: ['camelCase'],
+          leadingUnderscore: 'allow'
+        }
+      ],
+      'no-shadow': 'warn',
+      '@typescript-eslint/no-shadow': 'warn'
+    }
+  },
+  {
+    files: ['src/domain/math/**', 'src/domain/cipher/**', 'src/domain/digest/**'],
+    rules: {
+      'id-length': 'off',
+      '@typescript-eslint/naming-convention': 'off',
+      'no-shadow': 'off',
+      '@typescript-eslint/no-shadow': 'off'
     }
   },
   {
