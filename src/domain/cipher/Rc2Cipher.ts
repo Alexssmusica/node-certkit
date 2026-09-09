@@ -103,51 +103,57 @@ export class Rc2Cipher {
     let _input: ByteStringBuffer | null = null;
     let _output: ByteStringBuffer | null = null;
     let _iv: ByteStringBuffer | null = null;
-    let mixRound: (R: number[]) => void;
-    let mashRound: (R: number[]) => void;
-    let i: number;
-    let j: number;
+    let mixRound: (registers: number[]) => void;
+    let mashRound: (registers: number[]) => void;
+    // Persists across mix/mash rounds within a single block (RFC 2268 key schedule index).
+    let keyIndex: number;
     const K: number[] = [];
 
     key = Rc2Cipher.expandKey(key, bits);
-    for (i = 0; i < 64; i++) {
+    for (let keyWordIndex = 0; keyWordIndex < 64; keyWordIndex++) {
       K.push(key.getInt16Le());
     }
 
     if (encrypt) {
-      mixRound = function (R: number[]) {
-        for (i = 0; i < 4; i++) {
-          R[i]! += K[j]! + (R[(i + 3) % 4]! & R[(i + 2) % 4]!) + (~R[(i + 3) % 4]! & R[(i + 1) % 4]!);
-          R[i] = rol(R[i]!, s[i]!);
-          j++;
+      mixRound = function (registers: number[]) {
+        for (let roundIndex = 0; roundIndex < 4; roundIndex++) {
+          registers[roundIndex]! +=
+            K[keyIndex]! +
+            (registers[(roundIndex + 3) % 4]! & registers[(roundIndex + 2) % 4]!) +
+            (~registers[(roundIndex + 3) % 4]! & registers[(roundIndex + 1) % 4]!);
+          registers[roundIndex] = rol(registers[roundIndex]!, s[roundIndex]!);
+          keyIndex++;
         }
       };
 
-      mashRound = function (R: number[]) {
-        for (i = 0; i < 4; i++) {
-          R[i]! += K[R[(i + 3) % 4]! & 63]!;
+      mashRound = function (registers: number[]) {
+        for (let roundIndex = 0; roundIndex < 4; roundIndex++) {
+          registers[roundIndex]! += K[registers[(roundIndex + 3) % 4]! & 63]!;
         }
       };
     } else {
-      mixRound = function (R: number[]) {
-        for (i = 3; i >= 0; i--) {
-          R[i] = ror(R[i]!, s[i]!);
-          R[i]! -= K[j]! + (R[(i + 3) % 4]! & R[(i + 2) % 4]!) + (~R[(i + 3) % 4]! & R[(i + 1) % 4]!);
-          j--;
+      mixRound = function (registers: number[]) {
+        for (let roundIndex = 3; roundIndex >= 0; roundIndex--) {
+          registers[roundIndex] = ror(registers[roundIndex]!, s[roundIndex]!);
+          registers[roundIndex]! -=
+            K[keyIndex]! +
+            (registers[(roundIndex + 3) % 4]! & registers[(roundIndex + 2) % 4]!) +
+            (~registers[(roundIndex + 3) % 4]! & registers[(roundIndex + 1) % 4]!);
+          keyIndex--;
         }
       };
 
-      mashRound = function (R: number[]) {
-        for (i = 3; i >= 0; i--) {
-          R[i]! -= K[R[(i + 3) % 4]! & 63]!;
+      mashRound = function (registers: number[]) {
+        for (let roundIndex = 3; roundIndex >= 0; roundIndex--) {
+          registers[roundIndex]! -= K[registers[(roundIndex + 3) % 4]! & 63]!;
         }
       };
     }
 
-    const runPlan = function (plan: [number, (R: number[]) => void][]) {
-      const R: number[] = [];
+    const runPlan = function (plan: [number, (registers: number[]) => void][]) {
+      const registers: number[] = [];
 
-      for (i = 0; i < 4; i++) {
+      for (let wordIndex = 0; wordIndex < 4; wordIndex++) {
         let val = _input!.getInt16Le();
 
         if (_iv !== null) {
@@ -158,27 +164,27 @@ export class Rc2Cipher {
           }
         }
 
-        R.push(val & 0xffff);
+        registers.push(val & 0xffff);
       }
 
-      j = encrypt ? 0 : 63;
+      keyIndex = encrypt ? 0 : 63;
 
       for (let ptr = 0; ptr < plan.length; ptr++) {
         for (let ctr = 0; ctr < plan[ptr]![0]; ctr++) {
-          plan[ptr]![1](R);
+          plan[ptr]![1](registers);
         }
       }
 
-      for (i = 0; i < 4; i++) {
+      for (let wordIndex = 0; wordIndex < 4; wordIndex++) {
         if (_iv !== null) {
           if (encrypt) {
-            _iv.putInt16Le(R[i]!);
+            _iv.putInt16Le(registers[wordIndex]!);
           } else {
-            R[i]! ^= _iv.getInt16Le();
+            registers[wordIndex]! ^= _iv.getInt16Le();
           }
         }
 
-        _output!.putInt16Le(R[i]!);
+        _output!.putInt16Le(registers[wordIndex]!);
       }
     };
 

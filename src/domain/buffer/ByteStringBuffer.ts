@@ -65,20 +65,21 @@ export class ByteStringBuffer {
     return this.putBytes(String.fromCharCode(b));
   }
 
-  fillWithByte(b: number, n: number): this {
+  fillWithByte(b: number, repeatCount: number): this {
     let byte = String.fromCharCode(b);
     let d = this.data;
-    while (n > 0) {
-      if (n & 1) {
+    let remaining = repeatCount;
+    while (remaining > 0) {
+      if (remaining & 1) {
         d += byte;
       }
-      n >>>= 1;
-      if (n > 0) {
+      remaining >>>= 1;
+      if (remaining > 0) {
         byte += byte;
       }
     }
     this.data = d;
-    this._optimizeConstructedString(n);
+    this._optimizeConstructedString(repeatCount);
     return this;
   }
 
