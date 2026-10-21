@@ -6,7 +6,7 @@ import type { PrimeGenerateOptions } from './PrimeTypes.js';
 const GCD_30_DELTA = [6, 4, 2, 4, 2, 4, 6, 2];
 const THIRTY = new BigInteger(null);
 THIRTY.fromInt(30);
-const bitwiseOr = (x: number, y: number) => x | y;
+const bitwiseOr = (left: number, right: number) => left | right;
 
 function getMillerRabinTests(bits: number): number {
   if (bits <= 100) return 27;
@@ -105,10 +105,10 @@ export class PrimeService {
     }
 
     const rng: BigIntegerRandomSource = {
-      nextBytes(x: number[]): void {
-        const b = prng.getBytesSync(x.length);
-        for (let i = 0; i < x.length; ++i) {
-          x[i] = b.charCodeAt(i);
+      nextBytes(byteArray: number[]): void {
+        const randomBytes = prng.getBytesSync(byteArray.length);
+        for (let i = 0; i < byteArray.length; ++i) {
+          byteArray[i] = randomBytes.charCodeAt(i);
         }
       }
     };
@@ -127,15 +127,15 @@ export class PrimeService {
     return {
       generateProbablePrime(bits, options, callback) {
         let opts: PrimeGenerateOptions;
-        let cb: (err: Error | null, num?: BigInteger) => void;
+        let primeCallback: (err: Error | null, num?: BigInteger) => void;
         if (typeof options === 'function') {
-          cb = options;
+          primeCallback = options;
           opts = { prng: { getBytesSync: getRandomBytes } };
         } else {
           opts = { ...options, prng: options.prng || { getBytesSync: getRandomBytes } };
-          cb = callback!;
+          primeCallback = callback!;
         }
-        PrimeService.generateProbablePrime(bits, opts, cb);
+        PrimeService.generateProbablePrime(bits, opts, primeCallback);
       }
     };
   }

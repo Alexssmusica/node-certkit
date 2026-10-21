@@ -4,10 +4,10 @@ import { UtilNamespace } from '../util/UtilNamespace.js';
 import type { Md5Digest } from './DigestTypes.js';
 
 interface Md5State {
-  h0: number;
-  h1: number;
-  h2: number;
-  h3: number;
+  hashWord0: number;
+  hashWord1: number;
+  hashWord2: number;
+  hashWord3: number;
 }
 
 /**
@@ -15,9 +15,9 @@ interface Md5State {
  */
 export class Md5 {
   static #padding: string | null = null;
-  static #g: number[] | null = null;
-  static #r: number[] | null = null;
-  static #k: number[] | null = null;
+  static #messageIndexPermutation: number[] | null = null;
+  static #rotateShiftAmounts: number[] | null = null;
+  static #sineConstants: number[] | null = null;
   static #initialized = false;
 
   static #ensureInit(): void {
@@ -26,25 +26,25 @@ export class Md5 {
     }
     Md5.#padding = String.fromCharCode(128);
     Md5.#padding += UtilNamespace.fillString(String.fromCharCode(0x00), 64);
-    Md5.#g = [
+    Md5.#messageIndexPermutation = [
       0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 1, 6, 11, 0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 5, 8,
       11, 14, 1, 4, 7, 10, 13, 0, 3, 6, 9, 12, 15, 2, 0, 7, 14, 5, 12, 3, 10, 1, 8, 15, 6, 13, 4, 11, 2, 9
     ];
-    Md5.#r = [
+    Md5.#rotateShiftAmounts = [
       7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14,
       20, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6,
       10, 15, 21
     ];
-    Md5.#k = new Array<number>(64);
+    Md5.#sineConstants = new Array<number>(64);
     for (let i = 0; i < 64; ++i) {
-      Md5.#k[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 0x100000000);
+      Md5.#sineConstants[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 0x100000000);
     }
     Md5.#initialized = true;
   }
 
   #state: Md5State | null = null;
   #input = new ByteStringBuffer();
-  readonly #w = new Array<number>(16);
+  readonly #messageBlock = new Array<number>(16);
 
   static create(): Md5Digest {
     Md5.#ensureInit();
@@ -58,7 +58,7 @@ export class Md5 {
       messageLength64: null,
       messageLengthSize: 8,
       start: () => engine.#start(md),
-      update: (msg, encoding) => engine.#update(md, msg, encoding),
+      update: (input, encoding) => engine.#update(md, input, encoding),
       digest: () => engine.#digest(md)
     };
     md.start();
@@ -74,32 +74,32 @@ export class Md5 {
     }
     this.#input = new ByteStringBuffer();
     this.#state = {
-      h0: 0x67452301,
-      h1: 0xefcdab89,
-      h2: 0x98badcfe,
-      h3: 0x10325476
+      hashWord0: 0x67452301,
+      hashWord1: 0xefcdab89,
+      hashWord2: 0x98badcfe,
+      hashWord3: 0x10325476
     };
     return md;
   }
 
-  #update(md: Md5Digest, msg: string, encoding?: string): Md5Digest {
+  #update(md: Md5Digest, message: string, encoding?: string): Md5Digest {
     if (encoding === 'utf8') {
-      msg = encodeUtf8(msg);
+      message = encodeUtf8(message);
     }
 
-    const len = msg.length;
-    md.messageLength += len;
-    const lenParts = [(len / 0x100000000) >>> 0, len >>> 0];
+    const messageByteLength = message.length;
+    md.messageLength += messageByteLength;
+    const lengthCarry = [(messageByteLength / 0x100000000) >>> 0, messageByteLength >>> 0];
     const fullMessageLength = md.fullMessageLength!;
     for (let i = fullMessageLength.length - 1; i >= 0; --i) {
-      fullMessageLength[i] += lenParts[1]!;
-      lenParts[1] = lenParts[0]! + ((fullMessageLength[i]! / 0x100000000) >>> 0);
-      fullMessageLength[i] = fullMessageLength[i]! >>> 0;
-      lenParts[0] = (lenParts[1]! / 0x100000000) >>> 0;
+      fullMessageLength[i] += lengthCarry[1];
+      lengthCarry[1] = lengthCarry[0] + ((fullMessageLength[i] / 0x100000000) >>> 0);
+      fullMessageLength[i] = fullMessageLength[i] >>> 0;
+      lengthCarry[0] = (lengthCarry[1] / 0x100000000) >>> 0;
     }
 
-    this.#input.putBytes(msg);
-    Md5.#updateState(this.#state!, this.#w, this.#input);
+    this.#input.putBytes(message);
+    Md5.#updateState(this.#state!, this.#messageBlock, this.#input);
 
     if (this.#input.read > 2048 || this.#input.length() === 0) {
       this.#input.compact();
@@ -112,97 +112,100 @@ export class Md5 {
     const finalBlock = new ByteStringBuffer();
     finalBlock.putBytes(this.#input.bytes());
 
-    const remaining = md.fullMessageLength![md.fullMessageLength!.length - 1]! + md.messageLengthSize;
+    const remaining = md.fullMessageLength![md.fullMessageLength!.length - 1] + md.messageLengthSize;
 
     const overflow = remaining & (md.blockLength - 1);
     finalBlock.putBytes(Md5.#padding!.substr(0, md.blockLength - overflow));
 
-    let bits: number;
-    let carry = 0;
+    let lengthBits: number;
+    let carryBits = 0;
     for (let i = md.fullMessageLength!.length - 1; i >= 0; --i) {
-      bits = md.fullMessageLength![i]! * 8 + carry;
-      carry = (bits / 0x100000000) >>> 0;
-      finalBlock.putInt32Le(bits >>> 0);
+      lengthBits = md.fullMessageLength![i] * 8 + carryBits;
+      carryBits = (lengthBits / 0x100000000) >>> 0;
+      finalBlock.putInt32Le(lengthBits >>> 0);
     }
 
     const finalState = {
-      h0: this.#state!.h0,
-      h1: this.#state!.h1,
-      h2: this.#state!.h2,
-      h3: this.#state!.h3
+      hashWord0: this.#state!.hashWord0,
+      hashWord1: this.#state!.hashWord1,
+      hashWord2: this.#state!.hashWord2,
+      hashWord3: this.#state!.hashWord3
     };
-    Md5.#updateState(finalState, this.#w, finalBlock);
+    Md5.#updateState(finalState, this.#messageBlock, finalBlock);
     const digestBuffer = new ByteStringBuffer();
-    digestBuffer.putInt32Le(finalState.h0);
-    digestBuffer.putInt32Le(finalState.h1);
-    digestBuffer.putInt32Le(finalState.h2);
-    digestBuffer.putInt32Le(finalState.h3);
+    digestBuffer.putInt32Le(finalState.hashWord0);
+    digestBuffer.putInt32Le(finalState.hashWord1);
+    digestBuffer.putInt32Le(finalState.hashWord2);
+    digestBuffer.putInt32Le(finalState.hashWord3);
     return digestBuffer;
   }
 
-  static #updateState(s: Md5State, w: number[], bytes: ByteStringBuffer): void {
-    const g = Md5.#g!;
-    const r = Md5.#r!;
-    const k = Md5.#k!;
-    let t: number;
-    let a: number;
-    let b: number;
-    let c: number;
-    let d: number;
-    let f: number;
-    let ri: number;
-    let i: number;
-    let len = bytes.length();
-    while (len >= 64) {
-      a = s.h0;
-      b = s.h1;
-      c = s.h2;
-      d = s.h3;
+  static #updateState(state: Md5State, messageBlock: number[], bytes: ByteStringBuffer): void {
+    const messageIndexPermutation = Md5.#messageIndexPermutation!;
+    const rotateShiftAmounts = Md5.#rotateShiftAmounts!;
+    const sineConstants = Md5.#sineConstants!;
+    let roundAccumulator: number;
+    let workA: number;
+    let workB: number;
+    let workC: number;
+    let workD: number;
+    let mixFunction: number;
+    let rotateAmount: number;
+    let roundIndex: number;
+    let remainingBytes = bytes.length();
+    while (remainingBytes >= 64) {
+      workA = state.hashWord0;
+      workB = state.hashWord1;
+      workC = state.hashWord2;
+      workD = state.hashWord3;
 
-      for (i = 0; i < 16; ++i) {
-        w[i] = bytes.getInt32Le();
-        f = d ^ (b & (c ^ d));
-        t = a + f + k[i]! + w[i]!;
-        ri = r[i]!;
-        a = d;
-        d = c;
-        c = b;
-        b += (t << ri) | (t >>> (32 - ri));
+      for (roundIndex = 0; roundIndex < 16; ++roundIndex) {
+        messageBlock[roundIndex] = bytes.getInt32Le();
+        mixFunction = workD ^ (workB & (workC ^ workD));
+        roundAccumulator = workA + mixFunction + sineConstants[roundIndex] + messageBlock[roundIndex];
+        rotateAmount = rotateShiftAmounts[roundIndex]!;
+        workA = workD;
+        workD = workC;
+        workC = workB;
+        workB += (roundAccumulator << rotateAmount) | (roundAccumulator >>> (32 - rotateAmount));
       }
-      for (; i < 32; ++i) {
-        f = c ^ (d & (b ^ c));
-        t = a + f + k[i]! + w[g[i]!]!;
-        ri = r[i]!;
-        a = d;
-        d = c;
-        c = b;
-        b += (t << ri) | (t >>> (32 - ri));
+      for (; roundIndex < 32; ++roundIndex) {
+        mixFunction = workC ^ (workD & (workB ^ workC));
+        roundAccumulator =
+          workA + mixFunction + sineConstants[roundIndex] + messageBlock[messageIndexPermutation[roundIndex]];
+        rotateAmount = rotateShiftAmounts[roundIndex]!;
+        workA = workD;
+        workD = workC;
+        workC = workB;
+        workB += (roundAccumulator << rotateAmount) | (roundAccumulator >>> (32 - rotateAmount));
       }
-      for (; i < 48; ++i) {
-        f = b ^ c ^ d;
-        t = a + f + k[i]! + w[g[i]!]!;
-        ri = r[i]!;
-        a = d;
-        d = c;
-        c = b;
-        b += (t << ri) | (t >>> (32 - ri));
+      for (; roundIndex < 48; ++roundIndex) {
+        mixFunction = workB ^ workC ^ workD;
+        roundAccumulator =
+          workA + mixFunction + sineConstants[roundIndex] + messageBlock[messageIndexPermutation[roundIndex]];
+        rotateAmount = rotateShiftAmounts[roundIndex]!;
+        workA = workD;
+        workD = workC;
+        workC = workB;
+        workB += (roundAccumulator << rotateAmount) | (roundAccumulator >>> (32 - rotateAmount));
       }
-      for (; i < 64; ++i) {
-        f = c ^ (b | ~d);
-        t = a + f + k[i]! + w[g[i]!]!;
-        ri = r[i]!;
-        a = d;
-        d = c;
-        c = b;
-        b += (t << ri) | (t >>> (32 - ri));
+      for (; roundIndex < 64; ++roundIndex) {
+        mixFunction = workC ^ (workB | ~workD);
+        roundAccumulator =
+          workA + mixFunction + sineConstants[roundIndex] + messageBlock[messageIndexPermutation[roundIndex]];
+        rotateAmount = rotateShiftAmounts[roundIndex]!;
+        workA = workD;
+        workD = workC;
+        workC = workB;
+        workB += (roundAccumulator << rotateAmount) | (roundAccumulator >>> (32 - rotateAmount));
       }
 
-      s.h0 = (s.h0 + a) | 0;
-      s.h1 = (s.h1 + b) | 0;
-      s.h2 = (s.h2 + c) | 0;
-      s.h3 = (s.h3 + d) | 0;
+      state.hashWord0 = (state.hashWord0 + workA) | 0;
+      state.hashWord1 = (state.hashWord1 + workB) | 0;
+      state.hashWord2 = (state.hashWord2 + workC) | 0;
+      state.hashWord3 = (state.hashWord3 + workD) | 0;
 
-      len -= 64;
+      remainingBytes -= 64;
     }
   }
 }

@@ -1,4 +1,4 @@
-import os from 'node:os';
+import nodeOs from 'node:os';
 
 type EstimateCoresCallback = (err: null, cores: number) => void;
 type EstimateCoresOptions = { update?: boolean };
@@ -19,18 +19,18 @@ export class EnvInfo {
     callback?: EstimateCoresCallback
   ): void {
     let opts: EstimateCoresOptions;
-    let cb: EstimateCoresCallback;
+    let coresCallback: EstimateCoresCallback;
     if (typeof options === 'function') {
-      cb = options;
+      coresCallback = options;
       opts = {};
     } else {
       opts = options;
-      cb = callback!;
+      coresCallback = callback!;
     }
     if ('cores' in target && !opts.update) {
-      return cb(null, target.cores!);
+      return coresCallback(null, target.cores!);
     }
-    target.cores = Math.max(1, os.cpus().length);
-    return cb(null, target.cores);
+    target.cores = Math.max(1, nodeOs.cpus().length);
+    return coresCallback(null, target.cores);
   }
 }

@@ -1,12 +1,7 @@
 import { Fortuna } from '../prng/Fortuna.js';
-import type { PrngContext, PrngPlugin } from '../prng/PrngTypes.js';
+import type { PrngPlugin } from '../prng/PrngTypes.js';
 import { UtilNamespace } from '../../domain/util/UtilNamespace.js';
-import type {
-  AesPrngBackend,
-  FortunaRandomDependencies,
-  FortunaRandomNamespace,
-  Sha256DigestFactory
-} from './RandomTypes.js';
+import type { FortunaRandomDependencies, FortunaRandomNamespace } from './RandomTypes.js';
 
 const RANDOM_CONTEXT_METHODS = [
   'collect',
@@ -38,24 +33,24 @@ export class FortunaRandom {
 
     return {
       formatKey(key: string) {
-        const tmp = UtilNamespace.createBuffer(key);
-        const words = [tmp.getInt32(), tmp.getInt32(), tmp.getInt32(), tmp.getInt32()];
+        const keyBuffer = UtilNamespace.createBuffer(key);
+        const words = [keyBuffer.getInt32(), keyBuffer.getInt32(), keyBuffer.getInt32(), keyBuffer.getInt32()];
         return deps.aes._expandKey(words, false);
       },
       formatSeed(seed: string) {
-        const tmp = UtilNamespace.createBuffer(seed);
-        return [tmp.getInt32(), tmp.getInt32(), tmp.getInt32(), tmp.getInt32()];
+        const seedBuffer = UtilNamespace.createBuffer(seed);
+        return [seedBuffer.getInt32(), seedBuffer.getInt32(), seedBuffer.getInt32(), seedBuffer.getInt32()];
       },
       cipher(key: number[], seed: number[]) {
         deps.aes._updateBlock(key, seed, prngAesOutput, false);
-        prngAesBuffer.putInt32(prngAesOutput[0]!);
-        prngAesBuffer.putInt32(prngAesOutput[1]!);
-        prngAesBuffer.putInt32(prngAesOutput[2]!);
-        prngAesBuffer.putInt32(prngAesOutput[3]!);
+        prngAesBuffer.putInt32(prngAesOutput[0]);
+        prngAesBuffer.putInt32(prngAesOutput[1]);
+        prngAesBuffer.putInt32(prngAesOutput[2]);
+        prngAesBuffer.putInt32(prngAesOutput[3]);
         return prngAesBuffer.getBytes();
       },
       increment(seed: number[]) {
-        ++seed[3]!;
+        ++seed[3];
         return seed;
       },
       md: deps.sha256
@@ -91,15 +86,12 @@ export class FortunaRandom {
       return random;
     }
 
-    type MethodKey = (typeof RANDOM_CONTEXT_METHODS)[number];
-    type PropertyKey = (typeof RANDOM_CONTEXT_PROPERTIES)[number];
-
     for (let i = 0; i < RANDOM_CONTEXT_METHODS.length; ++i) {
-      const key = RANDOM_CONTEXT_METHODS[i] as MethodKey;
+      const key = RANDOM_CONTEXT_METHODS[i];
       (target as Record<string, unknown>)[key] = (ctx as Record<string, unknown>)[key];
     }
     for (let i = 0; i < RANDOM_CONTEXT_PROPERTIES.length; ++i) {
-      const key = RANDOM_CONTEXT_PROPERTIES[i] as PropertyKey;
+      const key = RANDOM_CONTEXT_PROPERTIES[i];
       (target as Record<string, unknown>)[key] = (ctx as Record<string, unknown>)[key];
     }
 

@@ -8,19 +8,19 @@ export class X509Asn1 {
     const publicKeyValidator = ctx.rsa.publicKeyValidator;
 
     const shortNames: Record<string, string> = {
-      CN: oids['commonName']!,
+      CN: oids['commonName'],
       commonName: 'CN',
-      C: oids['countryName']!,
+      C: oids['countryName'],
       countryName: 'C',
-      L: oids['localityName']!,
+      L: oids['localityName'],
       localityName: 'L',
-      ST: oids['stateOrProvinceName']!,
+      ST: oids['stateOrProvinceName'],
       stateOrProvinceName: 'ST',
-      O: oids['organizationName']!,
+      O: oids['organizationName'],
       organizationName: 'O',
-      OU: oids['organizationalUnitName']!,
+      OU: oids['organizationalUnitName'],
       organizationalUnitName: 'OU',
-      E: oids['emailAddress']!,
+      E: oids['emailAddress'],
       emailAddress: 'E'
     };
 

@@ -17,8 +17,8 @@ export class CbcMode {
     this.cipher = options.cipher!;
     this.blockSize = options.blockSize || 16;
     this._ints = this.blockSize / 4;
-    this._inBlock = new Array(this._ints);
-    this._outBlock = new Array(this._ints);
+    this._inBlock = new Array<number>(this._ints);
+    this._outBlock = new Array<number>(this._ints);
   }
 
   start(options: CipherModeStartOptions): void {
@@ -41,13 +41,13 @@ export class CbcMode {
     }
 
     for (let i = 0; i < this._ints; ++i) {
-      this._inBlock[i] = this._prev![i]! ^ input.getInt32();
+      this._inBlock[i] = this._prev![i] ^ input.getInt32();
     }
 
     this.cipher.encrypt(this._inBlock, this._outBlock);
 
     for (let i = 0; i < this._ints; ++i) {
-      output.putInt32(this._outBlock[i]!);
+      output.putInt32(this._outBlock[i]);
     }
     this._prev = this._outBlock;
   }
@@ -64,12 +64,13 @@ export class CbcMode {
     this.cipher.decrypt(this._inBlock, this._outBlock);
 
     for (let i = 0; i < this._ints; ++i) {
-      output.putInt32(this._prev![i]! ^ this._outBlock[i]!);
+      output.putInt32(this._prev![i] ^ this._outBlock[i]);
     }
     this._prev = this._inBlock.slice(0);
   }
 
-  pad(input: ByteStringBuffer, _options?: PadOptions): boolean {
+  pad(input: ByteStringBuffer, options?: PadOptions): boolean {
+    void options;
     const padding = input.length() === this.blockSize ? this.blockSize : this.blockSize - input.length();
     input.fillWithByte(padding, padding);
     return true;

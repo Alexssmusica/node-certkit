@@ -1,6 +1,6 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { validatePkcs7Padding } from './cipherModeUtils.js';
-import type { PaddingFunction, Rc2CipherObject, Rc2NamespaceObject } from './CipherTypes.js';
+import type { Rc2CipherObject, Rc2NamespaceObject } from './CipherTypes.js';
 
 const piTable = [
   0xd9, 0x78, 0xf9, 0xc4, 0x19, 0xdd, 0xb5, 0xed, 0x28, 0xe9, 0xfd, 0x79, 0x4a, 0xa0, 0xd8, 0x9d, 0xc6, 0x7e, 0x37,
@@ -19,7 +19,7 @@ const piTable = [
   0x77, 0x0a, 0xa6, 0x20, 0x68, 0xfe, 0x7f, 0xc1, 0xad
 ];
 
-const s = [1, 2, 3, 5];
+const rotateShifts = [1, 2, 3, 5];
 
 const rol = function (word: number, bits: number): number {
   return ((word << bits) & 0xffff) | ((word & 0xffff) >> (16 - bits));
@@ -36,24 +36,32 @@ export class Rc2Cipher {
     }
     effKeyBits = effKeyBits || 128;
 
-    const L = key;
-    const T = key.length();
-    const T1 = effKeyBits;
-    const T8 = Math.ceil(T1 / 8);
-    const TM = 0xff >> (T1 & 0x07);
-    let i: number;
+    const expandedKeyBuffer = key;
+    const keyByteLength = key.length();
+    const effectiveKeyBitCount = effKeyBits;
+    const paddedKeyByteCount = Math.ceil(effectiveKeyBitCount / 8);
+    const effectiveKeyByteMask = 0xff >> (effectiveKeyBitCount & 0x07);
+    let byteIndex: number;
 
-    for (i = T; i < 128; i++) {
-      L.putByte(piTable[(L.at(i - 1) + L.at(i - T)) & 0xff]!);
+    for (byteIndex = keyByteLength; byteIndex < 128; byteIndex++) {
+      expandedKeyBuffer.putByte(
+        piTable[(expandedKeyBuffer.at(byteIndex - 1) + expandedKeyBuffer.at(byteIndex - keyByteLength)) & 0xff]
+      );
     }
 
-    L.setAt(128 - T8, piTable[L.at(128 - T8) & TM]!);
+    expandedKeyBuffer.setAt(
+      128 - paddedKeyByteCount,
+      piTable[expandedKeyBuffer.at(128 - paddedKeyByteCount) & effectiveKeyByteMask]
+    );
 
-    for (i = 127 - T8; i >= 0; i--) {
-      L.setAt(i, piTable[L.at(i + 1) ^ L.at(i + T8)]!);
+    for (byteIndex = 127 - paddedKeyByteCount; byteIndex >= 0; byteIndex--) {
+      expandedKeyBuffer.setAt(
+        byteIndex,
+        piTable[expandedKeyBuffer.at(byteIndex + 1) ^ expandedKeyBuffer.at(byteIndex + paddedKeyByteCount)]
+      );
     }
 
-    return L;
+    return expandedKeyBuffer;
   }
 
   static createEncryptionCipher(key: string | ByteStringBuffer, bits?: number): Rc2CipherObject {
@@ -107,45 +115,45 @@ export class Rc2Cipher {
     let mashRound: (registers: number[]) => void;
     // Persists across mix/mash rounds within a single block (RFC 2268 key schedule index).
     let keyIndex: number;
-    const K: number[] = [];
+    const expandedKeyWords: number[] = [];
 
     key = Rc2Cipher.expandKey(key, bits);
     for (let keyWordIndex = 0; keyWordIndex < 64; keyWordIndex++) {
-      K.push(key.getInt16Le());
+      expandedKeyWords.push(key.getInt16Le());
     }
 
     if (encrypt) {
       mixRound = function (registers: number[]) {
         for (let roundIndex = 0; roundIndex < 4; roundIndex++) {
-          registers[roundIndex]! +=
-            K[keyIndex]! +
-            (registers[(roundIndex + 3) % 4]! & registers[(roundIndex + 2) % 4]!) +
-            (~registers[(roundIndex + 3) % 4]! & registers[(roundIndex + 1) % 4]!);
-          registers[roundIndex] = rol(registers[roundIndex]!, s[roundIndex]!);
+          registers[roundIndex] +=
+            expandedKeyWords[keyIndex] +
+            (registers[(roundIndex + 3) % 4] & registers[(roundIndex + 2) % 4]) +
+            (~registers[(roundIndex + 3) % 4] & registers[(roundIndex + 1) % 4]);
+          registers[roundIndex] = rol(registers[roundIndex], rotateShifts[roundIndex]);
           keyIndex++;
         }
       };
 
       mashRound = function (registers: number[]) {
         for (let roundIndex = 0; roundIndex < 4; roundIndex++) {
-          registers[roundIndex]! += K[registers[(roundIndex + 3) % 4]! & 63]!;
+          registers[roundIndex] += expandedKeyWords[registers[(roundIndex + 3) % 4] & 63];
         }
       };
     } else {
       mixRound = function (registers: number[]) {
         for (let roundIndex = 3; roundIndex >= 0; roundIndex--) {
-          registers[roundIndex] = ror(registers[roundIndex]!, s[roundIndex]!);
-          registers[roundIndex]! -=
-            K[keyIndex]! +
-            (registers[(roundIndex + 3) % 4]! & registers[(roundIndex + 2) % 4]!) +
-            (~registers[(roundIndex + 3) % 4]! & registers[(roundIndex + 1) % 4]!);
+          registers[roundIndex] = ror(registers[roundIndex], rotateShifts[roundIndex]);
+          registers[roundIndex] -=
+            expandedKeyWords[keyIndex] +
+            (registers[(roundIndex + 3) % 4] & registers[(roundIndex + 2) % 4]) +
+            (~registers[(roundIndex + 3) % 4] & registers[(roundIndex + 1) % 4]);
           keyIndex--;
         }
       };
 
       mashRound = function (registers: number[]) {
         for (let roundIndex = 3; roundIndex >= 0; roundIndex--) {
-          registers[roundIndex]! -= K[registers[(roundIndex + 3) % 4]! & 63]!;
+          registers[roundIndex] -= expandedKeyWords[registers[(roundIndex + 3) % 4] & 63];
         }
       };
     }
@@ -170,21 +178,21 @@ export class Rc2Cipher {
       keyIndex = encrypt ? 0 : 63;
 
       for (let ptr = 0; ptr < plan.length; ptr++) {
-        for (let ctr = 0; ctr < plan[ptr]![0]; ctr++) {
-          plan[ptr]![1](registers);
+        for (let ctr = 0; ctr < plan[ptr][0]; ctr++) {
+          plan[ptr][1](registers);
         }
       }
 
       for (let wordIndex = 0; wordIndex < 4; wordIndex++) {
         if (_iv !== null) {
           if (encrypt) {
-            _iv.putInt16Le(registers[wordIndex]!);
+            _iv.putInt16Le(registers[wordIndex]);
           } else {
-            registers[wordIndex]! ^= _iv.getInt16Le();
+            registers[wordIndex] ^= _iv.getInt16Le();
           }
         }
 
-        _output!.putInt16Le(registers[wordIndex]!);
+        _output!.putInt16Le(registers[wordIndex]);
       }
     };
 

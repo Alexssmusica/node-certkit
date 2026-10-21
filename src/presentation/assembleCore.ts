@@ -45,10 +45,7 @@ export function assembleRandom(certkit: MutableCertkit): void {
     aes: certkit.aes!,
     sha256: certkit.md!.sha256!
   } as FortunaRandomDependencies;
-  certkit.random = FortunaRandom.mergeInto(
-    certkit.random as Parameters<typeof FortunaRandom.mergeInto>[0],
-    deps
-  ) as MutableCertkit['random'];
+  certkit.random = FortunaRandom.mergeInto(certkit.random, deps);
 }
 
 export function assemblePrime(certkit: MutableCertkit): void {

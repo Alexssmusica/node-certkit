@@ -102,7 +102,7 @@ export class CertificateVerify {
           }
         }
 
-        if (error === null && parent && !cert.isIssuer(parent as X509Certificate)) {
+        if (error === null && parent && !cert.isIssuer(parent)) {
           error = {
             message: 'Certificate issuer is invalid.',
             error: certificateError.bad_certificate
@@ -110,13 +110,13 @@ export class CertificateVerify {
         }
 
         if (error === null) {
-          const se: Record<string, boolean> = {
+          const knownCriticalExtensions: Record<string, boolean> = {
             keyUsage: true,
             basicConstraints: true
           };
           for (let i = 0; error === null && i < cert.extensions.length; ++i) {
-            const ext = cert.extensions[i]!;
-            if (ext.critical && !(ext.name! in se)) {
+            const ext = cert.extensions[i];
+            if (ext.critical && !(ext.name! in knownCriticalExtensions)) {
               error = {
                 message: 'Certificate has an unsupported critical extension.',
                 error: certificateError.unsupported_certificate
@@ -198,7 +198,9 @@ export class CertificateVerify {
             }
           }
 
-          throw error;
+          const verifyFailure = new Error(error!.message) as Error & VerifyErrorObject;
+          Object.assign(verifyFailure, error!);
+          throw verifyFailure;
         }
 
         first = false;

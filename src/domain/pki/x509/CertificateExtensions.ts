@@ -63,10 +63,10 @@ export function certificateExtensionsFromAsn1(
   const parsedExtensions: X509Extension[] = [];
   const sequences = exts.value as Asn1Object[];
   for (let i = 0; i < sequences.length; ++i) {
-    const extseq = sequences[i]!;
+    const extseq = sequences[i];
     const extensionList = extseq.value as Asn1Object[];
     for (let extensionIndex = 0; extensionIndex < extensionList.length; ++extensionIndex) {
-      parsedExtensions.push(certificateExtensionFromAsn1(extensionList[extensionIndex]!, options));
+      parsedExtensions.push(certificateExtensionFromAsn1(extensionList[extensionIndex], options));
     }
   }
 
@@ -93,115 +93,115 @@ export function certificateExtensionFromAsn1(
   // [0] extnID      OBJECT IDENTIFIER
   // [1] critical    BOOLEAN DEFAULT FALSE
   // [2] extnValue   OCTET STRING
-  const e: X509Extension = {};
+  const extension: X509Extension = {};
   const fields = ext.value as Asn1Object[];
-  e.id = asn1.derToOid(fields[0]!.value as string);
-  e.critical = false;
-  if (fields[1]!.type === asn1.Type.BOOLEAN) {
-    e.critical = (fields[1]!.value as string).charCodeAt(0) !== 0x00;
-    e.value = fields[2]!.value as string;
+  extension.id = asn1.derToOid(fields[0].value as string);
+  extension.critical = false;
+  if (fields[1].type === asn1.Type.BOOLEAN) {
+    extension.critical = (fields[1].value as string).charCodeAt(0) !== 0x00;
+    extension.value = fields[2].value as string;
   } else {
-    e.value = fields[1]!.value as string;
+    extension.value = fields[1].value as string;
   }
-  if (e.id && e.id in oids) {
-    e.name = oids[e.id];
-    const rawValue = e.value as string;
+  if (extension.id && extension.id in oids) {
+    extension.name = oids[extension.id];
+    const rawValue = extension.value;
 
-    if (e.name === 'keyUsage') {
-      const ev = asn1.fromDer(rawValue);
-      const bits = ev.value as string;
+    if (extension.name === 'keyUsage') {
+      const extensionValueAsn1 = asn1.fromDer(rawValue);
+      const bits = extensionValueAsn1.value as string;
       let bitStringByte2 = 0x00;
-      let b3 = 0x00;
+      let bitStringByte3 = 0x00;
       if (bits.length > 1) {
         bitStringByte2 = bits.charCodeAt(1);
-        b3 = bits.length > 2 ? bits.charCodeAt(2) : 0;
+        bitStringByte3 = bits.length > 2 ? bits.charCodeAt(2) : 0;
       }
-      e.digitalSignature = (bitStringByte2 & 0x80) === 0x80;
-      e.nonRepudiation = (bitStringByte2 & 0x40) === 0x40;
-      e.keyEncipherment = (bitStringByte2 & 0x20) === 0x20;
-      e.dataEncipherment = (bitStringByte2 & 0x10) === 0x10;
-      e.keyAgreement = (bitStringByte2 & 0x08) === 0x08;
-      e.keyCertSign = (bitStringByte2 & 0x04) === 0x04;
-      e.cRLSign = (bitStringByte2 & 0x02) === 0x02;
-      e.encipherOnly = (bitStringByte2 & 0x01) === 0x01;
-      e.decipherOnly = (b3 & 0x80) === 0x80;
-    } else if (e.name === 'basicConstraints') {
-      const ev = asn1.fromDer(rawValue);
-      const seq = ev.value as Asn1Object[];
-      if (seq.length > 0 && seq[0]!.type === asn1.Type.BOOLEAN) {
-        e.cA = (seq[0]!.value as string).charCodeAt(0) !== 0x00;
+      extension.digitalSignature = (bitStringByte2 & 0x80) === 0x80;
+      extension.nonRepudiation = (bitStringByte2 & 0x40) === 0x40;
+      extension.keyEncipherment = (bitStringByte2 & 0x20) === 0x20;
+      extension.dataEncipherment = (bitStringByte2 & 0x10) === 0x10;
+      extension.keyAgreement = (bitStringByte2 & 0x08) === 0x08;
+      extension.keyCertSign = (bitStringByte2 & 0x04) === 0x04;
+      extension.cRLSign = (bitStringByte2 & 0x02) === 0x02;
+      extension.encipherOnly = (bitStringByte2 & 0x01) === 0x01;
+      extension.decipherOnly = (bitStringByte3 & 0x80) === 0x80;
+    } else if (extension.name === 'basicConstraints') {
+      const extensionValueAsn1 = asn1.fromDer(rawValue);
+      const seq = extensionValueAsn1.value as Asn1Object[];
+      if (seq.length > 0 && seq[0].type === asn1.Type.BOOLEAN) {
+        extension.cA = (seq[0].value as string).charCodeAt(0) !== 0x00;
       } else {
-        e.cA = false;
+        extension.cA = false;
       }
       let value: string | null = null;
-      if (seq.length > 0 && seq[0]!.type === asn1.Type.INTEGER) {
-        value = seq[0]!.value as string;
+      if (seq.length > 0 && seq[0].type === asn1.Type.INTEGER) {
+        value = seq[0].value as string;
       } else if (seq.length > 1) {
-        value = seq[1]!.value as string;
+        value = seq[1].value as string;
       }
       if (value !== null) {
-        e.pathLenConstraint = asn1.derToInteger(value);
+        extension.pathLenConstraint = asn1.derToInteger(value);
       }
-    } else if (e.name === 'extKeyUsage') {
-      const ev = asn1.fromDer(rawValue);
-      const usages = ev.value as Asn1Object[];
+    } else if (extension.name === 'extKeyUsage') {
+      const extensionValueAsn1 = asn1.fromDer(rawValue);
+      const usages = extensionValueAsn1.value as Asn1Object[];
       for (let usageIndex = 0; usageIndex < usages.length; ++usageIndex) {
-        const oid = asn1.derToOid(usages[usageIndex]!.value as string);
+        const oid = asn1.derToOid(usages[usageIndex].value as string);
         if (oid in oids) {
-          e[oids[oid]] = true;
+          extension[oids[oid]] = true;
         } else {
-          e[oid] = true;
+          extension[oid] = true;
         }
       }
-    } else if (e.name === 'nsCertType') {
-      const ev = asn1.fromDer(rawValue);
-      const bits = ev.value as string;
+    } else if (extension.name === 'nsCertType') {
+      const extensionValueAsn1 = asn1.fromDer(rawValue);
+      const bits = extensionValueAsn1.value as string;
       let bitStringByte2 = 0x00;
       if (bits.length > 1) {
         bitStringByte2 = bits.charCodeAt(1);
       }
-      e.client = (bitStringByte2 & 0x80) === 0x80;
-      e.server = (bitStringByte2 & 0x40) === 0x40;
-      e.email = (bitStringByte2 & 0x20) === 0x20;
-      e.objsign = (bitStringByte2 & 0x10) === 0x10;
-      e.reserved = (bitStringByte2 & 0x08) === 0x08;
-      e.sslCA = (bitStringByte2 & 0x04) === 0x04;
-      e.emailCA = (bitStringByte2 & 0x02) === 0x02;
-      e.objCA = (bitStringByte2 & 0x01) === 0x01;
-    } else if (e.name === 'subjectAltName' || e.name === 'issuerAltName') {
-      e.altNames = [];
+      extension.client = (bitStringByte2 & 0x80) === 0x80;
+      extension.server = (bitStringByte2 & 0x40) === 0x40;
+      extension.email = (bitStringByte2 & 0x20) === 0x20;
+      extension.objsign = (bitStringByte2 & 0x10) === 0x10;
+      extension.reserved = (bitStringByte2 & 0x08) === 0x08;
+      extension.sslCA = (bitStringByte2 & 0x04) === 0x04;
+      extension.emailCA = (bitStringByte2 & 0x02) === 0x02;
+      extension.objCA = (bitStringByte2 & 0x01) === 0x01;
+    } else if (extension.name === 'subjectAltName' || extension.name === 'issuerAltName') {
+      extension.altNames = [];
 
-      let gn: Asn1Object;
-      const ev = asn1.fromDer(rawValue);
-      const names = ev.value as Asn1Object[];
+      let generalNameAsn1: Asn1Object;
+      const extensionValueAsn1 = asn1.fromDer(rawValue);
+      const names = extensionValueAsn1.value as Asn1Object[];
       for (let n = 0; n < names.length; ++n) {
-        gn = names[n]!;
+        generalNameAsn1 = names[n]!;
 
         const altName: GeneralName = {
-          type: gn.type,
-          value: gn.value as string
+          type: generalNameAsn1.type,
+          value: generalNameAsn1.value as string
         };
-        e.altNames.push(altName);
+        extension.altNames.push(altName);
 
-        switch (gn.type) {
+        switch (generalNameAsn1.type) {
           case 1:
           case 2:
           case 6:
             break;
           case 7:
-            altName.ip = util.bytesToIP(gn.value as string);
+            altName.ip = util.bytesToIP(generalNameAsn1.value as string);
             break;
           case 8:
-            altName.oid = asn1.derToOid(gn.value as string);
+            altName.oid = asn1.derToOid(generalNameAsn1.value as string);
             break;
           default:
             break;
         }
       }
-    } else if (e.name === 'subjectKeyIdentifier') {
-      const ev = asn1.fromDer(rawValue);
-      e.subjectKeyIdentifier = util.bytesToHex(ev.value as string);
+    } else if (extension.name === 'subjectKeyIdentifier') {
+      const extensionValueAsn1 = asn1.fromDer(rawValue);
+      extension.subjectKeyIdentifier = util.bytesToHex(extensionValueAsn1.value as string);
     }
   }
-  return e;
+  return extension;
 }

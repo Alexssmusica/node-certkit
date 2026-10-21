@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import certkit from '../src/presentation/index.js';
 import type { PrngPlugin } from '../src/infrastructure/prng/PrngTypes.js';
 
@@ -27,7 +27,9 @@ type SnapshotDiff = {
 import fs from 'node:fs';
 import path from 'node:path';
 const snapshotPath = path.join(import.meta.dirname, 'instance-shape.snapshot.json');
-const expected = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
+type InstanceSnapshot = Record<string, InstanceDescription>;
+
+const expected = JSON.parse(fs.readFileSync(snapshotPath, 'utf8')) as InstanceSnapshot;
 
 const fixtureDir = path.join(import.meta.dirname, 'fixtures');
 const bufferB64 = fs.readFileSync(path.join(fixtureDir, 'certificate.pfx.b64'), 'utf8').trim();
@@ -69,7 +71,7 @@ function describeInstance(instance: object, label: string): InstanceDescription 
     }
   }
 
-  const proto = Object.getPrototypeOf(instance);
+  const proto = Object.getPrototypeOf(instance) as object | null;
   const protoMethods: Record<string, ValueDescription> = {};
   if (proto && proto !== Object.prototype) {
     const names = Object.getOwnPropertyNames(proto).sort();
@@ -176,7 +178,7 @@ function diffSnapshots(a: Record<string, unknown>, b: Record<string, unknown>): 
 }
 
 describe('Instance shape snapshot', () => {
-  it('matches the committed snapshot', (ctx) => {
+  it('matches the committed snapshot', () => {
     const actual = buildActual();
     const diff = diffSnapshots(expected, actual);
     if (diff.added.length || diff.removed.length || diff.changed.length) {

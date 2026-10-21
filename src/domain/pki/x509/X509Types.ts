@@ -13,7 +13,7 @@ import type { RsaPrivateKey, RsaPublicKey } from '../RsaTypes.js';
 export type X509Runtime = {
   asn1: Asn1NamespaceObject;
   oids: Record<string, string>;
-  md: MdRegistry;
+  digestRegistry: MdRegistry;
   util: UtilNamespaceObject;
   pem: CertkitPemNamespace;
   rsa: CertkitRsaNamespace;
@@ -39,7 +39,7 @@ export type MdDigestKey = Exclude<keyof MdRegistry, 'algorithms'>;
 export type SignatureDeps = {
   asn1: Asn1NamespaceObject;
   oids: Record<string, string>;
-  md: MdRegistry;
+  digestRegistry: MdRegistry;
   pss: CertkitPssNamespace;
   mgf: CertkitMgfNamespace;
 };
@@ -50,7 +50,7 @@ export type X509SignatureHelpers = {
   verifySignature: (options: {
     certificate: X509Certificate | X509CertificationRequest;
     subject?: X509Certificate | X509CertificationRequest;
-    md: MessageDigest;
+    messageDigest: MessageDigest;
     signature: string | null;
   }) => boolean;
   signatureParametersToAsn1: (oid: string, params: SignatureParameters) => Asn1Object;
@@ -252,7 +252,7 @@ export type VerifyCallback = (
   verified: boolean | CertificateErrorCode,
   depth: number,
   certs: X509Certificate[]
-) => boolean | { message?: string; error?: CertificateErrorCode | string } | string | 0;
+) => boolean | { message?: string; error?: string } | string | 0;
 
 export type VerifyOptions = {
   verify?: VerifyCallback;
@@ -280,7 +280,7 @@ export type X509Helpers = {
   verifySignature: (options: {
     certificate: X509Certificate | X509CertificationRequest;
     subject?: X509Certificate | X509CertificationRequest;
-    md: MessageDigest;
+    messageDigest: MessageDigest;
     signature: string | null;
   }) => boolean;
   dnToAsn1: (dnEntity: { attributes: DnAttribute[] }) => Asn1Object;

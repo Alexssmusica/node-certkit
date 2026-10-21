@@ -34,38 +34,38 @@ export class UtilNamespace {
     return new ByteStringBuffer(input as ConstructorParameters<typeof ByteStringBuffer>[0]);
   }
 
-  static fillString(c: string, n: number): string {
-    let s = '';
-    while (n > 0) {
-      if (n & 1) {
-        s += c;
+  static fillString(fillChar: string, repeatCount: number): string {
+    let result = '';
+    while (repeatCount > 0) {
+      if (repeatCount & 1) {
+        result += fillChar;
       }
-      n >>>= 1;
-      if (n > 0) {
-        c += c;
+      repeatCount >>>= 1;
+      if (repeatCount > 0) {
+        fillChar += fillChar;
       }
     }
-    return s;
+    return result;
   }
 
-  static xorBytes(firstBytes: string, secondBytes: string, n: number): string {
-    let s3 = '';
-    let b = '';
-    let t = '';
-    let i = 0;
-    let c = 0;
-    for (; n > 0; --n, ++i) {
-      b = String.fromCharCode(firstBytes.charCodeAt(i) ^ secondBytes.charCodeAt(i));
-      if (c >= 10) {
-        s3 += t;
-        t = '';
-        c = 0;
+  static xorBytes(firstBytes: string, secondBytes: string, byteCount: number): string {
+    let xorResult = '';
+    let xorByte: string;
+    let chunk = '';
+    let index = 0;
+    let chunkLength = 0;
+    for (; byteCount > 0; --byteCount, ++index) {
+      xorByte = String.fromCharCode(firstBytes.charCodeAt(index) ^ secondBytes.charCodeAt(index));
+      if (chunkLength >= 10) {
+        xorResult += chunk;
+        chunk = '';
+        chunkLength = 0;
       }
-      t += b;
-      ++c;
+      chunk += xorByte;
+      ++chunkLength;
     }
-    s3 += t;
-    return s3;
+    xorResult += chunk;
+    return xorResult;
   }
 
   static hexToBytes(hex: string): string {
@@ -107,19 +107,19 @@ export class UtilNamespace {
   }
 
   static format(format: string, ...args: unknown[]): string {
-    const re = /%./g;
+    const formatPattern = /%./g;
     let match: RegExpExecArray | null;
     let part: string;
     let argi = 0;
     const parts: string[] = [];
     let last = 0;
-    while ((match = re.exec(format))) {
-      part = format.substring(last, re.lastIndex - 2);
+    while ((match = formatPattern.exec(format))) {
+      part = format.substring(last, formatPattern.lastIndex - 2);
       if (part.length > 0) {
         parts.push(part);
       }
-      last = re.lastIndex;
-      const code = match[0][1]!;
+      last = formatPattern.lastIndex;
+      const code = match[0][1];
       switch (code) {
         case 's':
         case 'o':
@@ -141,21 +141,21 @@ export class UtilNamespace {
   }
 
   static formatNumber(number: number, decimals?: number, decimalPoint?: string, thousandsSeparator?: string): string {
-    const n = number;
-    const c = isNaN((decimals = Math.abs(decimals!))) ? 2 : decimals!;
-    const d = decimalPoint === undefined ? ',' : decimalPoint;
-    const t = thousandsSeparator === undefined ? '.' : thousandsSeparator;
-    const s = n < 0 ? '-' : '';
-    const i = parseInt(String(Math.abs(+n || 0).toFixed(c)), 10) + '';
-    const j = i.length > 3 ? i.length % 3 : 0;
+    const num = number;
+    const fractionDigits = isNaN((decimals = Math.abs(decimals!))) ? 2 : decimals;
+    const decimalSep = decimalPoint === undefined ? ',' : decimalPoint;
+    const thousandsSep = thousandsSeparator === undefined ? '.' : thousandsSeparator;
+    const signPrefix = num < 0 ? '-' : '';
+    const integerPart = parseInt(String(Math.abs(+num || 0).toFixed(fractionDigits)), 10) + '';
+    const headLength = integerPart.length > 3 ? integerPart.length % 3 : 0;
     return (
-      s +
-      (j ? i.substr(0, j) + t : '') +
-      i.substr(j).replace(/(\d{3})(?=\d)/g, '$1' + t) +
-      (c
-        ? d +
-          Math.abs(n - parseInt(i, 10))
-            .toFixed(c)
+      signPrefix +
+      (headLength ? integerPart.substr(0, headLength) + thousandsSep : '') +
+      integerPart.substr(headLength).replace(/(\d{3})(?=\d)/g, '$1' + thousandsSep) +
+      (fractionDigits
+        ? decimalSep +
+          Math.abs(num - parseInt(integerPart, 10))
+            .toFixed(fractionDigits)
             .slice(2)
         : '')
     );
@@ -176,55 +176,55 @@ export class UtilNamespace {
     }
   }
 
-  static bytesFromIP(ip: string): string | null {
-    if (ip.indexOf('.') !== -1) {
-      return UtilNamespace.bytesFromIPv4(ip);
+  static bytesFromIP(ipAddress: string): string | null {
+    if (ipAddress.indexOf('.') !== -1) {
+      return UtilNamespace.bytesFromIPv4(ipAddress);
     }
-    if (ip.indexOf(':') !== -1) {
-      return UtilNamespace.bytesFromIPv6(ip);
+    if (ipAddress.indexOf(':') !== -1) {
+      return UtilNamespace.bytesFromIPv6(ipAddress);
     }
     return null;
   }
 
-  static bytesFromIPv4(ip: string): string | null {
-    const parts = ip.split('.');
+  static bytesFromIPv4(ipAddress: string): string | null {
+    const parts = ipAddress.split('.');
     if (parts.length !== 4) {
       return null;
     }
-    const b = UtilNamespace.createBuffer();
+    const buffer = UtilNamespace.createBuffer();
     for (let i = 0; i < parts.length; ++i) {
-      const num = parseInt(parts[i]!, 10);
+      const num = parseInt(parts[i], 10);
       if (isNaN(num)) {
         return null;
       }
-      b.putByte(num);
+      buffer.putByte(num);
     }
-    return b.getBytes();
+    return buffer.getBytes();
   }
 
-  static bytesFromIPv6(ip: string): string | null {
+  static bytesFromIPv6(ipAddress: string): string | null {
     let blanks = 0;
-    const segments = ip.split(':').filter(function (e) {
-      if (e.length === 0) {
+    const segments = ipAddress.split(':').filter(function (segment) {
+      if (segment.length === 0) {
         ++blanks;
       }
       return true;
     });
     let zeros = (8 - segments.length + blanks) * 2;
-    const b = UtilNamespace.createBuffer();
+    const buffer = UtilNamespace.createBuffer();
     for (let i = 0; i < 8; ++i) {
-      if (!segments[i] || segments[i]!.length === 0) {
-        b.fillWithByte(0, zeros);
+      if (!segments[i] || segments[i].length === 0) {
+        buffer.fillWithByte(0, zeros);
         zeros = 0;
         continue;
       }
-      const bytes = UtilNamespace.hexToBytes(segments[i]!);
+      const bytes = UtilNamespace.hexToBytes(segments[i]);
       if (bytes.length < 2) {
-        b.putByte(0);
+        buffer.putByte(0);
       }
-      b.putBytes(bytes);
+      buffer.putBytes(bytes);
     }
-    return b.getBytes();
+    return buffer.getBytes();
   }
 
   static bytesToIP(bytes: string): string | null {
@@ -241,52 +241,52 @@ export class UtilNamespace {
     if (bytes.length !== 4) {
       return null;
     }
-    const ip: number[] = [];
+    const octets: number[] = [];
     for (let i = 0; i < bytes.length; ++i) {
-      ip.push(bytes.charCodeAt(i));
+      octets.push(bytes.charCodeAt(i));
     }
-    return ip.join('.');
+    return octets.join('.');
   }
 
   static bytesToIPv6(bytes: string): string | null {
     if (bytes.length !== 16) {
       return null;
     }
-    const ip: string[] = [];
+    const hextets: string[] = [];
     const zeroGroups: { start: number; end: number }[] = [];
     let zeroMaxGroup = 0;
     for (let i = 0; i < bytes.length; i += 2) {
-      let hex = UtilNamespace.bytesToHex(bytes[i]! + bytes[i + 1]!);
+      let hex = UtilNamespace.bytesToHex(bytes[i] + bytes[i + 1]);
       while (hex[0] === '0' && hex !== '0') {
         hex = hex.substr(1);
       }
       if (hex === '0') {
         const last = zeroGroups[zeroGroups.length - 1];
-        const idx = ip.length;
+        const idx = hextets.length;
         if (!last || idx !== last.end + 1) {
           zeroGroups.push({ start: idx, end: idx });
         } else {
           last.end = idx;
-          if (last.end - last.start > zeroGroups[zeroMaxGroup]!.end - zeroGroups[zeroMaxGroup]!.start) {
+          if (last.end - last.start > zeroGroups[zeroMaxGroup].end - zeroGroups[zeroMaxGroup].start) {
             zeroMaxGroup = zeroGroups.length - 1;
           }
         }
       }
-      ip.push(hex);
+      hextets.push(hex);
     }
     if (zeroGroups.length > 0) {
-      const group = zeroGroups[zeroMaxGroup]!;
+      const group = zeroGroups[zeroMaxGroup];
       if (group.end - group.start > 0) {
-        ip.splice(group.start, group.end - group.start + 1, '');
+        hextets.splice(group.start, group.end - group.start + 1, '');
         if (group.start === 0) {
-          ip.unshift('');
+          hextets.unshift('');
         }
         if (group.end === 7) {
-          ip.push('');
+          hextets.push('');
         }
       }
     }
-    return ip.join(':');
+    return hextets.join(':');
   }
 }
 
@@ -294,82 +294,114 @@ export class UtilNamespace {
  * Builds a flat certkit.util namespace object with all legacy aliases preserved.
  */
 export function createUtilNamespace(baseN: BaseNModule): UtilNamespaceObject {
-  const ns = {} as UtilNamespaceObject;
+  const utilNamespace = {} as UtilNamespaceObject;
 
-  ns.isArray = UtilNamespace.isArray;
-  ns.isArrayBuffer = UtilNamespace.isArrayBuffer;
-  ns.isArrayBufferView = UtilNamespace.isArrayBufferView;
-  ns.createBuffer = function (input?: unknown, encoding?: string) {
+  utilNamespace.isArray = UtilNamespace.isArray;
+  utilNamespace.isArrayBuffer = UtilNamespace.isArrayBuffer;
+  utilNamespace.isArrayBufferView = UtilNamespace.isArrayBufferView;
+  utilNamespace.createBuffer = function (input?: unknown, encoding?: string) {
     return UtilNamespace.createBuffer(input, encoding);
   };
-  ns.fillString = UtilNamespace.fillString.bind(UtilNamespace);
-  ns.xorBytes = UtilNamespace.xorBytes.bind(UtilNamespace);
-  ns.hexToBytes = UtilNamespace.hexToBytes.bind(UtilNamespace);
-  ns.bytesToHex = UtilNamespace.bytesToHex.bind(UtilNamespace);
-  ns.int32ToBytes = UtilNamespace.int32ToBytes.bind(UtilNamespace);
-  ns.encode64 = UtilNamespace.encode64.bind(UtilNamespace);
-  ns.decode64 = UtilNamespace.decode64.bind(UtilNamespace);
-  ns.encodeUtf8 = encodeUtf8;
-  ns.decodeUtf8 = decodeUtf8;
-  ns.isEmpty = UtilNamespace.isEmpty.bind(UtilNamespace);
-  ns.format = UtilNamespace.format.bind(UtilNamespace);
-  ns.formatNumber = UtilNamespace.formatNumber.bind(UtilNamespace);
-  ns.formatSize = UtilNamespace.formatSize.bind(UtilNamespace);
-  ns.bytesFromIP = UtilNamespace.bytesFromIP.bind(UtilNamespace);
-  ns.bytesFromIPv4 = UtilNamespace.bytesFromIPv4.bind(UtilNamespace);
-  ns.bytesFromIPv6 = UtilNamespace.bytesFromIPv6.bind(UtilNamespace);
-  ns.bytesToIP = UtilNamespace.bytesToIP.bind(UtilNamespace);
-  ns.bytesToIPv4 = UtilNamespace.bytesToIPv4.bind(UtilNamespace);
-  ns.bytesToIPv6 = UtilNamespace.bytesToIPv6.bind(UtilNamespace);
+  utilNamespace.fillString = UtilNamespace.fillString.bind(UtilNamespace);
+  utilNamespace.xorBytes = UtilNamespace.xorBytes.bind(UtilNamespace);
+  utilNamespace.hexToBytes = UtilNamespace.hexToBytes.bind(UtilNamespace);
+  utilNamespace.bytesToHex = UtilNamespace.bytesToHex.bind(UtilNamespace);
+  utilNamespace.int32ToBytes = UtilNamespace.int32ToBytes.bind(UtilNamespace);
+  utilNamespace.encode64 = UtilNamespace.encode64.bind(UtilNamespace);
+  utilNamespace.decode64 = UtilNamespace.decode64.bind(UtilNamespace);
+  utilNamespace.encodeUtf8 = encodeUtf8;
+  utilNamespace.decodeUtf8 = decodeUtf8;
+  utilNamespace.isEmpty = UtilNamespace.isEmpty.bind(UtilNamespace);
+  utilNamespace.format = UtilNamespace.format.bind(UtilNamespace);
+  utilNamespace.formatNumber = UtilNamespace.formatNumber.bind(UtilNamespace);
+  utilNamespace.formatSize = UtilNamespace.formatSize.bind(UtilNamespace);
+  utilNamespace.bytesFromIP = UtilNamespace.bytesFromIP.bind(UtilNamespace);
+  utilNamespace.bytesFromIPv4 = UtilNamespace.bytesFromIPv4.bind(UtilNamespace);
+  utilNamespace.bytesFromIPv6 = UtilNamespace.bytesFromIPv6.bind(UtilNamespace);
+  utilNamespace.bytesToIP = UtilNamespace.bytesToIP.bind(UtilNamespace);
+  utilNamespace.bytesToIPv4 = UtilNamespace.bytesToIPv4.bind(UtilNamespace);
+  utilNamespace.bytesToIPv6 = UtilNamespace.bytesToIPv6.bind(UtilNamespace);
 
-  ns.nextTick = EnvInfo.nextTick;
-  ns.setImmediate = EnvInfo.setImmediate;
-  ns.isNodejs = EnvInfo.isNodejs;
-  ns.globalScope = EnvInfo.globalScope;
-  ns.estimateCores = function (
+  utilNamespace.nextTick = EnvInfo.nextTick;
+  utilNamespace.setImmediate = EnvInfo.setImmediate;
+  utilNamespace.isNodejs = EnvInfo.isNodejs;
+  utilNamespace.globalScope = EnvInfo.globalScope;
+  utilNamespace.estimateCores = function (
     options: Parameters<typeof EnvInfo.estimateCores>[1],
     callback?: Parameters<typeof EnvInfo.estimateCores>[2]
   ) {
-    return EnvInfo.estimateCores(ns, options, callback);
+    return EnvInfo.estimateCores(utilNamespace, options, callback);
   };
 
-  ns.ByteStringBuffer = ByteStringBuffer;
-  ns.DataBuffer = DataBuffer;
-  ns.ByteBuffer = ByteStringBuffer;
+  utilNamespace.ByteStringBuffer = ByteStringBuffer;
+  utilNamespace.DataBuffer = DataBuffer;
+  utilNamespace.ByteBuffer = ByteStringBuffer;
 
-  ns.binary = {
+  utilNamespace.binary = {
     raw: {
-      encode: RawCodec.encode,
-      decode: RawCodec.decode
+      encode: function (bytes: Uint8Array | { length(): number; at(i: number): number }) {
+        return RawCodec.encode(bytes as Uint8Array);
+      },
+      decode: function (bytes: Uint8Array, output?: Uint8Array, offset?: number) {
+        return output === undefined ? RawCodec.decode(bytes) : RawCodec.decode(bytes, output, offset);
+      }
     },
     hex: {
-      encode: ns.bytesToHex as (bytes: Uint8Array | string) => string,
-      decode: HexCodec.decode
+      encode: function (bytes: Uint8Array | string) {
+        return typeof bytes === 'string' ? utilNamespace.bytesToHex(bytes) : HexCodec.encode(bytes);
+      },
+      decode: function (hex: string, output?: Uint8Array, offset?: number) {
+        return output === undefined ? HexCodec.decode(hex) : HexCodec.decode(hex, output, offset);
+      }
     },
     base64: {
-      encode: Base64Codec.encode,
-      decode: Base64Codec.decode
+      encode: function (input: Uint8Array | { length(): number; at(i: number): number }, maxline?: number) {
+        return Base64Codec.encode(input as Uint8Array, maxline);
+      },
+      decode: function (input: string, output?: Uint8Array, offset?: number) {
+        return output === undefined ? Base64Codec.decode(input) : Base64Codec.decode(input, output, offset);
+      }
     },
     base58: {
-      encode: Base58Codec.encode,
-      decode: Base58Codec.decode
+      encode: function (input: Uint8Array | { length(): number; at(i: number): number }, maxline?: number) {
+        return Base58Codec.encode(input, maxline);
+      },
+      decode: function (input: string, maxline?: number) {
+        return Base58Codec.decode(input, maxline);
+      }
     },
     baseN: {
-      encode: baseN.encode,
-      decode: baseN.decode
+      encode: function (
+        input: Uint8Array | { length(): number; at(i: number): number },
+        alphabet: string,
+        maxline?: number
+      ) {
+        return baseN.encode(input, alphabet, maxline);
+      },
+      decode: function (input: string, alphabet: string) {
+        return baseN.decode(input, alphabet);
+      }
     }
-  };
+  } as UtilNamespaceObject['binary'];
 
-  ns.text = {
+  utilNamespace.text = {
     utf8: {
-      encode: Utf8TextCodec.encode,
-      decode: Utf8TextCodec.decode
+      encode: function (input: string, output?: Uint8Array, offset?: number) {
+        return Utf8TextCodec.encode(input, output, offset);
+      },
+      decode: function (bytes: Uint8Array) {
+        return Utf8TextCodec.decode(bytes);
+      }
     },
     utf16: {
-      encode: Utf16Codec.encode,
-      decode: Utf16Codec.decode
+      encode: function (input: string, output?: Uint16Array, offset?: number) {
+        return Utf16Codec.encode(input, output as unknown as Uint8Array, offset);
+      },
+      decode: function (bytes: Uint8Array) {
+        return Utf16Codec.decode(bytes);
+      }
     }
   };
 
-  return ns;
+  return utilNamespace;
 }

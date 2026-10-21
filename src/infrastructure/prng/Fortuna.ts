@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { ByteStringBuffer } from '../../domain/buffer/ByteStringBuffer.js';
 import { EnvInfo } from '../env/EnvInfo.js';
-import type { PrngContext, PrngPlugin } from './PrngTypes.js';
+import type { MessageDigestInstance, PrngContext, PrngPlugin } from './PrngTypes.js';
 
 export class Fortuna {
   static create(plugin: PrngPlugin): PrngContext {
@@ -24,7 +24,7 @@ export class Fortuna {
     };
 
     const md = plugin.md;
-    const pools = new Array(32);
+    const pools: MessageDigestInstance[] = new Array<MessageDigestInstance>(32);
     for (let i = 0; i < 32; ++i) {
       pools[i] = md.create();
     }
@@ -40,7 +40,7 @@ export class Fortuna {
       const increment = ctx.plugin.increment;
       const formatKey = ctx.plugin.formatKey;
       const formatSeed = ctx.plugin.formatSeed;
-      const b = new ByteStringBuffer();
+      const outputBuffer = new ByteStringBuffer();
 
       ctx.key = null;
 
@@ -52,8 +52,8 @@ export class Fortuna {
           return callback!(err);
         }
 
-        if (b.length() >= count) {
-          return callback!(null, b.getBytes(count));
+        if (outputBuffer.length() >= count) {
+          return callback!(null, outputBuffer.getBytes(count));
         }
 
         if (ctx.generated > 0xfffff) {
@@ -70,7 +70,7 @@ export class Fortuna {
         const seed = ctx.seed!;
         const bytes = cipher(key, seed);
         ctx.generated += bytes.length;
-        b.putBytes(bytes);
+        outputBuffer.putBytes(bytes);
 
         ctx.key = formatKey(cipher(key, increment(seed)));
         ctx.seed = formatSeed(cipher(ctx.key, ctx.seed!));
@@ -87,8 +87,8 @@ export class Fortuna {
 
       ctx.key = null;
 
-      const b = new ByteStringBuffer();
-      while (b.length() < count) {
+      const outputBuffer = new ByteStringBuffer();
+      while (outputBuffer.length() < count) {
         if (ctx.generated > 0xfffff) {
           ctx.key = null;
         }
@@ -101,21 +101,21 @@ export class Fortuna {
         const seed = ctx.seed!;
         const bytes = cipher(key, seed);
         ctx.generated += bytes.length;
-        b.putBytes(bytes);
+        outputBuffer.putBytes(bytes);
 
         ctx.key = formatKey(cipher(key, increment(seed)));
         ctx.seed = formatSeed(cipher(ctx.key, ctx.seed!));
       }
 
-      return b.getBytes(count);
+      return outputBuffer.getBytes(count);
     };
 
     function _reseed(callback: (err?: Error | null) => void): void {
-      if (ctx.pools[0]!.messageLength >= 32) {
+      if (ctx.pools[0].messageLength >= 32) {
         _seed();
         return callback();
       }
-      const needed = (32 - ctx.pools[0]!.messageLength) << 5;
+      const needed = (32 - ctx.pools[0].messageLength) << 5;
       ctx.seedFile(needed, function (err, bytes) {
         if (err) {
           return callback(err);
@@ -127,10 +127,10 @@ export class Fortuna {
     }
 
     function _reseedSync(): void {
-      if (ctx.pools[0]!.messageLength >= 32) {
+      if (ctx.pools[0].messageLength >= 32) {
         return _seed();
       }
-      const needed = (32 - ctx.pools[0]!.messageLength) << 5;
+      const needed = (32 - ctx.pools[0].messageLength) << 5;
       ctx.collect(ctx.seedFileSync(needed));
       _seed();
     }
@@ -144,8 +144,8 @@ export class Fortuna {
       let _2powK = 1;
       for (let k = 0; k < 32; ++k) {
         if (ctx.reseeds % _2powK === 0) {
-          mdInstance.update(ctx.pools[k]!.digest().getBytes());
-          ctx.pools[k]!.start();
+          mdInstance.update(ctx.pools[k].digest().getBytes());
+          ctx.pools[k].start();
         }
         _2powK = _2powK << 1;
       }
@@ -174,34 +174,34 @@ export class Fortuna {
         };
       }
 
-      const b = new ByteStringBuffer();
+      const seedBuffer = new ByteStringBuffer();
       if (getRandomValues) {
-        while (b.length() < needed) {
-          const count = Math.max(1, Math.min(needed - b.length(), 65536) / 4);
+        while (seedBuffer.length() < needed) {
+          const count = Math.max(1, Math.min(needed - seedBuffer.length(), 65536) / 4);
           const entropy = new Uint32Array(Math.floor(count));
           try {
             getRandomValues(entropy);
             for (let i = 0; i < entropy.length; ++i) {
-              b.putInt32(entropy[i]!);
+              seedBuffer.putInt32(entropy[i]);
             }
-          } catch (e) {
+          } catch (caughtError) {
             const QuotaExceededErrorCtor = (
               globalThis as {
                 QuotaExceededError?: new (...args: unknown[]) => Error;
               }
             ).QuotaExceededError;
-            if (!(typeof QuotaExceededErrorCtor !== 'undefined' && e instanceof QuotaExceededErrorCtor)) {
-              throw e;
+            if (!(typeof QuotaExceededErrorCtor !== 'undefined' && caughtError instanceof QuotaExceededErrorCtor)) {
+              throw caughtError;
             }
           }
         }
       }
 
-      if (b.length() < needed) {
+      if (seedBuffer.length() < needed) {
         throw new Error('Unable to collect sufficient entropy for PRNG seed.');
       }
 
-      return b.getBytes(needed);
+      return seedBuffer.getBytes(needed);
     }
 
     if (crypto) {
@@ -220,8 +220,8 @@ export class Fortuna {
       ctx.seedFile = function (needed: number, callback: (err: Error | null, bytes?: string) => void) {
         try {
           callback(null, defaultSeedFile(needed));
-        } catch (e) {
-          callback(e as Error);
+        } catch (caughtError) {
+          callback(caughtError as Error);
         }
       };
       ctx.seedFileSync = defaultSeedFile;
@@ -230,15 +230,15 @@ export class Fortuna {
     ctx.collect = function (bytes: string) {
       const count = bytes.length;
       for (let i = 0; i < count; ++i) {
-        ctx.pools[ctx.pool]!.update(bytes.charAt(i));
+        ctx.pools[ctx.pool].update(bytes.charAt(i));
         ctx.pool = ctx.pool === 31 ? 0 : ctx.pool + 1;
       }
     };
 
-    ctx.collectInt = function (i: number, n: number) {
+    ctx.collectInt = function (i: number, bitCount: number) {
       let bytes = '';
-      for (let x = 0; x < n; x += 8) {
-        bytes += String.fromCharCode((i >> x) & 0xff);
+      for (let bitOffset = 0; bitOffset < bitCount; bitOffset += 8) {
+        bytes += String.fromCharCode((i >> bitOffset) & 0xff);
       }
       ctx.collect(bytes);
     };

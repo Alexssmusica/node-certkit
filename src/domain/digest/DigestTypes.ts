@@ -9,7 +9,7 @@ export interface Md5Digest {
   messageLength64: number[] | null;
   messageLengthSize: number;
   start: () => Md5Digest;
-  update: (msg: string, encoding?: string) => Md5Digest;
+  update: (input: string, encoding?: string) => Md5Digest;
   digest: () => ByteStringBuffer;
 }
 
@@ -22,7 +22,7 @@ export interface Sha1Digest {
   messageLength64: number[] | null;
   messageLengthSize: number;
   start: () => Sha1Digest;
-  update: (msg: string, encoding?: string) => Sha1Digest;
+  update: (input: string, encoding?: string) => Sha1Digest;
   digest: () => ByteStringBuffer;
 }
 
@@ -35,7 +35,7 @@ export interface Sha256Digest {
   messageLength64: number[] | null;
   messageLengthSize: number;
   start: () => Sha256Digest;
-  update: (msg: string, encoding?: string) => Sha256Digest;
+  update: (input: string, encoding?: string) => Sha256Digest;
   digest: () => ByteStringBuffer;
 }
 
@@ -48,14 +48,14 @@ export interface Sha512Digest {
   messageLength128: number[] | null;
   messageLengthSize: number;
   start: () => Sha512Digest;
-  update: (msg: string, encoding?: string) => Sha512Digest;
+  update: (input: string, encoding?: string) => Sha512Digest;
   digest: () => ByteStringBuffer;
 }
 
 export interface BlockDigest {
   blockLength: number;
   start: () => BlockDigest;
-  update: (msg: string, encoding?: string) => BlockDigest;
+  update: (input: string, encoding?: string) => BlockDigest;
   digest: () => ByteStringBuffer;
 }
 

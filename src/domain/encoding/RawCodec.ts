@@ -12,9 +12,9 @@ export class RawCodec {
     }
     const off = offset || 0;
     let j = off;
-    const s = str as string;
-    for (let i = 0; i < s.length; ++i) {
-      out[j++] = s.charCodeAt(i);
+    const rawString = str as string;
+    for (let i = 0; i < rawString.length; ++i) {
+      out[j++] = rawString.charCodeAt(i);
     }
     return output ? j - off : out;
   }

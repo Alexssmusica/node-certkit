@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import certkit from '../../src/presentation/index.js';
 import type { RsaPrivateKey, RsaPublicKey } from '../../src/domain/pki/RsaTypes.js';
 import { UtilNamespace } from '../../src/domain/util/UtilNamespace.js';
@@ -12,7 +12,7 @@ const BigInteger = JSBN.BigInteger;
 // RSA's test vectors for certkit's RSA-OAEP implementation:
 // http://www.rsa.com/rsalabs/node.asp?id=2125
 describe('pkcs1', () => {
-  it('should detect invalid RSAES-OAEP padding', (ctx) => {
+  it('should detect invalid RSAES-OAEP padding', () => {
     const keys = makeKey();
 
     // provide the seed to test the same input each time
@@ -39,9 +39,7 @@ describe('pkcs1', () => {
       try {
         const decrypted = keys.privateKey.decrypt(out, null);
         PKCS1.decode_rsa_oaep(keys.privateKey, decrypted);
-        throw {
-          message: 'Expected an exception.'
-        };
+        throw new Error('Expected an exception.');
       } catch (e) {
         const err = e as { message?: string };
         expect(err.message).toBe('Invalid RSAES-OAEP padding.');
@@ -49,7 +47,7 @@ describe('pkcs1', () => {
     }
   });
 
-  it('should detect leading zero bytes', (ctx) => {
+  it('should detect leading zero bytes', () => {
     const keys = makeKey();
     const message = UtilNamespace.fillString('\x00', 80);
     const encoded = PKCS1.encode_rsa_oaep(keys.publicKey, message);
@@ -1336,7 +1334,7 @@ describe('pkcs1', () => {
     }
 
     examples.forEach((ex: { title: string; message: string; seed: string; encrypted: string }) => {
-      it(`should test ${ex.title}`, (ctx) => {
+      it(`should test ${ex.title}`, () => {
         checkOAEPEncrypt(publicKey, privateKey, md, ex.message, ex.seed, ex.encrypted);
       });
     });

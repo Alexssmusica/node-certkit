@@ -1,45 +1,45 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import certkit from '../../src/presentation/index.js';
 const MD = certkit.md;
 const PBKDF2 = certkit.pbkdf2;
 const UTIL = certkit.util;
 const CERTKIT = certkit;
 describe('pbkdf2', () => {
-  it('should derive a password with hmac-sha-1 c=1', (ctx) => {
+  it('should derive a password with hmac-sha-1 c=1', () => {
     const dkHex = UTIL.bytesToHex(PBKDF2('password', 'salt', 1, 20, 'sha1'));
     expect(dkHex).toBe('0c60c80f961f0e71f3a9b524af6012062fe037a6');
   });
 
-  it('should derive a password with hmac-sha-1 c=2', (ctx) => {
+  it('should derive a password with hmac-sha-1 c=2', () => {
     const dkHex = UTIL.bytesToHex(PBKDF2('password', 'salt', 2, 20, 'sha1'));
     expect(dkHex).toBe('ea6c014dc72d6f8ccd1ed92ace1d41f0d8de8957');
   });
 
-  it('should derive a password with hmac-sha-1 c=5 keylen=8', (ctx) => {
+  it('should derive a password with hmac-sha-1 c=5 keylen=8', () => {
     const salt = UTIL.hexToBytes('1234567878563412');
     const dkHex = UTIL.bytesToHex(PBKDF2('password', salt, 5, 8, 'sha1'));
     expect(dkHex).toBe('d1daa78615f287e6');
   });
 
-  it('should derive a utf8 password with hmac-sha-1 c=1 keylen=16', (ctx) => {
+  it('should derive a utf8 password with hmac-sha-1 c=1 keylen=16', () => {
     const dkHex = UTIL.bytesToHex(PBKDF2('中', 'salt', 1, 16, 'sha1'));
     expect(dkHex).toBe('5f719aa196edc4df6b1556de503faaf3');
   });
 
-  it('should derive a password with hmac-sha-1 c=4096', (ctx) => {
+  it('should derive a password with hmac-sha-1 c=4096', () => {
     // Note: might be too slow on old browsers
     const dkHex = UTIL.bytesToHex(PBKDF2('password', 'salt', 4096, 20, 'sha1'));
     expect(dkHex).toBe('4b007901b765489abead49d926f721d065a429c1');
   });
 
   /*
-    it('should derive a password with hmac-sha-1 c=16777216', (ctx) => {
+    it('should derive a password with hmac-sha-1 c=16777216', () => {
       // Note: too slow
       var dkHex = UTIL.bytesToHex(PBKDF2('password', 'salt', 16777216, 20));
       expect(dkHex).toBe('eefe3d61cd4da4e4e9945b3d6ba2158c2634e984');
     });*/
 
-  it('should derive a password with hmac-sha-256 c=1000', (ctx) => {
+  it('should derive a password with hmac-sha-256 c=1000', () => {
     // Note: might be too slow on old browsers
     const salt = '4bcda0d1c689fe465c5b8a817f0ddf3d';
     const md = MD.sha256.create();
@@ -49,7 +49,7 @@ describe('pbkdf2', () => {
     );
   });
 
-  it('should derive a password with hmac-sha-256 (passed as an algorithm identifier) c=1000', (ctx) => {
+  it('should derive a password with hmac-sha-256 (passed as an algorithm identifier) c=1000', () => {
     // Note: might be too slow on old browsers
     const salt = '4bcda0d1c689fe465c5b8a817f0ddf3d';
     const dkHex = UTIL.bytesToHex(PBKDF2('password', salt, 1000, 48, 'sha256'));
@@ -58,7 +58,7 @@ describe('pbkdf2', () => {
     );
   });
 
-  it('should derive a password with hmac-sha-512 c=1000', (ctx) => {
+  it('should derive a password with hmac-sha-512 c=1000', () => {
     // Note: might be too slow on old browsers
     const salt = '4bcda0d1c689fe465c5b8a817f0ddf3d';
     const md = MD.sha512.create();
@@ -68,7 +68,7 @@ describe('pbkdf2', () => {
     );
   });
 
-  it('should derive a password with hmac-sha-512 (passed as an algorithm identifier) c=1000', (ctx) => {
+  it('should derive a password with hmac-sha-512 (passed as an algorithm identifier) c=1000', () => {
     // Note: might be too slow on old browsers
     const salt = '4bcda0d1c689fe465c5b8a817f0ddf3d';
     const dkHex = UTIL.bytesToHex(PBKDF2('password', salt, 1000, 48, 'sha512'));
@@ -87,7 +87,7 @@ describe('pbkdf2', () => {
 
           resolve();
         } catch (e) {
-          reject(e);
+          reject(e instanceof Error ? e : new Error(String(e)));
         }
       });
     });
@@ -103,7 +103,7 @@ describe('pbkdf2', () => {
 
           resolve();
         } catch (e) {
-          reject(e);
+          reject(e instanceof Error ? e : new Error(String(e)));
         }
       });
     });
@@ -120,7 +120,7 @@ describe('pbkdf2', () => {
 
           resolve();
         } catch (e) {
-          reject(e);
+          reject(e instanceof Error ? e : new Error(String(e)));
         }
       });
     });
@@ -137,7 +137,7 @@ describe('pbkdf2', () => {
 
           resolve();
         } catch (e) {
-          reject(e);
+          reject(e instanceof Error ? e : new Error(String(e)));
         }
       });
     });
@@ -156,7 +156,7 @@ describe('pbkdf2', () => {
         
             resolve();
           } catch (e) {
-            reject(e);
+            reject(e instanceof Error ? e : new Error(String(e)));
           }
         });
       });
@@ -177,7 +177,7 @@ describe('pbkdf2', () => {
 
           resolve();
         } catch (e) {
-          reject(e);
+          reject(e instanceof Error ? e : new Error(String(e)));
         }
       });
     });
@@ -197,7 +197,7 @@ describe('pbkdf2', () => {
 
           resolve();
         } catch (e) {
-          reject(e);
+          reject(e instanceof Error ? e : new Error(String(e)));
         }
       });
     });
@@ -218,7 +218,7 @@ describe('pbkdf2', () => {
 
           resolve();
         } catch (e) {
-          reject(e);
+          reject(e instanceof Error ? e : new Error(String(e)));
         }
       });
     });
@@ -238,13 +238,13 @@ describe('pbkdf2', () => {
 
           resolve();
         } catch (e) {
-          reject(e);
+          reject(e instanceof Error ? e : new Error(String(e)));
         }
       });
     });
   });
 
-  it('should derive a password with "usePureJavaScript"', (ctx) => {
+  it('should derive a password with "usePureJavaScript"', () => {
     // save
     const purejs = CERTKIT.options.usePureJavaScript;
     // test possible native mode

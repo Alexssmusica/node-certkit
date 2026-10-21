@@ -35,10 +35,10 @@ export class Base64Codec {
     let i = 0;
 
     while (i < input.length) {
-      const enc1 = BASE64_IDX[input.charCodeAt(i++) - 43]!;
-      const enc2 = BASE64_IDX[input.charCodeAt(i++) - 43]!;
-      const enc3 = BASE64_IDX[input.charCodeAt(i++) - 43]!;
-      const enc4 = BASE64_IDX[input.charCodeAt(i++) - 43]!;
+      const enc1 = BASE64_IDX[input.charCodeAt(i++) - 43];
+      const enc2 = BASE64_IDX[input.charCodeAt(i++) - 43];
+      const enc3 = BASE64_IDX[input.charCodeAt(i++) - 43];
+      const enc4 = BASE64_IDX[input.charCodeAt(i++) - 43];
 
       chunks.push(String.fromCharCode((enc1 << 2) | (enc2 >> 4)));
       if (enc3 !== 64) {
@@ -57,9 +57,9 @@ export class Base64Codec {
     let output = '';
     let i = 0;
     while (i < input.byteLength) {
-      const chr1 = input[i++]!;
-      const chr2 = input[i++]!;
-      const chr3 = input[i++]!;
+      const chr1 = input[i++];
+      const chr2 = input[i++];
+      const chr3 = input[i++];
 
       line += BASE64.charAt(chr1 >> 2);
       line += BASE64.charAt(((chr1 & 3) << 4) | (chr2 >> 4));
@@ -94,10 +94,10 @@ export class Base64Codec {
     let j = off;
 
     while (i < input.length) {
-      const enc1 = BASE64_IDX[input.charCodeAt(i++) - 43]!;
-      const enc2 = BASE64_IDX[input.charCodeAt(i++) - 43]!;
-      const enc3 = BASE64_IDX[input.charCodeAt(i++) - 43]!;
-      const enc4 = BASE64_IDX[input.charCodeAt(i++) - 43]!;
+      const enc1 = BASE64_IDX[input.charCodeAt(i++) - 43];
+      const enc2 = BASE64_IDX[input.charCodeAt(i++) - 43];
+      const enc3 = BASE64_IDX[input.charCodeAt(i++) - 43];
+      const enc4 = BASE64_IDX[input.charCodeAt(i++) - 43];
 
       out[j++] = (enc1 << 2) | (enc2 >> 4);
       if (enc3 !== 64) {

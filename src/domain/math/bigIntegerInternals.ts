@@ -5,14 +5,14 @@ export const dbits = 28;
 export const BI_FP = 52;
 const BI_RM = '0123456789abcdefghijklmnopqrstuvwxyz';
 const BI_RC: number[] = new Array<number>();
-let rr: number;
-let vv: number;
-rr = '0'.charCodeAt(0);
-for (vv = 0; vv <= 9; ++vv) BI_RC[rr++] = vv;
-rr = 'a'.charCodeAt(0);
-for (vv = 10; vv < 36; ++vv) BI_RC[rr++] = vv;
-rr = 'A'.charCodeAt(0);
-for (vv = 10; vv < 36; ++vv) BI_RC[rr++] = vv;
+let radixWriteIndex: number;
+let digitValue: number;
+radixWriteIndex = '0'.charCodeAt(0);
+for (digitValue = 0; digitValue <= 9; ++digitValue) BI_RC[radixWriteIndex++] = digitValue;
+radixWriteIndex = 'a'.charCodeAt(0);
+for (digitValue = 10; digitValue < 36; ++digitValue) BI_RC[radixWriteIndex++] = digitValue;
+radixWriteIndex = 'A'.charCodeAt(0);
+for (digitValue = 10; digitValue < 36; ++digitValue) BI_RC[radixWriteIndex++] = digitValue;
 
 export const lowprimes = [
   2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109,
@@ -23,107 +23,114 @@ export const lowprimes = [
   673, 677, 683, 691, 701, 709, 719, 727, 733, 739, 743, 751, 757, 761, 769, 773, 787, 797, 809, 811, 821, 823, 827,
   829, 839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997
 ];
-export const lplim = (1 << 26) / lowprimes[lowprimes.length - 1]!;
+export const lplim = (1 << 26) / lowprimes[lowprimes.length - 1];
 
-export function int2char(n: number): string {
-  return BI_RM.charAt(n);
+export function int2char(digit: number): string {
+  return BI_RM.charAt(digit);
 }
-export function intAt(s: string, i: number): number {
-  const c = BI_RC[s.charCodeAt(i)];
-  return c == null ? -1 : c;
-}
-
-export function nbits(x: number): number {
-  let r = 1,
-    t: number;
-  if ((t = x >>> 16) != 0) {
-    x = t;
-    r += 16;
-  }
-  if ((t = x >> 8) != 0) {
-    x = t;
-    r += 8;
-  }
-  if ((t = x >> 4) != 0) {
-    x = t;
-    r += 4;
-  }
-  if ((t = x >> 2) != 0) {
-    x = t;
-    r += 2;
-  }
-  if ((t = x >> 1) != 0) {
-    x = t;
-    r += 1;
-  }
-  return r;
+export function intAt(string: string, index: number): number {
+  const code = BI_RC[string.charCodeAt(index)];
+  return code == null ? -1 : code;
 }
 
-export function lbit(x: number): number {
-  if (x == 0) return -1;
-  let r = 0;
-  if ((x & 0xffff) == 0) {
-    x >>= 16;
-    r += 16;
+export function nbits(word: number): number {
+  let bitCount = 1;
+  let shifted: number;
+  if ((shifted = word >>> 16) != 0) {
+    word = shifted;
+    bitCount += 16;
   }
-  if ((x & 0xff) == 0) {
-    x >>= 8;
-    r += 8;
+  if ((shifted = word >> 8) != 0) {
+    word = shifted;
+    bitCount += 8;
   }
-  if ((x & 0xf) == 0) {
-    x >>= 4;
-    r += 4;
+  if ((shifted = word >> 4) != 0) {
+    word = shifted;
+    bitCount += 4;
   }
-  if ((x & 3) == 0) {
-    x >>= 2;
-    r += 2;
+  if ((shifted = word >> 2) != 0) {
+    word = shifted;
+    bitCount += 2;
   }
-  if ((x & 1) == 0) ++r;
-  return r;
+  if (word >> 1 != 0) {
+    bitCount += 1;
+  }
+  return bitCount;
 }
 
-export function cbit(x: number): number {
-  let r = 0;
-  while (x != 0) {
-    x &= x - 1;
-    ++r;
+export function lbit(word: number): number {
+  if (word == 0) return -1;
+  let trailingZeros = 0;
+  if ((word & 0xffff) == 0) {
+    word >>= 16;
+    trailingZeros += 16;
   }
-  return r;
+  if ((word & 0xff) == 0) {
+    word >>= 8;
+    trailingZeros += 8;
+  }
+  if ((word & 0xf) == 0) {
+    word >>= 4;
+    trailingZeros += 4;
+  }
+  if ((word & 3) == 0) {
+    word >>= 2;
+    trailingZeros += 2;
+  }
+  if ((word & 1) == 0) ++trailingZeros;
+  return trailingZeros;
 }
 
-export function op_and(x: number, y: number): number {
-  return x & y;
+export function cbit(word: number): number {
+  let setBits = 0;
+  while (word != 0) {
+    word &= word - 1;
+    ++setBits;
+  }
+  return setBits;
 }
-export function op_or(x: number, y: number): number {
-  return x | y;
+
+export function opAnd(leftWord: number, rightWord: number): number {
+  return leftWord & rightWord;
 }
-export function op_xor(x: number, y: number): number {
-  return x ^ y;
+export function opOr(leftWord: number, rightWord: number): number {
+  return leftWord | rightWord;
 }
-export function op_andnot(x: number, y: number): number {
-  return x & ~y;
+export function opXor(leftWord: number, rightWord: number): number {
+  return leftWord ^ rightWord;
+}
+export function opAndNot(leftWord: number, rightWord: number): number {
+  return leftWord & ~rightWord;
 }
 
 export function bnGetPrng(): BigIntegerRandomSource {
   return {
-    nextBytes(x: number[]): void {
-      for (let i = 0; i < x.length; ++i) {
-        x[i] = Math.floor(Math.random() * 0x0100);
+    nextBytes(bytes: number[]): void {
+      for (let i = 0; i < bytes.length; ++i) {
+        bytes[i] = Math.floor(Math.random() * 0x0100);
       }
     }
   };
 }
 
-export function am3(this: BigInteger, i: number, x: number, w: BigInteger, j: number, c: number, n: number): number {
-  const xl = x & 0x3fff,
-    xh = x >> 14;
-  while (--n >= 0) {
-    let l = this.data[i]! & 0x3fff;
-    const h = this.data[i++]! >> 14;
-    const m = xh * l + h * xl;
-    l = xl * l + ((m & 0x3fff) << 14) + w.data[j]! + c;
-    c = (l >> 28) + (m >> 14) + xh * h;
-    w.data[j++] = l & 0xfffffff;
+export function am3(
+  this: BigInteger,
+  limbIndex: number,
+  operand: number,
+  accumulator: BigInteger,
+  outIndex: number,
+  carry: number,
+  limbCount: number
+): number {
+  const operandLow = operand & 0x3fff;
+  const operandHigh = operand >> 14;
+  while (--limbCount >= 0) {
+    let limbLow = this.data[limbIndex] & 0x3fff;
+    const limbHigh = this.data[limbIndex++] >> 14;
+    const crossTerm = operandHigh * limbLow + limbHigh * operandLow;
+    limbLow = operandLow * limbLow + ((crossTerm & 0x3fff) << 14) + accumulator.data[outIndex] + carry;
+    carry = (limbLow >> 28) + (crossTerm >> 14) + operandHigh * limbHigh;
+    accumulator.data[outIndex++] = limbLow & 0xfffffff;
   }
-  return c;
+  return carry;
 }

@@ -50,10 +50,7 @@ export class NodeCryptoProvider implements NativeCryptoProvider {
   }
 
   generateKeyPairSync(_type: string, options: RsaKeyPairGenerateOptions): { publicKey: string; privateKey: string } {
-    return crypto.generateKeyPairSync('rsa', options as crypto.RSAKeyPairOptions<'pem', 'pem'>) as {
-      publicKey: string;
-      privateKey: string;
-    };
+    return crypto.generateKeyPairSync('rsa', options as crypto.RSAKeyPairOptions<'pem', 'pem'>);
   }
 
   generateKeyPair(

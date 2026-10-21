@@ -1,7 +1,6 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import certkit from '../../src/presentation/index.js';
-import type { EncryptPrivateKeyInfoOptions } from '../../src/domain/pki/CertkitPkiTypes.js';
-import type { RsaKeyPair, RsaPrivateKey, RsaPublicKey } from '../../src/domain/pki/RsaTypes.js';
+import type { RsaKeyPair, RsaPublicKey } from '../../src/domain/pki/RsaTypes.js';
 import { UtilNamespace } from '../../src/domain/util/UtilNamespace.js';
 const JSBN = certkit.jsbn;
 const MD = certkit.md;
@@ -135,7 +134,7 @@ describe('rsa', () => {
     RSA.generateKeyPair(genOptions, (err, pair) => {
       expect(err).toBeFalsy();
       _pairCheck(pair!);
-      callback!(pair!);
+      callback(pair!);
     });
   }
 
@@ -226,7 +225,7 @@ describe('rsa', () => {
           _pairCmp(pair1, pair2);
           resolve();
         } catch (e) {
-          reject(e);
+          reject(e instanceof Error ? e : new Error(String(e)));
         }
       });
     });
@@ -240,7 +239,7 @@ describe('rsa', () => {
           _pairCmp(pair1, pair2);
           resolve();
         } catch (e) {
-          reject(e);
+          reject(e instanceof Error ? e : new Error(String(e)));
         }
       });
     });
@@ -256,7 +255,7 @@ describe('rsa', () => {
             _pairCmp(pair1, pair2);
             resolve();
           } catch (e) {
-            reject(e);
+            reject(e instanceof Error ? e : new Error(String(e)));
           }
         }
       }
@@ -326,7 +325,7 @@ describe('rsa', () => {
         const encryptedPem = PKI.encryptRsaPrivateKey(privateKey, 'password', {
           algorithm: algorithm,
           legacy: true
-        } as EncryptPrivateKeyInfoOptions & { legacy: boolean });
+        });
         privateKey = PKI.decryptRsaPrivateKey(encryptedPem, 'password')!;
         expect(PKI.privateKeyToPem(privateKey)).toBe(_pem.privateKey);
       });
@@ -823,20 +822,6 @@ describe('rsa', () => {
       16
     );
 
-    // private exponent
-    const d = new JSBN.BigInteger(
-      '009b771db6c374e59227006de8f9c5ba85cf98c63754505f9f30939803afc149' +
-        '8eda44b1b1e32c7eb51519edbd9591ea4fce0f8175ca528e09939e48f37088a0' +
-        '7059c36332f74368c06884f718c9f8114f1b8d4cb790c63b09d46778bfdc4134' +
-        '8fb4cd9feab3d24204992c6dd9ea824fbca591cd64cf68a233ad0526775c9848' +
-        'fafa31528177e1f8df9181a8b945081106fd58bd3d73799b229575c4f3b29101' +
-        'a03ee1f05472b3615784d9244ce0ed639c77e8e212ab52abddf4a928224b6b6f' +
-        '74b7114786dd6071bd9113d7870c6b52c0bc8b9c102cfe321dac357e030ed6c5' +
-        '80040ca41c13d6b4967811807ef2a225983ea9f88d67faa42620f42a4f5bdbe0' +
-        '3b',
-      16
-    );
-
     // public exponent
     const e = new JSBN.BigInteger('3');
 
@@ -905,7 +890,7 @@ describe('rsa', () => {
 
       // 91 garbage byte injected as the value of a TLV replaced digest
       // algorithm structure
-      const I = UTIL.binary.hex.decode(
+      void UTIL.binary.hex.decode(
         '0001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
           'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
           'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
@@ -935,7 +920,7 @@ describe('rsa', () => {
       // a signature when low public exponent is used
 
       // 204 tailing garbage bytes injected after DigestInfo structure
-      const I = UTIL.binary.hex.decode(
+      void UTIL.binary.hex.decode(
         '000100302f300b060960864801650304020104207509e5bda0c762d2bac7f90d' +
           '758b5b2263fa01ccbc542ab5e3df163be08e6ca9888888888888888888888888' +
           '8888888888888888888888888888888888888888888888888888888888888888' +
@@ -968,7 +953,7 @@ describe('rsa', () => {
       // 215 tailing garbage bytes injected after DigestInfo structure
       // unchecked digest algorithm structure
       // combined with earlier issue
-      const I = UTIL.binary.hex.decode(
+      void UTIL.binary.hex.decode(
         '0001003024010004207509e5bda0c762d2bac7f90d758b5b2263fa01ccbc542a' +
           'b5e3df163be08e6ca98888888888888888888888888888888888888888888888' +
           '8888888888888888888888888888888888888888888888888888888888888888' +
@@ -1155,7 +1140,7 @@ describe('rsa', () => {
       const publicKey = RSA.setPublicKey(N, e);
       // incorrect value for digest algorithm's type octet
       // 0x0c instead of correct 0x06
-      const I = UTIL.binary.hex.decode(
+      void UTIL.binary.hex.decode(
         '0001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
           'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
           'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
@@ -1183,7 +1168,7 @@ describe('rsa', () => {
       const publicKey = RSA.setPublicKey(N, e);
       // incorrect value for hash value's type octet
       // 0x0a instead of correct 0x04
-      const I = UTIL.binary.hex.decode(
+      void UTIL.binary.hex.decode(
         '0001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
           'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +
           'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' +

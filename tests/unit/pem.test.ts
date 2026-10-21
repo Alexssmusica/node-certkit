@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import certkit from '../../src/presentation/index.js';
 const PEM = certkit.pem;
 const _input =
@@ -133,7 +133,7 @@ const _csrWithoutNew =
   '-----END CERTIFICATE REQUEST-----\r\n';
 
 describe('pem', () => {
-  it('should decode and re-encode PEM messages', (ctx) => {
+  it('should decode and re-encode PEM messages', () => {
     const msgs = PEM.decode(_input);
 
     let output = '';
@@ -144,14 +144,14 @@ describe('pem', () => {
     expect(output).toBe(_input);
   });
 
-  it('should decode a CSR from PEM with NEW in the labels', (ctx) => {
+  it('should decode a CSR from PEM with NEW in the labels', () => {
     const csrs = PEM.decode(_csrWithNew);
     for (let i = 0; i < csrs.length; ++i) {
       expect(csrs[i].type).toBe('CERTIFICATE REQUEST');
     }
   });
 
-  it('should decode a CSR from PEM without NEW in the labels', (ctx) => {
+  it('should decode a CSR from PEM without NEW in the labels', () => {
     const csrs = PEM.decode(_csrWithoutNew);
     for (let i = 0; i < csrs.length; ++i) {
       expect(csrs[i].type).toBe('CERTIFICATE REQUEST');

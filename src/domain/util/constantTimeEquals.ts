@@ -1,14 +1,14 @@
 /**
  * Compare two binary strings in constant time.
  */
-export function constantTimeEquals(a: string, b: string): boolean {
-  if (a.length !== b.length) {
+export function constantTimeEquals(left: string, right: string): boolean {
+  if (left.length !== right.length) {
     return false;
   }
 
   let result = 0;
-  for (let i = 0; i < a.length; ++i) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  for (let i = 0; i < left.length; ++i) {
+    result |= left.charCodeAt(i) ^ right.charCodeAt(i);
   }
 
   return result === 0;

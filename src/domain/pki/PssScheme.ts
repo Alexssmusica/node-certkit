@@ -14,21 +14,21 @@ export class PssScheme {
     const mgf = options.mgf;
     const hLen = hash.digestLength;
 
-    let salt_ = options.salt ?? null;
-    if (typeof salt_ === 'string') {
-      salt_ = new ByteStringBuffer(salt_);
+    let configuredSalt = options.salt ?? null;
+    if (typeof configuredSalt === 'string') {
+      configuredSalt = new ByteStringBuffer(configuredSalt);
     }
 
-    let sLen: number;
+    let saltLength: number;
     if ('saltLength' in options && options.saltLength !== undefined) {
-      sLen = options.saltLength;
-    } else if (salt_ !== null) {
-      sLen = salt_.length();
+      saltLength = options.saltLength;
+    } else if (configuredSalt !== null) {
+      saltLength = configuredSalt.length();
     } else {
       throw new Error('Salt length not specified or specific salt not given.');
     }
 
-    if (salt_ !== null && salt_.length() !== sLen) {
+    if (configuredSalt !== null && configuredSalt.length() !== saltLength) {
       throw new Error('Given salt length does not match length of given salt.');
     }
 
@@ -40,104 +40,104 @@ export class PssScheme {
         const emLen = Math.ceil(emBits / 8);
         const mHash = md.digest().getBytes();
 
-        if (emLen < hLen + sLen + 2) {
+        if (emLen < hLen + saltLength + 2) {
           throw new Error('Message is too long to encrypt.');
         }
 
         let salt: string;
-        if (salt_ === null) {
+        if (configuredSalt === null) {
           if (!prng) {
             throw new Error('PRNG required to generate PSS salt');
           }
-          salt = prng.getBytesSync(sLen);
+          salt = prng.getBytesSync(saltLength);
         } else {
-          salt = salt_.bytes();
+          salt = configuredSalt.bytes();
         }
 
-        const m_ = new ByteStringBuffer();
-        m_.fillWithByte(0, 8);
-        m_.putBytes(mHash);
-        m_.putBytes(salt);
+        const paddedMessage = new ByteStringBuffer();
+        paddedMessage.fillWithByte(0, 8);
+        paddedMessage.putBytes(mHash);
+        paddedMessage.putBytes(salt);
 
         hash.start();
-        hash.update(m_.getBytes());
-        const h = hash.digest().getBytes();
+        hash.update(paddedMessage.getBytes());
+        const hashOctets = hash.digest().getBytes();
 
-        const ps = new ByteStringBuffer();
-        ps.fillWithByte(0, emLen - sLen - hLen - 2);
-        ps.putByte(0x01);
-        ps.putBytes(salt);
-        const db = ps.getBytes();
+        const paddingBlock = new ByteStringBuffer();
+        paddingBlock.fillWithByte(0, emLen - saltLength - hLen - 2);
+        paddingBlock.putByte(0x01);
+        paddingBlock.putBytes(salt);
+        const dataBlock = paddingBlock.getBytes();
 
         const maskLen = emLen - hLen - 1;
-        const dbMask = mgf.generate(h, maskLen);
+        const dbMask = mgf.generate(hashOctets, maskLen);
 
         let maskedDB = '';
         for (let i = 0; i < maskLen; i++) {
-          maskedDB += String.fromCharCode(db.charCodeAt(i) ^ dbMask.charCodeAt(i));
+          maskedDB += String.fromCharCode(dataBlock.charCodeAt(i) ^ dbMask.charCodeAt(i));
         }
 
         const mask = (0xff00 >> (8 * emLen - emBits)) & 0xff;
         maskedDB = String.fromCharCode(maskedDB.charCodeAt(0) & ~mask) + maskedDB.substr(1);
 
-        return maskedDB + h + String.fromCharCode(0xbc);
+        return maskedDB + hashOctets + String.fromCharCode(0xbc);
       },
 
-      verify(mHash: string, em: string, modBits: number): boolean {
+      verify(mHash: string, encodedMessage: string, modBits: number): boolean {
         const emBits = modBits - 1;
         const emLen = Math.ceil(emBits / 8);
 
-        em = em.substr(-emLen);
+        encodedMessage = encodedMessage.substr(-emLen);
 
-        if (emLen < hLen + sLen + 2) {
+        if (emLen < hLen + saltLength + 2) {
           throw new Error('Inconsistent parameters to PSS signature verification.');
         }
 
-        if (em.charCodeAt(emLen - 1) !== 0xbc) {
+        if (encodedMessage.charCodeAt(emLen - 1) !== 0xbc) {
           throw new Error('Encoded message does not end in 0xBC.');
         }
 
         const maskLen = emLen - hLen - 1;
-        const maskedDB = em.substr(0, maskLen);
-        const h = em.substr(maskLen, hLen);
+        const maskedDB = encodedMessage.substr(0, maskLen);
+        const encodedHashOctets = encodedMessage.substr(maskLen, hLen);
 
         const mask = (0xff00 >> (8 * emLen - emBits)) & 0xff;
         if ((maskedDB.charCodeAt(0) & mask) !== 0) {
           throw new Error('Bits beyond keysize not zero as expected.');
         }
 
-        const dbMask = mgf.generate(h, maskLen);
+        const dbMask = mgf.generate(encodedHashOctets, maskLen);
 
-        let db = '';
+        let dataBlock = '';
         for (let i = 0; i < maskLen; i++) {
-          db += String.fromCharCode(maskedDB.charCodeAt(i) ^ dbMask.charCodeAt(i));
+          dataBlock += String.fromCharCode(maskedDB.charCodeAt(i) ^ dbMask.charCodeAt(i));
         }
 
-        db = String.fromCharCode(db.charCodeAt(0) & ~mask) + db.substr(1);
+        dataBlock = String.fromCharCode(dataBlock.charCodeAt(0) & ~mask) + dataBlock.substr(1);
 
-        const checkLen = emLen - hLen - sLen - 2;
+        const checkLen = emLen - hLen - saltLength - 2;
         for (let i = 0; i < checkLen; i++) {
-          if (db.charCodeAt(i) !== 0x00) {
+          if (dataBlock.charCodeAt(i) !== 0x00) {
             throw new Error('Leftmost octets not zero as expected');
           }
         }
 
-        if (db.charCodeAt(checkLen) !== 0x01) {
+        if (dataBlock.charCodeAt(checkLen) !== 0x01) {
           throw new Error('Inconsistent PSS signature, 0x01 marker not found');
         }
 
-        const salt = db.substr(-sLen);
+        const salt = dataBlock.substr(-saltLength);
 
-        const m_ = new ByteStringBuffer();
-        m_.fillWithByte(0, 8);
-        m_.putBytes(mHash);
-        m_.putBytes(salt);
+        const paddedMessage = new ByteStringBuffer();
+        paddedMessage.fillWithByte(0, 8);
+        paddedMessage.putBytes(mHash);
+        paddedMessage.putBytes(salt);
 
         hash.start();
-        hash.update(m_.getBytes());
-        const h_ = hash.digest().getBytes();
+        hash.update(paddedMessage.getBytes());
+        const recoveredHashOctets = hash.digest().getBytes();
 
-        return constantTimeEquals(h, h_);
+        return constantTimeEquals(encodedHashOctets, recoveredHashOctets);
       }
     };
   }
@@ -145,21 +145,24 @@ export class PssScheme {
   static createCertkitNamespace(getRandomBytes: (count: number) => string): {
     create: (options?: PssCreateOptions) => PssObject;
   } {
-    return {
-      create: function (options?: PssCreateOptions) {
-        if (arguments.length === 3) {
-          options = {
-            md: arguments[0] as MessageDigest,
-            mgf: arguments[1] as MgfObject,
-            saltLength: arguments[2] as number
-          };
-        }
-        if (!options!.prng) {
-          options = { ...options!, prng: { getBytesSync: getRandomBytes } };
-        }
-        return PssScheme.create(options!);
+    const create = (...args: [PssCreateOptions?] | [MessageDigest, MgfObject, number]) => {
+      let options: PssCreateOptions | undefined;
+      if (args.length === 3) {
+        options = {
+          md: args[0],
+          mgf: args[1],
+          saltLength: args[2]
+        };
+      } else {
+        options = args[0];
       }
+      if (!options!.prng) {
+        options = { ...options!, prng: { getBytesSync: getRandomBytes } };
+      }
+      return PssScheme.create(options!);
     };
+    Object.defineProperty(create, 'length', { value: 1 });
+    return { create };
   }
 }
 

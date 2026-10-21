@@ -22,14 +22,13 @@ export class BaseNCodec {
     if (!(input instanceof Uint8Array)) {
       output = BaseNCodec.#encodeWithByteBuffer(input, alphabet);
     } else {
-      let i = 0;
       const base = alphabet.length;
       const first = alphabet.charAt(0);
       const digits = [0];
-      for (i = 0; i < input.length; ++i) {
-        let carry = input[i]!;
+      for (let i = 0; i < input.length; ++i) {
+        let carry = input[i];
         for (let j = 0; j < digits.length; ++j) {
-          carry += digits[j]! << 8;
+          carry += digits[j] << 8;
           digits[j] = carry % base;
           carry = (carry / base) | 0;
         }
@@ -40,11 +39,11 @@ export class BaseNCodec {
         }
       }
 
-      for (i = 0; input[i] === 0 && i < input.length - 1; ++i) {
+      for (let i = 0; input[i] === 0 && i < input.length - 1; ++i) {
         output += first;
       }
-      for (i = digits.length - 1; i >= 0; --i) {
-        output += alphabet[digits[i]!];
+      for (let i = digits.length - 1; i >= 0; --i) {
+        output += alphabet[digits[i]];
       }
     }
 
@@ -85,7 +84,7 @@ export class BaseNCodec {
 
       let carry = value;
       for (let j = 0; j < bytes.length; ++j) {
-        carry += bytes[j]! * base;
+        carry += bytes[j] * base;
         bytes[j] = carry & 0xff;
         carry >>= 8;
       }
@@ -104,14 +103,13 @@ export class BaseNCodec {
   }
 
   static #encodeWithByteBuffer(input: ByteBufferLike, alphabet: string): string {
-    let i = 0;
     const base = alphabet.length;
     const first = alphabet.charAt(0);
     const digits = [0];
-    for (i = 0; i < input.length(); ++i) {
+    for (let i = 0; i < input.length(); ++i) {
       let carry = input.at(i);
       for (let j = 0; j < digits.length; ++j) {
-        carry += digits[j]! << 8;
+        carry += digits[j] << 8;
         digits[j] = carry % base;
         carry = (carry / base) | 0;
       }
@@ -124,11 +122,11 @@ export class BaseNCodec {
 
     let output = '';
 
-    for (i = 0; input.at(i) === 0 && i < input.length() - 1; ++i) {
+    for (let i = 0; input.at(i) === 0 && i < input.length() - 1; ++i) {
       output += first;
     }
-    for (i = digits.length - 1; i >= 0; --i) {
-      output += alphabet[digits[i]!];
+    for (let i = digits.length - 1; i >= 0; --i) {
+      output += alphabet[digits[i]];
     }
 
     return output;

@@ -273,7 +273,7 @@ export class Asn1Codec {
     if (isArray(asn1Object)) {
       const copied: Asn1Value[] = [];
       for (let i = 0; i < asn1Object.length; ++i) {
-        copied.push(Asn1Codec.copy(asn1Object[i]!, options, depth + 1));
+        copied.push(Asn1Codec.copy(asn1Object[i], options, depth + 1));
       }
       return copied as Asn1Object[];
     }
@@ -333,7 +333,7 @@ export class Asn1Codec {
       return obj1 === obj2;
     }
 
-    const asn1Obj1 = obj1 as Asn1Object;
+    const asn1Obj1 = obj1;
     const asn1Obj2 = obj2 as Asn1Object;
     let equal =
       asn1Obj1.tagClass === asn1Obj2.tagClass &&
@@ -358,10 +358,10 @@ export class Asn1Codec {
    *
    * @return the length of the BER-encoded ASN.1 value or undefined.
    */
-  static getBerValueLength(b: ByteStringBuffer) {
+  static getBerValueLength(buffer: ByteStringBuffer) {
     // TODO: move this function and related DER/BER functions to a der.js
     // file; better abstract ASN.1 away from der/ber.
-    const lengthOctet = b.getByte();
+    const lengthOctet = buffer.getByte();
     if (lengthOctet === 0x80) {
       return undefined;
     }
@@ -375,7 +375,7 @@ export class Asn1Codec {
     } else {
       // the number of bytes the length is specified in bits 7 through 1
       // and each length byte is in big-endian base-256
-      length = b.getInt((lengthOctet & 0x7f) << 3);
+      length = buffer.getInt((lengthOctet & 0x7f) << 3);
     }
     return length;
   }
@@ -443,7 +443,7 @@ export class Asn1Codec {
     const bytes = new ByteStringBuffer();
 
     // build the first byte
-    let b1 = asn1Object.tagClass | asn1Object.type;
+    let firstOctet = asn1Object.tagClass | asn1Object.type;
 
     // for storing the ASN.1 value
     const value = new ByteStringBuffer();
@@ -464,7 +464,7 @@ export class Asn1Codec {
       // turn on 6th bit (0x20 = 32) to indicate asn1 is constructed
       // from other asn1 objects
       if (asn1Object.constructed) {
-        b1 |= 0x20;
+        firstOctet |= 0x20;
       } else {
         // type is a bit string, add unused bits of 0x00
         value.putByte(0x00);
@@ -474,7 +474,7 @@ export class Asn1Codec {
       const children = asn1Object.value as Asn1Object[];
       for (let i = 0; i < children.length; ++i) {
         if (children[i] !== undefined) {
-          value.putBuffer(Asn1Codec.toDer(children[i]!, depth + 1));
+          value.putBuffer(Asn1Codec.toDer(children[i], depth + 1));
         }
       }
     } else {
@@ -504,7 +504,7 @@ export class Asn1Codec {
     }
 
     // add tag byte
-    bytes.putByte(b1);
+    bytes.putByte(firstOctet);
 
     // use "short form" encoding
     if (value.length() <= 127) {
@@ -556,7 +556,7 @@ export class Asn1Codec {
     bytes.putByte(40 * parseInt(values[0], 10) + parseInt(values[1], 10));
     // other bytes are each value in base 128 with 8th bit set except for
     // the last byte for each value
-    let last, valueBytes, value, b;
+    let last, valueBytes, value, encodedByte;
     for (let i = 2; i < values.length; ++i) {
       // produce value bytes in reverse because we don't know how many
       // bytes it will take to store the value
@@ -568,19 +568,19 @@ export class Asn1Codec {
         throw new Error('OID value too large; max is 32-bits.');
       }
       do {
-        b = value & 0x7f;
+        encodedByte = value & 0x7f;
         value = value >>> 7;
         // if value is not last, then turn on 8th bit
         if (!last) {
-          b |= 0x80;
+          encodedByte |= 0x80;
         }
-        valueBytes.push(b);
+        valueBytes.push(encodedByte);
         last = false;
       } while (value > 0);
 
       // add value bytes in reverse (needs to be in big endian)
-      for (let n = valueBytes.length - 1; n >= 0; --n) {
-        bytes.putByte(valueBytes[n]);
+      for (let byteIndex = valueBytes.length - 1; byteIndex >= 0; --byteIndex) {
+        bytes.putByte(valueBytes[byteIndex]);
       }
     }
 
@@ -605,8 +605,8 @@ export class Asn1Codec {
     }
 
     // first byte is 40 * value1 + value2
-    let b = bytes.getByte();
-    parts.push(String(Math.floor(b / 40)), String(b % 40));
+    const firstByte = bytes.getByte();
+    parts.push(String(Math.floor(firstByte / 40)), String(firstByte % 40));
 
     // other bytes are each value in base 128 with 8th bit set except for
     // the last byte for each value
@@ -617,14 +617,14 @@ export class Asn1Codec {
       if (value > 0x3fffffffffff) {
         throw new Error('OID value too large; max is 53-bits.');
       }
-      b = bytes.getByte();
+      const oidByte = bytes.getByte();
       value = value * 128;
       // not the last byte for the value
-      if (b & 0x80) {
-        value += b & 0x7f;
+      if (oidByte & 0x80) {
+        value += oidByte & 0x7f;
       } else {
         // last byte
-        parts.push(String(value + b));
+        parts.push(String(value + oidByte));
         value = 0;
       }
     }
@@ -669,36 +669,36 @@ export class Asn1Codec {
     // if YY >= 50 use 19xx, if YY < 50 use 20xx
     let year = parseInt(utc.substr(0, 2), 10);
     year = year >= 50 ? 1900 + year : 2000 + year;
-    const MM = parseInt(utc.substr(2, 2), 10) - 1; // use 0-11 for month
-    const DD = parseInt(utc.substr(4, 2), 10);
-    const hh = parseInt(utc.substr(6, 2), 10);
-    const mm = parseInt(utc.substr(8, 2), 10);
-    let ss = 0;
+    const monthIndex = parseInt(utc.substr(2, 2), 10) - 1; // use 0-11 for month
+    const day = parseInt(utc.substr(4, 2), 10);
+    const hour = parseInt(utc.substr(6, 2), 10);
+    const minute = parseInt(utc.substr(8, 2), 10);
+    let second = 0;
     let end = 0;
-    let c = '';
+    let tzChar: string;
 
     // not just YYMMDDhhmmZ
     if (utc.length > 11) {
       // get character after minutes
-      c = utc.charAt(10);
+      tzChar = utc.charAt(10);
       end = 10;
 
       // see if seconds are present
-      if (c !== '+' && c !== '-') {
+      if (tzChar !== '+' && tzChar !== '-') {
         // get seconds
-        ss = parseInt(utc.substr(10, 2), 10);
+        second = parseInt(utc.substr(10, 2), 10);
         end += 2;
       }
     }
 
     // update date
-    date.setUTCFullYear(year, MM, DD);
-    date.setUTCHours(hh, mm, ss, 0);
+    date.setUTCFullYear(year, monthIndex, day);
+    date.setUTCHours(hour, minute, second, 0);
 
     if (end) {
       // get +/- after end of time
-      c = utc.charAt(end);
-      if (c === '+' || c === '-') {
+      tzChar = utc.charAt(end);
+      if (tzChar === '+' || tzChar === '-') {
         // get hours+minutes offset
         const hhoffset = parseInt(utc.substr(end + 1, 2), 10);
         const mmoffset = parseInt(utc.substr(end + 4, 2), 10);
@@ -708,7 +708,7 @@ export class Asn1Codec {
         offset *= 60000;
 
         // apply offset
-        if (c === '+') {
+        if (tzChar === '+') {
           date.setTime(+date - offset);
         } else {
           date.setTime(+date + offset);
@@ -754,11 +754,11 @@ export class Asn1Codec {
     const date = new Date();
 
     const YYYY = parseInt(gentime.substr(0, 4), 10);
-    const MM = parseInt(gentime.substr(4, 2), 10) - 1; // use 0-11 for month
-    const DD = parseInt(gentime.substr(6, 2), 10);
-    const hh = parseInt(gentime.substr(8, 2), 10);
-    const mm = parseInt(gentime.substr(10, 2), 10);
-    const ss = parseInt(gentime.substr(12, 2), 10);
+    const monthIndex = parseInt(gentime.substr(4, 2), 10) - 1; // use 0-11 for month
+    const day = parseInt(gentime.substr(6, 2), 10);
+    const hour = parseInt(gentime.substr(8, 2), 10);
+    const minute = parseInt(gentime.substr(10, 2), 10);
+    const second = parseInt(gentime.substr(12, 2), 10);
     let fff = 0;
     let offset = 0;
     let isUTC = false;
@@ -767,9 +767,9 @@ export class Asn1Codec {
       isUTC = true;
     }
 
-    const end = gentime.length - 5,
-      c = gentime.charAt(end);
-    if (c === '+' || c === '-') {
+    const end = gentime.length - 5;
+    const tzChar = gentime.charAt(end);
+    if (tzChar === '+' || tzChar === '-') {
       // get hours+minutes offset
       const hhoffset = parseInt(gentime.substr(end + 1, 2), 10);
       const mmoffset = parseInt(gentime.substr(end + 4, 2), 10);
@@ -779,7 +779,7 @@ export class Asn1Codec {
       offset *= 60000;
 
       // apply offset
-      if (c === '+') {
+      if (tzChar === '+') {
         offset *= -1;
       }
 
@@ -792,14 +792,14 @@ export class Asn1Codec {
     }
 
     if (isUTC) {
-      date.setUTCFullYear(YYYY, MM, DD);
-      date.setUTCHours(hh, mm, ss, fff);
+      date.setUTCFullYear(YYYY, monthIndex, day);
+      date.setUTCHours(hour, minute, second, fff);
 
       // apply offset
       date.setTime(+date + offset);
     } else {
-      date.setFullYear(YYYY, MM, DD);
-      date.setHours(hh, mm, ss, fff);
+      date.setFullYear(YYYY, monthIndex, day);
+      date.setHours(hour, minute, second, fff);
     }
 
     return date;
@@ -889,22 +889,22 @@ export class Asn1Codec {
    *
    * @return the byte buffer.
    */
-  static integerToDer(x: number) {
+  static integerToDer(integer: number) {
     const integerBuffer = new ByteStringBuffer();
-    if (x >= -0x80 && x < 0x80) {
-      return integerBuffer.putSignedInt(x, 8);
+    if (integer >= -0x80 && integer < 0x80) {
+      return integerBuffer.putSignedInt(integer, 8);
     }
-    if (x >= -0x8000 && x < 0x8000) {
-      return integerBuffer.putSignedInt(x, 16);
+    if (integer >= -0x8000 && integer < 0x8000) {
+      return integerBuffer.putSignedInt(integer, 16);
     }
-    if (x >= -0x800000 && x < 0x800000) {
-      return integerBuffer.putSignedInt(x, 24);
+    if (integer >= -0x800000 && integer < 0x800000) {
+      return integerBuffer.putSignedInt(integer, 24);
     }
-    if (x >= -0x80000000 && x < 0x80000000) {
-      return integerBuffer.putSignedInt(x, 32);
+    if (integer >= -0x80000000 && integer < 0x80000000) {
+      return integerBuffer.putSignedInt(integer, 32);
     }
     const error = new Error('Integer too large; max is 32-bits.') as DerError;
-    error.integer = x;
+    error.integer = integer;
     throw error;
   }
 
@@ -922,11 +922,11 @@ export class Asn1Codec {
       bytes = new ByteStringBuffer(bytes);
     }
 
-    const n = bytes.length() * 8;
-    if (n > 32) {
+    const bitCount = bytes.length() * 8;
+    if (bitCount > 32) {
       throw new Error('Integer too large; max is 32-bits.');
     }
-    return bytes.getSignedInt(n);
+    return bytes.getSignedInt(bitCount);
   }
 
   /**
@@ -954,7 +954,7 @@ export class Asn1Codec {
    */
   static validate(
     asn1Object: Asn1Object,
-    v: Asn1Validator,
+    validator: Asn1Validator,
     capture?: Record<string, unknown>,
     errors?: string[],
     depth = 0
@@ -969,18 +969,18 @@ export class Asn1Codec {
 
     // ensure tag class and type are the same if specified
     if (
-      (asn1Object.tagClass === v.tagClass || typeof v.tagClass === 'undefined') &&
-      (asn1Object.type === v.type || typeof v.type === 'undefined')
+      (asn1Object.tagClass === validator.tagClass || typeof validator.tagClass === 'undefined') &&
+      (asn1Object.type === validator.type || typeof validator.type === 'undefined')
     ) {
       // ensure constructed flag is the same if specified
-      if (asn1Object.constructed === v.constructed || typeof v.constructed === 'undefined') {
+      if (asn1Object.constructed === validator.constructed || typeof validator.constructed === 'undefined') {
         isValid = true;
 
         // handle sub values
-        if (v.value && isArray(v.value)) {
+        if (validator.value && isArray(validator.value)) {
           let j = 0;
-          for (let i = 0; isValid && i < v.value.length; ++i) {
-            const schemaItem = v.value[i];
+          for (let i = 0; isValid && i < validator.value.length; ++i) {
+            const schemaItem = validator.value[i];
             isValid = !!schemaItem.optional;
 
             // current child in the object
@@ -994,7 +994,7 @@ export class Asn1Codec {
                 if (errors) {
                   errors.push(
                     '[' +
-                      v.name +
+                      validator.name +
                       '] ' +
                       'Missing required element. Expected tag class "' +
                       schemaItem.tagClass +
@@ -1023,7 +1023,7 @@ export class Asn1Codec {
                 if (errors) {
                   errors.push(
                     '[' +
-                      v.name +
+                      validator.name +
                       '] ' +
                       'Tag mismatch. Expected (' +
                       schemaItem.tagClass +
@@ -1041,8 +1041,8 @@ export class Asn1Codec {
             }
 
             // Tags are compatible (or schema did not declare tags) - dive into recursive validate.
-            const childRval = Asn1Codec.validate(objChild, schemaItem, capture, errors, depth + 1);
-            if (childRval) {
+            const childValid = Asn1Codec.validate(objChild, schemaItem, capture, errors, depth + 1);
+            if (childValid) {
               // consume this child
               ++j;
               isValid = true;
@@ -1059,40 +1059,58 @@ export class Asn1Codec {
         }
 
         if (isValid && capture) {
-          if (v.capture) {
-            capture[v.capture] = asn1Object.value;
+          if (validator.capture) {
+            capture[validator.capture] = asn1Object.value;
           }
-          if (v.captureAsn1) {
-            capture[v.captureAsn1] = asn1Object;
+          if (validator.captureAsn1) {
+            capture[validator.captureAsn1] = asn1Object;
           }
-          if (v.captureBitStringContents && 'bitStringContents' in asn1Object) {
-            capture[v.captureBitStringContents] = asn1Object.bitStringContents;
+          if (validator.captureBitStringContents && 'bitStringContents' in asn1Object) {
+            capture[validator.captureBitStringContents] = asn1Object.bitStringContents;
           }
-          if (v.captureBitStringValue && 'bitStringContents' in asn1Object) {
+          if (validator.captureBitStringValue && 'bitStringContents' in asn1Object) {
             const bitStringContents = asn1Object.bitStringContents!;
             if (bitStringContents.length < 2) {
-              capture[v.captureBitStringValue] = '';
+              capture[validator.captureBitStringValue] = '';
             } else {
               // FIXME: support unused bits with data shifting
               const unused = bitStringContents.charCodeAt(0);
               if (unused !== 0) {
                 throw new Error('captureBitStringValue only supported for zero unused bits');
               }
-              capture[v.captureBitStringValue] = bitStringContents.slice(1);
+              capture[validator.captureBitStringValue] = bitStringContents.slice(1);
             }
           }
         }
       } else if (errors) {
         errors.push(
-          '[' + v.name + '] ' + 'Expected constructed "' + v.constructed + '", got "' + asn1Object.constructed + '"'
+          '[' +
+            validator.name +
+            '] ' +
+            'Expected constructed "' +
+            validator.constructed +
+            '", got "' +
+            asn1Object.constructed +
+            '"'
         );
       }
     } else if (errors) {
-      if (asn1Object.tagClass !== v.tagClass) {
-        errors.push('[' + v.name + '] ' + 'Expected tag class "' + v.tagClass + '", got "' + asn1Object.tagClass + '"');
+      if (asn1Object.tagClass !== validator.tagClass) {
+        errors.push(
+          '[' +
+            validator.name +
+            '] ' +
+            'Expected tag class "' +
+            validator.tagClass +
+            '", got "' +
+            asn1Object.tagClass +
+            '"'
+        );
       }
-      if (asn1Object.type !== v.type) {
-        errors.push('[' + v.name + '] ' + 'Expected type "' + v.type + '", got "' + asn1Object.type + '"');
+      if (asn1Object.type !== validator.type) {
+        errors.push(
+          '[' + validator.name + '] ' + 'Expected type "' + validator.type + '", got "' + asn1Object.type + '"'
+        );
       }
     }
     return isValid;
@@ -1113,7 +1131,7 @@ export class Asn1Codec {
 
   static createCertkitNamespace(oids?: Record<string, string>): Asn1NamespaceObject {
     setPrettyPrintPkiOids(oids);
-    const ns = {
+    const namespaceObject = {
       Class: Asn1Codec.Class,
       Type: Asn1Codec.Type,
       create: Asn1Codec.create.bind(Asn1Codec),
@@ -1133,7 +1151,7 @@ export class Asn1Codec {
       validate: Asn1Codec.validate.bind(Asn1Codec),
       prettyPrint: Asn1Codec.prettyPrint.bind(Asn1Codec)
     } as Asn1NamespaceObject;
-    Object.defineProperty(ns, 'maxDepth', {
+    Object.defineProperty(namespaceObject, 'maxDepth', {
       get() {
         return Asn1Codec.maxDepth;
       },
@@ -1143,7 +1161,7 @@ export class Asn1Codec {
       enumerable: true,
       configurable: true
     });
-    return ns;
+    return namespaceObject;
   }
 }
 

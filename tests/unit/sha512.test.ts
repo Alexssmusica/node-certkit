@@ -1,20 +1,20 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import certkit from '../../src/presentation/index.js';
 const SHA512 = certkit.sha512;
 describe('sha512', () => {
-  it('should have correct digest length', (ctx) => {
+  it('should have correct digest length', () => {
     const md = SHA512.create();
     expect(md.digestLength).toBe(64);
   });
 
-  it('should digest the empty string', (ctx) => {
+  it('should digest the empty string', () => {
     const md = SHA512.create();
     expect(md.digest().toHex()).toBe(
       'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e'
     );
   });
 
-  it('should digest "abc"', (ctx) => {
+  it('should digest "abc"', () => {
     const md = SHA512.create();
     md.update('abc');
     expect(md.digest().toHex()).toBe(
@@ -22,7 +22,7 @@ describe('sha512', () => {
     );
   });
 
-  it('should digest "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"', (ctx) => {
+  it('should digest "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"', () => {
     const md = SHA512.create();
     md.update(
       'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu'
@@ -32,7 +32,7 @@ describe('sha512', () => {
     );
   });
 
-  it('should digest "The quick brown fox jumps over the lazy dog"', (ctx) => {
+  it('should digest "The quick brown fox jumps over the lazy dog"', () => {
     const md = SHA512.create();
     md.update('The quick brown fox jumps over the lazy dog');
     expect(md.digest().toHex()).toBe(
@@ -40,7 +40,7 @@ describe('sha512', () => {
     );
   });
 
-  it('should digest "c\'\u00e8"', (ctx) => {
+  it('should digest "c\'\u00e8"', () => {
     const md = SHA512.create();
     md.update("c'\u00e8", 'utf8');
     expect(md.digest().toHex()).toBe(
@@ -48,7 +48,7 @@ describe('sha512', () => {
     );
   });
 
-  it('should digest "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"', (ctx) => {
+  it('should digest "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"', () => {
     const md = SHA512.create();
     md.start();
     md.update('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq');
@@ -61,7 +61,7 @@ describe('sha512', () => {
     );
   });
 
-  it('should digest multiple long messages', (ctx) => {
+  it('should digest multiple long messages', () => {
     // Note: might be too slow on old browsers
     // done multiple times to check hot loop optimizations
     for (let loop = 0; loop < 3; ++loop) {
@@ -79,19 +79,19 @@ describe('sha512', () => {
 const SHA384 = SHA512.sha384!;
 
 describe('sha384', () => {
-  it('should have correct digest length', (ctx) => {
+  it('should have correct digest length', () => {
     const md = SHA384.create();
     expect(md.digestLength).toBe(48);
   });
 
-  it('should digest the empty string', (ctx) => {
+  it('should digest the empty string', () => {
     const md = SHA384.create();
     expect(md.digest().toHex()).toBe(
       '38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b'
     );
   });
 
-  it('should digest "abc"', (ctx) => {
+  it('should digest "abc"', () => {
     const md = SHA384.create();
     md.update('abc');
     expect(md.digest().toHex()).toBe(
@@ -99,7 +99,7 @@ describe('sha384', () => {
     );
   });
 
-  it('should digest "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"', (ctx) => {
+  it('should digest "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"', () => {
     const md = SHA384.create();
     md.update(
       'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu'
@@ -109,7 +109,7 @@ describe('sha384', () => {
     );
   });
 
-  it('should digest "The quick brown fox jumps over the lazy dog"', (ctx) => {
+  it('should digest "The quick brown fox jumps over the lazy dog"', () => {
     const md = SHA384.create();
     md.update('The quick brown fox jumps over the lazy dog');
     expect(md.digest().toHex()).toBe(
@@ -117,7 +117,7 @@ describe('sha384', () => {
     );
   });
 
-  it('should digest "c\'\u00e8"', (ctx) => {
+  it('should digest "c\'\u00e8"', () => {
     const md = SHA384.create();
     md.update("c'\u00e8", 'utf8');
     expect(md.digest().toHex()).toBe(
@@ -125,7 +125,7 @@ describe('sha384', () => {
     );
   });
 
-  it('should digest "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"', (ctx) => {
+  it('should digest "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"', () => {
     const md = SHA384.create();
     md.start();
     md.update('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq');
@@ -138,7 +138,7 @@ describe('sha384', () => {
     );
   });
 
-  it('should digest multiple long messages', (ctx) => {
+  it('should digest multiple long messages', () => {
     // Note: might be too slow on old browsers
     // done multiple times to check hot loop optimizations
     for (let loop = 0; loop < 3; ++loop) {
@@ -156,17 +156,17 @@ describe('sha384', () => {
 const SHA256 = SHA512.sha256!;
 
 describe('sha512/256', () => {
-  it('should have correct digest length', (ctx) => {
+  it('should have correct digest length', () => {
     const md = SHA256.create();
     expect(md.digestLength).toBe(32);
   });
 
-  it('should digest the empty string', (ctx) => {
+  it('should digest the empty string', () => {
     const md = SHA256.create();
     expect(md.digest().toHex()).toBe('c672b8d1ef56ed28ab87c3622c5114069bdd3ad7b8f9737498d0c01ecef0967a');
   });
 
-  it('should digest "The quick brown fox jumps over the lazy dog"', (ctx) => {
+  it('should digest "The quick brown fox jumps over the lazy dog"', () => {
     const md = SHA256.create();
     md.update('The quick brown fox jumps over the lazy dog');
     expect(md.digest().toHex()).toBe('dd9d67b371519c339ed8dbd25af90e976a1eeefd4ad3d889005e532fc5bef04d');
@@ -176,17 +176,17 @@ describe('sha512/256', () => {
 const SHA224 = SHA512.sha224!;
 
 describe('sha512/224', () => {
-  it('should have correct digest length', (ctx) => {
+  it('should have correct digest length', () => {
     const md = SHA224.create();
     expect(md.digestLength).toBe(28);
   });
 
-  it('should digest the empty string', (ctx) => {
+  it('should digest the empty string', () => {
     const md = SHA224.create();
     expect(md.digest().toHex()).toBe('6ed0dd02806fa89e25de060c19d3ac86cabb87d6a0ddd05c333b84f4');
   });
 
-  it('should digest "The quick brown fox jumps over the lazy dog"', (ctx) => {
+  it('should digest "The quick brown fox jumps over the lazy dog"', () => {
     const md = SHA224.create();
     md.update('The quick brown fox jumps over the lazy dog');
     expect(md.digest().toHex()).toBe('944cd2847fb54558d4775db0485a50003111c8e5daa63fe722c6aa37');

@@ -2,13 +2,13 @@ import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { Asn1Codec } from './Asn1Codec.js';
 import type { Asn1FromDerOptions, Asn1Object, DerError } from './Asn1Types.js';
 
-export function checkBufferLength(bytes: ByteStringBuffer, remaining: number, n: number): void {
+export function checkBufferLength(bytes: ByteStringBuffer, remaining: number, byteCount: number): void {
   const available = bytes.length();
-  if (n > remaining || n > available) {
+  if (byteCount > remaining || byteCount > available) {
     const error = new Error('Too few bytes to parse DER.') as DerError;
     error.available = available;
     error.remaining = remaining;
-    error.requested = n;
+    error.requested = byteCount;
     throw error;
   }
 }
@@ -76,15 +76,15 @@ export function fromDerInternal(
   checkBufferLength(bytes, remaining, 2);
 
   // get the first byte
-  const b1 = bytes.getByte();
+  const firstOctet = bytes.getByte();
   // consumed one byte
   remaining--;
 
   // get the tag class
-  const tagClass = b1 & 0xc0;
+  const tagClass = firstOctet & 0xc0;
 
   // get the type (bits 1-5)
-  const type = b1 & 0x1f;
+  const type = firstOctet & 0x1f;
 
   // get the variable value length and adjust remaining bytes
   start = bytes.length();
@@ -110,7 +110,7 @@ export function fromDerInternal(
   let bitStringContents;
 
   // constructed flag is bit 6 (32 = 0x20) of the first byte
-  const constructed = (b1 & 0x20) === 0x20;
+  const constructed = (firstOctet & 0x20) === 0x20;
   if (constructed) {
     // parse child asn1 objects from the value
     value = [];
@@ -192,13 +192,16 @@ export function fromDerInternal(
 
         // if the data all decoded and the class indicates UNIVERSAL or
         // CONTEXT_SPECIFIC then assume we've got an encapsulated ASN.1 object
-        const tc = composed.tagClass;
-        if (used === length && (tc === Asn1Codec.Class.UNIVERSAL || tc === Asn1Codec.Class.CONTEXT_SPECIFIC)) {
+        const composedTagClass = composed.tagClass;
+        if (
+          used === length &&
+          (composedTagClass === Asn1Codec.Class.UNIVERSAL || composedTagClass === Asn1Codec.Class.CONTEXT_SPECIFIC)
+        ) {
           value = [composed];
         }
-      } catch (ex) {
-        if (ex instanceof Error && /Max depth exceeded/.test(ex.message)) {
-          throw ex;
+      } catch (parseError) {
+        if (parseError instanceof Error && /Max depth exceeded/.test(parseError.message)) {
+          throw parseError;
         }
       }
     }
@@ -231,7 +234,6 @@ export function fromDerInternal(
       value = chars.join('');
     } else {
       value = bytes.getBytes(length);
-      remaining -= length;
     }
   }
 

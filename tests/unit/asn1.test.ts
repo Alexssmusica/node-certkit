@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import certkit from '../../src/presentation/index.js';
 import type { Asn1Object, Asn1Validator, Asn1Value } from '../../src/domain/asn1/Asn1Types.js';
 const ASN1 = certkit.asn1;
@@ -514,7 +514,7 @@ describe('asn1', () => {
       // bytes for round-trip comparison
       const bytes = b.copy().bytes();
       // copy for non-strict test
-      const bns = b.copy();
+      b.copy();
       // create strict and non-strict asn1
       const asn1assert = throws
         ? (f: () => void) => {
@@ -548,7 +548,7 @@ describe('asn1', () => {
           // byte comparisons for round-trip testing can fail due to
           // semantically safe changes such as changing the length encoding.
           // test a roundtrip for data where it makes sense.
-          expect(UTIL.bytesToHex(bytes)).toBe(UTIL.bytesToHex(der!.bytes()));
+          expect(UTIL.bytesToHex(bytes)).toBe(UTIL.bytesToHex(der.bytes()));
         }
       }
 

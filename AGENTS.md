@@ -2,30 +2,17 @@
 
 ## Naming conventions
 
-This library is a TypeScript port of node-forge. Internal names fall into three categories; treat each differently when editing code.
+This library is a TypeScript port of node-forge. Prefer explicit camelCase for parameters and locals; loop indices `i`, `j`, and `k` are fine in tight loops.
 
-### 1. Canonical spec notation (preserve)
+### Domain vocabulary (keep on the public surface)
 
-Short names that mirror RFCs, FIPS, or published algorithms. Renaming hurts auditability against the spec. Document with JSDoc when touching these blocks.
+Abbreviations that are standard in PKI/crypto libraries and frozen on the exported `certkit` object (see `tests/api-surface.test.ts` and `tests/api-surface.snapshot.json`):
 
-| Area | Examples | Reference |
-|------|----------|-----------|
-| PKCS#1 OAEP/PSS | `DB`, `PS`, `lHash`, `em`, `mHash`, `maskedDB` | RFC 8017 |
-| PKCS#12 key derivation | `D`, `S`, `P`, `I`, `B`, `u`, `v` | RFC 7292 |
-| PBKDF2 | `p`, `s`, `c`, `dk`, `u_c` | RFC 2898 |
-| RSA key components | `n`, `e`, `d`, `p`, `q`, `dP`, `dQ`, `qInv` | PKCS#1 (public API) |
-| SHA rounds | `a`–`h`, `t1`, `t2`, `s0`, `s1` | FIPS 180 |
-| AES | `Nb`, `Nk`, `Nr`, state columns `a`–`d` | FIPS 197 |
-| BigInteger / Montgomery | `t`, `s`, `data`, `mp`, `mpl`, `r`, `q` | HAC / jsBN |
-| ASN.1 time fields | `MM`, `DD`, `hh`, `mm`, `ss` | X.690 |
+`md`, `oid`, `iv`, `dk`, `pem`, `csr`, `tbs`, `cri`, `pfx`, `p12`, `ski`, `ext`, and other keys in the snapshot.
 
-### 2. Domain vocabulary (keep)
+Do not rename snapshot keys. In implementation code, use bracket access (e.g. `cert['md']`) or longer local names (e.g. `digestRegistry`) when ESLint `id-length` applies; wire snapshot names only at assembly boundaries.
 
-Abbreviations that are standard in PKI/crypto libraries:
-
-`md`, `oid`, `iv`, `dk`, `pem`, `csr`, `tbs`, `cri`, `pfx`, `p12`, `ski`, `ext`
-
-### 3. Legacy laziness (rename)
+### Legacy placeholders (rename)
 
 Generic placeholders inherited from node-forge with no semantic value:
 
@@ -35,24 +22,22 @@ Prefer descriptive English names: `digestBuffer`, `pemMessage`, `capture`, `exte
 
 ### Style rules
 
-- **Variables and parameters:** camelCase
+- **Variables and parameters:** camelCase (`id-length` minimum 3; exceptions `i`, `j`, `k`)
 - **Types, classes, interfaces:** PascalCase
 - **Public API snake_case:** only where already exposed (`encode_rsa_oaep`, error codes like `bad_certificate`) — do not rename
-- **Loop indices:** `i`, `j`, `k` are acceptable in tight loops
+- **Comma-chained `let`:** split into separate declarations
 
 ### Lint scope
 
-ESLint naming rules apply as `error` in: `src/domain/pki/`, `src/domain/asn1/`, `src/domain/buffer/`, `src/domain/util/`, `src/presentation/`.
+ESLint `id-length`, `@typescript-eslint/naming-convention`, and `@typescript-eslint/no-shadow` are **errors** under `src/**/*.ts`.
 
-They are disabled in `src/domain/math/`, `src/domain/cipher/`, and `src/domain/digest/` where canonical algorithm notation applies.
+Naming rules are **off** in `tests/` so spec-mirrored vectors do not drown out real warnings.
 
-In cleaned directories, `id-denylist` rejects category-3 placeholders even when they satisfy `id-length` and camelCase: `rval`, `tmp`, `obj`, `msg`, `res`, `ret`, `cap`, `s2`, `b2`.
+`src/index.ts` disables `@typescript-eslint/no-namespace` and `@typescript-eslint/no-shadow` because nested namespace type aliases (`certkit.pki.rsa.PrivateKey` mirroring `certkit.pki.PrivateKey`) are intentional public API for node-forge migration — do not rename them.
 
-Narrow `id-length` exceptions exist only where spec notation requires them: `C`/`L`/`O`/`E` in `X509Asn1.ts` (X.500 DN short names) and `D`/`S`/`P`/`I`/`B` in `PbeService.ts` (RFC 7292 appendix B.2).
+`src/domain/math/BigInteger.ts` has a narrow `id-length` exception list for remaining jsBN/HAC loop operands inside methods; prototype digit constants are named `digitBits`, `digitMask`, `digitMax`, `floatScale`, `floatHighBits`, `floatLowBits`, `multiplyAdd` (see `tests/instance-shape.snapshot.json`).
 
-Naming rules are off in `tests/` so spec-mirrored vectors do not drown out real warnings.
-
-`src/index.ts` disables `@typescript-eslint/no-shadow` because nested namespace type aliases (`certkit.pki.rsa.PrivateKey` mirroring `certkit.pki.PrivateKey`) are intentional public API for node-forge migration — do not rename them.
+TypeScript uses `noUncheckedIndexedAccess: false`; removing redundant non-null assertions (`@typescript-eslint/no-unnecessary-type-assertion`) assumes that setting stays off.
 
 ### Safety net before merging naming changes
 

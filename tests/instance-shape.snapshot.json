@@ -840,10 +840,6 @@
         "type": "function",
         "length": 2
       },
-      "am": {
-        "type": "function",
-        "length": 6
-      },
       "and": {
         "type": "function",
         "length": 1
@@ -1015,6 +1011,10 @@
       "multiply": {
         "type": "function",
         "length": 1
+      },
+      "multiplyAdd": {
+        "type": "function",
+        "length": 6
       },
       "multiplyLowerTo": {
         "type": "function",

@@ -1,4 +1,4 @@
-import type { Asn1NamespaceObject, Asn1Validator } from '../asn1/Asn1Types.js';
+import type { Asn1NamespaceObject } from '../asn1/Asn1Types.js';
 import type { Pkcs12Validators } from './Pkcs12Types.js';
 
 export function createPkcs12Validators(asn1: Asn1NamespaceObject): Pkcs12Validators {

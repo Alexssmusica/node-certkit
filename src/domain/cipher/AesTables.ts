@@ -23,31 +23,31 @@ export function ensureAesTables(): AesTables {
   const rcon = [0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36];
 
   // compute xtime table which maps i onto GF(i, 0x02)
-  const xtime = new Array(256);
+  const xtime: number[] = new Array<number>(256);
   for (let i = 0; i < 128; ++i) {
     xtime[i] = i << 1;
     xtime[i + 128] = ((i + 128) << 1) ^ 0x11b;
   }
 
   // compute all other tables
-  const sbox = new Array(256);
-  const isbox = new Array(256);
-  const mix = new Array(4);
-  const imix = new Array(4);
+  const sbox: number[] = new Array<number>(256);
+  const isbox: number[] = new Array<number>(256);
+  const mix: number[][] = new Array<number[]>(4);
+  const imix: number[][] = new Array<number[]>(4);
   for (let i = 0; i < 4; ++i) {
-    mix[i] = new Array(256);
-    imix[i] = new Array(256);
+    mix[i] = new Array<number>(256);
+    imix[i] = new Array<number>(256);
   }
-  let e = 0,
-    ei = 0,
-    e2,
-    e4,
-    e8,
-    sx,
-    sx2,
-    me,
-    ime;
-  for (let i = 0; i < 256; ++i) {
+  let fieldElement = 0;
+  let inverseElement = 0;
+  let fieldDouble: number;
+  let fieldQuadruple: number;
+  let fieldOctuple: number;
+  let substitutedByte: number;
+  let substitutedDouble: number;
+  let mixColumnWord: number;
+  let inverseMixColumnWord: number;
+  for (let tableIndex = 0; tableIndex < 256; ++tableIndex) {
     /* We need to generate the SubBytes() AesAlgorithm.#sbox and AesAlgorithm.#isbox tables so that
       we can perform byte substitutions. This requires us to traverse
       all of the elements in GF, find their multiplicative inverses,
@@ -108,12 +108,13 @@ export function ensureAesTables(): AesTables {
     */
 
     // apply affine transformation
-    sx = ei ^ (ei << 1) ^ (ei << 2) ^ (ei << 3) ^ (ei << 4);
-    sx = (sx >> 8) ^ (sx & 255) ^ 0x63;
+    substitutedByte =
+      inverseElement ^ (inverseElement << 1) ^ (inverseElement << 2) ^ (inverseElement << 3) ^ (inverseElement << 4);
+    substitutedByte = (substitutedByte >> 8) ^ (substitutedByte & 255) ^ 0x63;
 
     // update tables
-    sbox[e] = sx;
-    isbox[sx] = e;
+    sbox[fieldElement] = substitutedByte;
+    isbox[substitutedByte] = fieldElement;
 
     /* Mixing columns is done using matrix multiplication. The columns
       that are to be mixed are each a single word in the current state.
@@ -177,39 +178,40 @@ export function ensureAesTables(): AesTables {
     */
 
     // calculate AesAlgorithm.#mix and AesAlgorithm.#imix table values
-    sx2 = xtime[sx];
-    e2 = xtime[e];
-    e4 = xtime[e2];
-    e8 = xtime[e4];
-    me =
-      (sx2 << 24) ^ // 2
-      (sx << 16) ^ // 1
-      (sx << 8) ^ // 1
-      (sx ^ sx2); // 3
-    ime =
-      ((e2 ^ e4 ^ e8) << 24) ^ // E (14)
-      ((e ^ e8) << 16) ^ // 9
-      ((e ^ e4 ^ e8) << 8) ^ // D (13)
-      (e ^ e2 ^ e8); // B (11)
+    substitutedDouble = xtime[substitutedByte];
+    fieldDouble = xtime[fieldElement];
+    fieldQuadruple = xtime[fieldDouble];
+    fieldOctuple = xtime[fieldQuadruple];
+    mixColumnWord =
+      (substitutedDouble << 24) ^ // 2
+      (substitutedByte << 16) ^ // 1
+      (substitutedByte << 8) ^ // 1
+      (substitutedByte ^ substitutedDouble); // 3
+    inverseMixColumnWord =
+      ((fieldDouble ^ fieldQuadruple ^ fieldOctuple) << 24) ^ // E (14)
+      ((fieldElement ^ fieldOctuple) << 16) ^ // 9
+      ((fieldElement ^ fieldQuadruple ^ fieldOctuple) << 8) ^ // D (13)
+      (fieldElement ^ fieldDouble ^ fieldOctuple); // B (11)
     // produce each of the AesAlgorithm.#mix tables by rotating the 2,1,1,3 value
-    for (let n = 0; n < 4; ++n) {
-      mix[n][e] = me;
-      imix[n][sx] = ime;
+    for (let mixTableIndex = 0; mixTableIndex < 4; ++mixTableIndex) {
+      mix[mixTableIndex][fieldElement] = mixColumnWord;
+      imix[mixTableIndex][substitutedByte] = inverseMixColumnWord;
       // cycle the right most byte to the left most position
       // ie: 2,1,1,3 becomes 3,2,1,1
-      me = (me << 24) | (me >>> 8);
-      ime = (ime << 24) | (ime >>> 8);
+      mixColumnWord = (mixColumnWord << 24) | (mixColumnWord >>> 8);
+      inverseMixColumnWord = (inverseMixColumnWord << 24) | (inverseMixColumnWord >>> 8);
     }
 
     // get next element and inverse
-    if (e === 0) {
+    if (fieldElement === 0) {
       // 1 is the inverse of 1
-      e = ei = 1;
+      fieldElement = 1;
+      inverseElement = 1;
     } else {
       // e = 2e + 2*2*2*(10e)) = multiply e by 82 (chosen generator)
       // ei = ei + 2*2*ei = multiply ei by 5 (inverse generator)
-      e = e2 ^ xtime[xtime[xtime[e2 ^ e8]]];
-      ei ^= xtime[xtime[ei]];
+      fieldElement = fieldDouble ^ xtime[xtime[xtime[fieldDouble ^ fieldOctuple]]];
+      inverseElement ^= xtime[xtime[inverseElement]];
     }
   }
 

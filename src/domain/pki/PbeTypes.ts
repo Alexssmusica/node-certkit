@@ -5,12 +5,12 @@ import type { UtilNamespaceObject } from '../util/UtilTypes.js';
 import type { FortunaRandomNamespace } from '../../infrastructure/random/RandomTypes.js';
 import type { CertkitPkcs5Namespace } from '../../presentation/CertkitTypes.js';
 import type { PemCodec } from './PemCodec.js';
-import type { CertkitPki, CertkitPkiForPbe } from './CertkitPkiTypes.js';
+import type { CertkitPkiForPbe } from './CertkitPkiTypes.js';
 
 export type PbeDeps = {
   asn1: Asn1NamespaceObject;
   oids: Record<string, string>;
-  md: MdRegistry;
+  digestRegistry: MdRegistry;
   util: UtilNamespaceObject;
   aes: AesNamespaceObject;
   des: DesNamespaceObject;

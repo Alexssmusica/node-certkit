@@ -41,7 +41,9 @@ export class BlockCipher {
       this._input!.putBuffer(input);
     }
 
-    while (!this._op.call(this.mode, this._input!, this.output!, this._finish) && !this._finish) {}
+    while (!this._op.call(this.mode, this._input!, this.output!, this._finish) && !this._finish) {
+      /* process full blocks until finish or mode signals completion */
+    }
 
     this._input!.compact();
   }

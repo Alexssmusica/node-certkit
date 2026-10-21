@@ -1,6 +1,5 @@
 /* Migrated from lib/pkcs12.js */
 import type { Asn1Object, Asn1Value } from '../asn1/Asn1Types.js';
-import { isArray } from '../util/typeChecks.js';
 import { createPkcs12Validators } from './Pkcs12Asn1.js';
 import type {
   Pkcs12Bag,
@@ -74,7 +73,7 @@ export class Pkcs12Service {
           if (
             bag.attributes[attrName] !== undefined &&
             attrValue !== null &&
-            bag.attributes[attrName]!.indexOf(attrValue) >= 0
+            bag.attributes[attrName].indexOf(attrValue) >= 0
           ) {
             result.push(bag);
           }
@@ -214,23 +213,23 @@ export class Pkcs12Service {
         const macAlgorithm = asn1.derToOid(capture.macAlgorithm as string);
         switch (macAlgorithm) {
           case pkiOids.sha1:
-            md = deps.md.sha1.create();
+            md = deps.digestRegistry.sha1.create();
             macKeyBytes = 20;
             break;
           case pkiOids.sha256:
-            md = deps.md.sha256.create();
+            md = deps.digestRegistry.sha256.create();
             macKeyBytes = 32;
             break;
           case pkiOids.sha384:
-            md = deps.md.sha384.create();
+            md = deps.digestRegistry.sha384.create();
             macKeyBytes = 48;
             break;
           case pkiOids.sha512:
-            md = deps.md.sha512.create();
+            md = deps.digestRegistry.sha512.create();
             macKeyBytes = 64;
             break;
           case pkiOids.md5:
-            md = deps.md.md5.create();
+            md = deps.digestRegistry.md5.create();
             macKeyBytes = 16;
             break;
         }
@@ -278,7 +277,7 @@ export class Pkcs12Service {
         const value = deps.util.createBuffer();
         const chunks = data.value as Asn1Object[];
         for (let i = 0; i < chunks.length; ++i) {
-          value.putBytes(chunks[i]!.value as string);
+          value.putBytes(chunks[i].value as string);
         }
         data.composed = data.constructed = false;
         data.value = value.getBytes();
@@ -308,7 +307,7 @@ export class Pkcs12Service {
       }
 
       for (let i = 0; i < (authSafeAsn1.value as Asn1Object[]).length; i++) {
-        const contentInfo = (authSafeAsn1.value as Asn1Object[])[i]!;
+        const contentInfo = (authSafeAsn1.value as Asn1Object[])[i];
 
         // validate contentInfo and capture data
         const capture: Record<string, unknown> = {};
@@ -323,7 +322,7 @@ export class Pkcs12Service {
           encrypted: false,
           safeBags: []
         };
-        let safeContents: string | null = null;
+        let safeContents: string;
         const data = firstAsn1Child((capture.content as Asn1Object).value);
         switch (asn1.derToOid(capture.contentType as string)) {
           case pkiOids.data:
@@ -343,7 +342,7 @@ export class Pkcs12Service {
           }
         }
 
-        safeContentEntry.safeBags = _decodeSafeContents(safeContents!, strict, password);
+        safeContentEntry.safeBags = _decodeSafeContents(safeContents, strict, password);
         pfx.safeContents.push(safeContentEntry);
       }
     }
@@ -418,7 +417,7 @@ export class Pkcs12Service {
 
       const bags: Pkcs12Bag[] = [];
       for (let i = 0; i < (safeContentsAsn1.value as Asn1Object[]).length; i++) {
-        const safeBag = (safeContentsAsn1.value as Asn1Object[])[i]!;
+        const safeBag = (safeContentsAsn1.value as Asn1Object[])[i];
 
         // validate SafeBag and capture data
         const capture: Record<string, unknown> = {};
@@ -436,7 +435,8 @@ export class Pkcs12Service {
         };
         bags.push(bag);
 
-        let validator, decoder;
+        let bagValidator;
+        let bagDecoder;
         let bagAsn1 = firstAsn1Child((capture.bagValue as Asn1Object).value);
         switch (bag.type) {
           case pkiOids.pkcs8ShroudedKeyBag:
@@ -468,8 +468,8 @@ export class Pkcs12Service {
             /* A PKCS#12 certBag can wrap both X.509 and sdsi certificates.
            Therefore put the SafeBag content through another validator to
            capture the fields.  Afterwards check & store the results. */
-            validator = certBagValidator;
-            decoder = function () {
+            bagValidator = certBagValidator;
+            bagDecoder = function () {
               if (asn1.derToOid(capture.certId as string) !== pkiOids.x509Certificate) {
                 const error = new Error('Unsupported certificate type, only X.509 supported.') as Error & {
                   oid?: string;
@@ -498,14 +498,14 @@ export class Pkcs12Service {
         }
 
         /* Validate SafeBag value (i.e. CertBag, etc.) and capture data if needed. */
-        if (validator !== undefined && !asn1.validate(bagAsn1, validator, capture, errors)) {
-          const error = new Error('Cannot read PKCS#12 ' + validator.name) as Error & { errors?: string[] };
+        if (bagValidator !== undefined && !asn1.validate(bagAsn1, bagValidator, capture, errors)) {
+          const error = new Error('Cannot read PKCS#12 ' + bagValidator.name) as Error & { errors?: string[] };
           error.errors = errors;
           throw error;
         }
 
         /* Call decoder function from above to store the results. */
-        decoder();
+        bagDecoder();
       }
 
       return bags;
@@ -525,7 +525,7 @@ export class Pkcs12Service {
         for (let i = 0; i < attributes.length; ++i) {
           const capture: Record<string, unknown> = {};
           const errors: string[] = [];
-          if (!asn1.validate(attributes[i]!, attributeValidator, capture, errors)) {
+          if (!asn1.validate(attributes[i], attributeValidator, capture, errors)) {
             const error = new Error('Cannot read PKCS#12 BagAttribute.') as Error & { errors?: string[] };
             error.errors = errors;
             throw error;
@@ -540,7 +540,7 @@ export class Pkcs12Service {
           decodedAttrs[pkiOids[oid]] = [];
           const values = capture.values as Asn1Object[];
           for (let j = 0; j < values.length; ++j) {
-            decodedAttrs[pkiOids[oid]]!.push(values[j]!.value as string);
+            decodedAttrs[pkiOids[oid]].push(values[j].value as string);
           }
         }
       }
@@ -609,7 +609,7 @@ export class Pkcs12Service {
           if (typeof pairedCert === 'string') {
             pairedCert = deps.pki.certificateFromPem!(pairedCert);
           }
-          const sha1 = deps.md.sha1.create();
+          const sha1 = deps.digestRegistry.sha1.create();
           sha1.update(asn1.toDer(deps.pki.certificateToAsn1!(pairedCert)).getBytes());
           localKeyId = sha1.digest().getBytes();
         } else {
@@ -659,7 +659,7 @@ export class Pkcs12Service {
       let chain: Array<string | X509Certificate> = [];
       if (cert !== null) {
         if (deps.util.isArray(cert)) {
-          chain = cert as Array<string | X509Certificate>;
+          chain = cert;
         } else {
           chain = [cert];
         }
@@ -712,7 +712,7 @@ export class Pkcs12Service {
       }
 
       // create safe contents for private key
-      let keyBag = null;
+      let keyBag: Asn1Object;
       if (key !== null) {
         // SafeBag
         const pkAsn1 = deps.pki.wrapRsaPrivateKey!(deps.pki.privateKeyToAsn1!(key));
@@ -763,7 +763,7 @@ export class Pkcs12Service {
       let macData;
       if (options.useMac) {
         // MacData
-        const sha1 = deps.md.sha1.create();
+        const sha1 = deps.digestRegistry.sha1.create();
         const macSalt = new deps.util.ByteBuffer(deps.random.getBytesSync(options.saltSize));
         const count = options.count;
         // 160-bit key

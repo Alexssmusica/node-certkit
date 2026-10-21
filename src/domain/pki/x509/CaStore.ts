@@ -11,7 +11,7 @@ export class CaStore {
 
     pki.createCaStore = function (certs?: Array<X509Certificate | string>): X509CaStore {
       const caStore = {
-        certs: {} as Record<string, X509Certificate | X509Certificate[]>
+        certs: {}
       } as X509CaStore;
 
       caStore.getIssuer = function (cert: X509Certificate) {
@@ -30,9 +30,9 @@ export class CaStore {
           if (hash in caStore.certs) {
             let existingCerts = caStore.certs[hash];
             if (!ctx.util.isArray(existingCerts)) {
-              existingCerts = [existingCerts as X509Certificate];
+              existingCerts = [existingCerts];
             }
-            (existingCerts as X509Certificate[]).push(cert);
+            existingCerts.push(cert);
             caStore.certs[hash] = existingCerts;
           } else {
             caStore.certs[hash] = cert;
@@ -50,12 +50,12 @@ export class CaStore {
           return false;
         }
         if (!ctx.util.isArray(match)) {
-          match = [match as X509Certificate];
+          match = [match];
         }
-        const matchArr = match as X509Certificate[];
+        const matchArr = match;
         const der1 = asn1.toDer(pki.certificateToAsn1(cert)).getBytes();
         for (let i = 0; i < matchArr.length; ++i) {
-          const der2 = asn1.toDer(pki.certificateToAsn1(matchArr[i]!)).getBytes();
+          const der2 = asn1.toDer(pki.certificateToAsn1(matchArr[i])).getBytes();
           if (der1 === der2) {
             return true;
           }
@@ -68,12 +68,12 @@ export class CaStore {
 
         for (const hash in caStore.certs) {
           if (Object.prototype.hasOwnProperty.call(caStore.certs, hash)) {
-            const value = caStore.certs[hash]!;
+            const value = caStore.certs[hash];
             if (!ctx.util.isArray(value)) {
-              certList.push(value as X509Certificate);
+              certList.push(value);
             } else {
-              for (let i = 0; i < (value as X509Certificate[]).length; ++i) {
-                certList.push((value as X509Certificate[])[i]!);
+              for (let i = 0; i < value.length; ++i) {
+                certList.push(value[i]);
               }
             }
           }
@@ -102,9 +102,9 @@ export class CaStore {
         }
 
         const der1 = asn1.toDer(pki.certificateToAsn1(cert)).getBytes();
-        const matchArr = match as X509Certificate[];
+        const matchArr = match;
         for (let i = 0; i < matchArr.length; ++i) {
-          const der2 = asn1.toDer(pki.certificateToAsn1(matchArr[i]!)).getBytes();
+          const der2 = asn1.toDer(pki.certificateToAsn1(matchArr[i])).getBytes();
           if (der1 === der2) {
             result = matchArr[i]!;
             matchArr.splice(i, 1);
@@ -119,7 +119,7 @@ export class CaStore {
 
       if (certs) {
         for (let i = 0; i < certs.length; ++i) {
-          caStore.addCertificate(certs[i]!);
+          caStore.addCertificate(certs[i]);
         }
       }
 
@@ -145,7 +145,7 @@ export class CaStore {
     dnToAsn1: X509Helpers['dnToAsn1']
   ): void {
     if (!subject.hash) {
-      const md = ctx.md.sha1.create();
+      const md = ctx.digestRegistry.sha1.create();
       subject.attributes = pki.RDNAttributesAsArray(dnToAsn1(subject), md);
       subject.hash = md.digest().toHex();
     }

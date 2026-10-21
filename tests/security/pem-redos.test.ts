@@ -18,8 +18,8 @@ describe('PEM decode ReDoS hardening', () => {
 
     const messages = PemCodec.decode(pem);
     expect(messages).toHaveLength(2);
-    expect(messages[0]!.type).toBe('CERTIFICATE');
-    expect(messages[1]!.type).toBe('RSA PRIVATE KEY');
+    expect(messages[0].type).toBe('CERTIFICATE');
+    expect(messages[1].type).toBe('RSA PRIVATE KEY');
   });
 
   it('should fail fast on malformed PEM without END marker', () => {

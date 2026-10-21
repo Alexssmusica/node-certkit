@@ -1,5 +1,4 @@
-import type { NativeCryptoProvider } from '../ports/index.js';
-import type { DigestAlgorithmRegistry, HmacContext } from '../digest/DigestTypes.js';
+import type { HmacContext } from '../digest/DigestTypes.js';
 import type { Pbkdf2Callback, Pbkdf2Dependencies, Pbkdf2Function } from './Pbkdf2Types.js';
 import { UtilNamespace } from '../util/UtilNamespace.js';
 import { EnvInfo } from '../../infrastructure/env/EnvInfo.js';
@@ -17,9 +16,9 @@ export class Pbkdf2 {
 
     /** PBKDF2 key derivation (RFC 2898 section 5.2): `p` password, `s` salt, `c` iterations, `dk` derived key. */
     function pbkdf2(
-      p: string,
-      s: string,
-      c: number,
+      password: string,
+      salt: string,
+      iterationCount: number,
       dkLen: number,
       md?: string | MessageDigest | null | Pbkdf2Callback,
       callback?: Pbkdf2Callback
@@ -40,35 +39,49 @@ export class Pbkdf2 {
         if (typeof md !== 'string') {
           md = 'sha256';
         }
-        const digest = md as string;
-        const pBuf = Buffer.from(p, 'binary');
-        const sBuf = Buffer.from(s, 'binary');
+        const digest = md;
+        const pBuf = Buffer.from(password, 'binary');
+        const sBuf = Buffer.from(salt, 'binary');
         if (!callback) {
           if (!nativeCrypto.pbkdf2SyncSupportsDigest) {
             return nativeCrypto
-              .pbkdf2Sync(pBuf.toString('binary'), sBuf.toString('binary'), c, dkLen)
+              .pbkdf2Sync(pBuf.toString('binary'), sBuf.toString('binary'), iterationCount, dkLen)
               .toString('binary');
           }
           return nativeCrypto
-            .pbkdf2Sync(pBuf.toString('binary'), sBuf.toString('binary'), c, dkLen, digest)
+            .pbkdf2Sync(pBuf.toString('binary'), sBuf.toString('binary'), iterationCount, dkLen, digest)
             .toString('binary');
         }
         const done: Pbkdf2Callback = callback;
         if (!nativeCrypto.pbkdf2SyncSupportsDigest) {
-          nativeCrypto.pbkdf2!(pBuf.toString('binary'), sBuf.toString('binary'), c, dkLen, digest, function (err, key) {
+          nativeCrypto.pbkdf2!(
+            pBuf.toString('binary'),
+            sBuf.toString('binary'),
+            iterationCount,
+            dkLen,
+            digest,
+            function (err, key) {
+              if (err) {
+                return done(err);
+              }
+              done(null, key.toString('binary'));
+            }
+          );
+          return;
+        }
+        nativeCrypto.pbkdf2!(
+          pBuf.toString('binary'),
+          sBuf.toString('binary'),
+          iterationCount,
+          dkLen,
+          digest,
+          function (err, key) {
             if (err) {
               return done(err);
             }
             done(null, key.toString('binary'));
-          });
-          return;
-        }
-        nativeCrypto.pbkdf2!(pBuf.toString('binary'), sBuf.toString('binary'), c, dkLen, digest, function (err, key) {
-          if (err) {
-            return done(err);
           }
-          done(null, key.toString('binary'));
-        });
+        );
         return;
       }
 
@@ -79,13 +92,13 @@ export class Pbkdf2 {
         if (!(md in deps.mdAlgorithms)) {
           throw new Error('Unknown hash algorithm: ' + md);
         }
-        md = deps.mdAlgorithms[md]!.create() as unknown as MessageDigest;
+        md = deps.mdAlgorithms[md].create() as unknown as MessageDigest;
       }
 
-      const mdObj = md as MessageDigest;
+      const mdObj = md;
       const hLen = mdObj.digestLength;
 
-      if (!Number.isInteger(c) || c < 1) {
+      if (!Number.isInteger(iterationCount) || iterationCount < 1) {
         const err = new Error('Invalid PBKDF2 iteration count.');
         if (callback) {
           return callback(err);
@@ -109,24 +122,24 @@ export class Pbkdf2 {
         throw err;
       }
 
-      const len = Math.ceil(dkLen / hLen);
-      const r = dkLen - (len - 1) * hLen;
+      const blockCount = Math.ceil(dkLen / hLen);
+      const finalBlockLength = dkLen - (blockCount - 1) * hLen;
 
       const prf = deps.hmacCreate();
-      prf.start(mdObj as unknown as Parameters<HmacContext['start']>[0], p);
-      let dk = '';
+      prf.start(mdObj as unknown as Parameters<HmacContext['start']>[0], password);
+      let derivedKeyBytes = '';
       let xor: string;
       let currentU: string;
       let previousU: string;
 
       if (!callback) {
-        for (let i = 1; i <= len; ++i) {
+        for (let i = 1; i <= blockCount; ++i) {
           prf.start(null, null);
-          prf.update(s);
+          prf.update(salt);
           prf.update(UtilNamespace.int32ToBytes(i));
           xor = previousU = prf.digest().getBytes();
 
-          for (let j = 2; j <= c; ++j) {
+          for (let j = 2; j <= iterationCount; ++j) {
             prf.start(null, null);
             prf.update(previousU);
             currentU = prf.digest().getBytes();
@@ -134,21 +147,21 @@ export class Pbkdf2 {
             previousU = currentU;
           }
 
-          dk += i < len ? xor : xor.substr(0, r);
+          derivedKeyBytes += i < blockCount ? xor : xor.substr(0, finalBlockLength);
         }
-        return dk;
+        return derivedKeyBytes;
       }
 
       let i = 1;
       let j: number;
 
       function outer(): void {
-        if (i > len) {
-          return callback!(null, dk);
+        if (i > blockCount) {
+          return callback!(null, derivedKeyBytes);
         }
 
         prf.start(null, null);
-        prf.update(s);
+        prf.update(salt);
         prf.update(UtilNamespace.int32ToBytes(i));
         xor = previousU = prf.digest().getBytes();
 
@@ -157,7 +170,7 @@ export class Pbkdf2 {
       }
 
       function inner(): void {
-        if (j <= c) {
+        if (j <= iterationCount) {
           prf.start(null, null);
           prf.update(previousU);
           currentU = prf.digest().getBytes();
@@ -168,7 +181,7 @@ export class Pbkdf2 {
           return;
         }
 
-        dk += i < len ? xor : xor.substr(0, r);
+        derivedKeyBytes += i < blockCount ? xor : xor.substr(0, finalBlockLength);
 
         ++i;
         outer();

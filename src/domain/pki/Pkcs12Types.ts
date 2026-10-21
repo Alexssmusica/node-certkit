@@ -10,7 +10,7 @@ import type { X509Certificate } from './x509/X509Types.js';
 export type Pkcs12Deps = {
   asn1: Asn1NamespaceObject;
   oids: Record<string, string>;
-  md: MdRegistry;
+  digestRegistry: MdRegistry;
   util: UtilNamespaceObject;
   hmac: CertkitHmacNamespace;
   pbe: Pick<CertkitPbeNamespace, 'generatePkcs12Key' | 'getCipher'>;

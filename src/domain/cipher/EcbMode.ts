@@ -15,11 +15,13 @@ export class EcbMode {
     this.cipher = options.cipher!;
     this.blockSize = options.blockSize || 16;
     this._ints = this.blockSize / 4;
-    this._inBlock = new Array(this._ints);
-    this._outBlock = new Array(this._ints);
+    this._inBlock = new Array<number>(this._ints);
+    this._outBlock = new Array<number>(this._ints);
   }
 
-  start(_options?: CipherModeStartOptions): void {}
+  start(options?: CipherModeStartOptions): void {
+    void options;
+  }
 
   encrypt(input: ByteStringBuffer, output: ByteStringBuffer, finish: boolean): boolean | void {
     if (input.length() < this.blockSize && !(finish && input.length() > 0)) {
@@ -33,7 +35,7 @@ export class EcbMode {
     this.cipher.encrypt(this._inBlock, this._outBlock);
 
     for (let i = 0; i < this._ints; ++i) {
-      output.putInt32(this._outBlock[i]!);
+      output.putInt32(this._outBlock[i]);
     }
   }
 
@@ -49,11 +51,12 @@ export class EcbMode {
     this.cipher.decrypt(this._inBlock, this._outBlock);
 
     for (let i = 0; i < this._ints; ++i) {
-      output.putInt32(this._outBlock[i]!);
+      output.putInt32(this._outBlock[i]);
     }
   }
 
-  pad(input: ByteStringBuffer, _options?: PadOptions): boolean {
+  pad(input: ByteStringBuffer, options?: PadOptions): boolean {
+    void options;
     const padding = input.length() === this.blockSize ? this.blockSize : this.blockSize - input.length();
     input.fillWithByte(padding, padding);
     return true;

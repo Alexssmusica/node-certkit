@@ -33,7 +33,10 @@ export type UtilNamespaceObject = {
   };
   text: {
     utf8: { encode: typeof Utf8TextCodec.encode; decode: typeof Utf8TextCodec.decode };
-    utf16: { encode: typeof Utf16Codec.encode; decode: typeof Utf16Codec.decode };
+    utf16: {
+      encode: (input: string, output?: Uint16Array, offset?: number) => Uint8Array | number;
+      decode: typeof Utf16Codec.decode;
+    };
   };
   isArray: typeof UtilNamespace.isArray;
   isArrayBuffer: typeof UtilNamespace.isArrayBuffer;

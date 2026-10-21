@@ -38,7 +38,7 @@ export class Certificate {
     } = _helpers;
 
     pki.certificateFromPem = function (pem: string, computeHash?: boolean, strict?: boolean) {
-      const pemMessage = runtime.pem.decode(pem)[0]!;
+      const pemMessage = runtime.pem.decode(pem)[0];
 
       if (
         pemMessage.type !== 'CERTIFICATE' &&
@@ -139,7 +139,7 @@ export class Certificate {
      * Gets a fingerprint for the given public key.
      *
      * @param options the options to use.
-     *          [md] the message digest object to use (defaults to runtime.md.sha1).
+     *          [md] the message digest object to use (defaults to runtime.digestRegistry.sha1).
      *          [type] the type of fingerprint, such as 'RSAPublicKey',
      *            'SubjectPublicKeyInfo' (defaults to 'RSAPublicKey').
      *          [encoding] an alternative output encoding, such as 'hex'
@@ -159,7 +159,7 @@ export class Certificate {
     ): string;
     function getPublicKeyFingerprint(key: RsaPublicKey, options?: PublicKeyFingerprintOptions) {
       options = options || {};
-      const md = options.md || runtime.md.sha1.create();
+      const md = options.md || runtime.digestRegistry.sha1.create();
       const type = options.type || 'RSAPublicKey';
 
       let bytes;
@@ -187,7 +187,8 @@ export class Certificate {
       } else if (options.encoding === 'binary') {
         return digest.getBytes();
       } else if (options.encoding) {
-        throw new Error('Unknown encoding "' + options.encoding + '".');
+        const encodingLabel = typeof options.encoding === 'string' ? options.encoding : 'unknown';
+        throw new Error('Unknown encoding "' + encodingLabel + '".');
       }
       return digest;
     }
@@ -366,11 +367,11 @@ export class Certificate {
        * Signs this certificate using the given private key.
        *
        * @param key the private key to sign with.
-       * @param md the message digest object to use (defaults to runtime.md.sha1).
+       * @param md the message digest object to use (defaults to runtime.digestRegistry.sha1).
        */
       cert.sign = function (key: PrivateKey, md?: MessageDigest) {
         // TODO: get signature OID from private key
-        cert.md = md || runtime.md.sha1.create();
+        cert.md = md || runtime.digestRegistry.sha1.create();
         const algorithmOid = oids[cert.md.algorithm + 'WithRSAEncryption'];
         if (!algorithmOid) {
           const error = new Error(
@@ -383,7 +384,7 @@ export class Certificate {
 
         // get TBSCertificate, convert to DER
         cert.tbsCertificate = pki.getTBSCertificate(cert);
-        const bytes = asn1.toDer(cert.tbsCertificate!);
+        const bytes = asn1.toDer(cert.tbsCertificate);
 
         // digest and sign
         cert.md.update(bytes.getBytes());
@@ -432,7 +433,7 @@ export class Certificate {
           signatureValid = verifySignature({
             certificate: cert,
             subject: child,
-            md: md,
+            messageDigest: md,
             signature: child.signature
           });
         }
@@ -461,11 +462,12 @@ export class Certificate {
         } else if (issuerDn.attributes.length === subjectDn.attributes.length) {
           // all attributes are the same so issuer matches subject
           issuerMatches = true;
-          let iattr, sattr;
+          let issuerAttribute;
+          let subjectAttribute;
           for (let n = 0; issuerMatches && n < issuerDn.attributes.length; ++n) {
-            iattr = issuerDn.attributes[n];
-            sattr = subjectDn.attributes[n];
-            if (iattr.type !== sattr.type || iattr.value !== sattr.value) {
+            issuerAttribute = issuerDn.attributes[n];
+            subjectAttribute = subjectDn.attributes[n];
+            if (issuerAttribute.type !== subjectAttribute.type || issuerAttribute.value !== subjectAttribute.value) {
               // attribute mismatch
               issuerMatches = false;
             }
@@ -606,17 +608,17 @@ export class Certificate {
       if (computeHash) {
         // create digest for OID signature type
         cert.md = createSignatureDigest({
-          signatureOid: cert.signatureOid!,
+          signatureOid: cert.signatureOid,
           type: 'certificate'
         });
 
         // produce DER formatted TBSCertificate and digest it
-        const bytes = asn1.toDer(cert.tbsCertificate!);
+        const bytes = asn1.toDer(cert.tbsCertificate);
         cert.md.update(bytes.getBytes());
       }
 
       // handle issuer, build issuer message digest
-      const imd = runtime.md.sha1.create();
+      const imd = runtime.digestRegistry.sha1.create();
       const ibytes = asn1.toDer(capture.certIssuer as Asn1Object);
       imd.update(ibytes.getBytes());
       cert.issuer.getField = function (sn: string | AttributeLookup) {
@@ -633,7 +635,7 @@ export class Certificate {
       cert.issuer.hash = imd.digest().toHex();
 
       // handle subject, build subject message digest
-      const smd = runtime.md.sha1.create();
+      const smd = runtime.digestRegistry.sha1.create();
       const sbytes = asn1.toDer(capture.certSubject as Asn1Object);
       smd.update(sbytes.getBytes());
       cert.subject.getField = function (sn: string | AttributeLookup) {

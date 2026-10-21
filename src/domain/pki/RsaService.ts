@@ -42,9 +42,9 @@ function getMillerRabinTests(bits: number): number {
   return 2;
 }
 
-function bnToBytes(b: BigInteger): string {
-  let hex = b.toString(16);
-  if (hex[0]! >= '8') {
+function bnToBytes(bigInteger: BigInteger): string {
+  let hex = bigInteger.toString(16);
+  if (hex[0] >= '8') {
     hex = '00' + hex;
   }
   const bytes = UtilNamespace.hexToBytes(hex);
@@ -102,7 +102,7 @@ export class RsaService {
     const self = this;
     return {
       privateKeyFromPem(pem: string) {
-        const pemMessage = PemCodec.decode(pem)[0]!;
+        const pemMessage = PemCodec.decode(pem)[0];
         if (pemMessage.type !== 'PRIVATE KEY' && pemMessage.type !== 'RSA PRIVATE KEY') {
           const error = new Error(
             'Could not convert private key from PEM; PEM header type is not "PRIVATE KEY" or "RSA PRIVATE KEY".'
@@ -119,7 +119,7 @@ export class RsaService {
         return self.privateKeyFromAsn1(asn1Object);
       },
       publicKeyFromPem(pem: string) {
-        const pemMessage = PemCodec.decode(pem)[0]!;
+        const pemMessage = PemCodec.decode(pem)[0];
         if (pemMessage.type !== 'PUBLIC KEY' && pemMessage.type !== 'RSA PUBLIC KEY') {
           const error = new Error(
             'Could not convert public key from PEM; PEM header type is not "PUBLIC KEY" or "RSA PUBLIC KEY".'
@@ -168,13 +168,13 @@ export class RsaService {
     return asn1.toDer(digestInfo).getBytes();
   }
 
-  #modPow(x: BigInteger, key: RsaKeyMaterial, pub: boolean): BigInteger {
-    if (pub) {
-      return x.modPow(key.e, key.n);
+  #modPow(baseValue: BigInteger, key: RsaKeyMaterial, usePublicKey: boolean): BigInteger {
+    if (usePublicKey) {
+      return baseValue.modPow(key.e, key.n);
     }
 
     if (!key.p || !key.q) {
-      return x.modPow(key.d!, key.n);
+      return baseValue.modPow(key.d!, key.n);
     }
 
     if (!key.dP) {
@@ -187,46 +187,46 @@ export class RsaService {
       key.qInv = key.q.modInverse(key.p);
     }
 
-    let r: BigInteger;
+    let blindingFactor: BigInteger;
     do {
-      r = new BigInteger(UtilNamespace.bytesToHex(this.#random.getBytesSync(key.n.bitLength() / 8)), 16);
-    } while (r.compareTo(key.n) >= 0 || !r.gcd(key.n).equals(BigInteger.ONE));
-    x = x.multiply(r.modPow(key.e, key.n)).mod(key.n);
+      blindingFactor = new BigInteger(UtilNamespace.bytesToHex(this.#random.getBytesSync(key.n.bitLength() / 8)), 16);
+    } while (blindingFactor.compareTo(key.n) >= 0 || !blindingFactor.gcd(key.n).equals(BigInteger.ONE));
+    baseValue = baseValue.multiply(blindingFactor.modPow(key.e, key.n)).mod(key.n);
 
-    let xp = x.mod(key.p).modPow(key.dP, key.p);
-    const xq = x.mod(key.q).modPow(key.dQ, key.q);
+    let modPResult = baseValue.mod(key.p).modPow(key.dP, key.p);
+    const modQResult = baseValue.mod(key.q).modPow(key.dQ, key.q);
 
-    while (xp.compareTo(xq) < 0) {
-      xp = xp.add(key.p);
+    while (modPResult.compareTo(modQResult) < 0) {
+      modPResult = modPResult.add(key.p);
     }
 
-    let y = xp.subtract(xq).multiply(key.qInv).mod(key.p).multiply(key.q).add(xq);
-    y = y.multiply(r.modInverse(key.n)).mod(key.n);
-    return y;
+    let result = modPResult.subtract(modQResult).multiply(key.qInv).mod(key.p).multiply(key.q).add(modQResult);
+    result = result.multiply(blindingFactor.modInverse(key.n)).mod(key.n);
+    return result;
   }
 
-  #encodePkcs1v15(m: string, key: RsaKeyMaterial, bt: number): ByteStringBuffer {
-    const eb = new ByteStringBuffer();
-    const k = Math.ceil(key.n.bitLength() / 8);
+  #encodePkcs1v15(message: string, key: RsaKeyMaterial, blockType: number): ByteStringBuffer {
+    const encodingBlock = new ByteStringBuffer();
+    const keyOctetLength = Math.ceil(key.n.bitLength() / 8);
 
-    if (m.length > k - 11) {
+    if (message.length > keyOctetLength - 11) {
       const error = new Error('Message is too long for PKCS#1 v1.5 padding.') as Error & {
         length?: number;
         max?: number;
       };
-      error.length = m.length;
-      error.max = k - 11;
+      error.length = message.length;
+      error.max = keyOctetLength - 11;
       throw error;
     }
 
-    eb.putByte(0x00);
-    eb.putByte(bt);
+    encodingBlock.putByte(0x00);
+    encodingBlock.putByte(blockType);
 
-    let padNum = k - 3 - m.length;
-    if (bt === 0x00 || bt === 0x01) {
-      const padByte = bt === 0x00 ? 0x00 : 0xff;
+    let padNum = keyOctetLength - 3 - message.length;
+    if (blockType === 0x00 || blockType === 0x01) {
+      const padByte = blockType === 0x00 ? 0x00 : 0xff;
       for (let i = 0; i < padNum; ++i) {
-        eb.putByte(padByte);
+        encodingBlock.putByte(padByte);
       }
     } else {
       while (padNum > 0) {
@@ -237,51 +237,51 @@ export class RsaService {
           if (padByte === 0) {
             ++numZeros;
           } else {
-            eb.putByte(padByte);
+            encodingBlock.putByte(padByte);
           }
         }
         padNum = numZeros;
       }
     }
 
-    eb.putByte(0x00);
-    eb.putBytes(m);
-    return eb;
+    encodingBlock.putByte(0x00);
+    encodingBlock.putBytes(message);
+    return encodingBlock;
   }
 
   #decodePkcs1v15(
-    em: string,
+    encodedMessage: string,
     key: RsaKeyMaterial,
-    pub: boolean,
-    ml?: number | false,
+    usePublicKey: boolean,
+    messageLength?: number | false,
     options?: { _skipPaddingChecks?: boolean }
   ): string {
-    const k = Math.ceil(key.n.bitLength() / 8);
-    const eb = new ByteStringBuffer(em);
-    const first = eb.getByte();
-    const bt = eb.getByte();
+    const keyOctetLength = Math.ceil(key.n.bitLength() / 8);
+    const encodingBlock = new ByteStringBuffer(encodedMessage);
+    const first = encodingBlock.getByte();
+    const blockType = encodingBlock.getByte();
     if (
       first !== 0x00 ||
-      (pub && bt !== 0x00 && bt !== 0x01) ||
-      (!pub && bt !== 0x02) ||
-      (pub && bt === 0x00 && typeof ml === 'undefined')
+      (usePublicKey && blockType !== 0x00 && blockType !== 0x01) ||
+      (!usePublicKey && blockType !== 0x02) ||
+      (usePublicKey && blockType === 0x00 && typeof messageLength === 'undefined')
     ) {
       throw new Error('Encryption block is invalid.');
     }
 
     let padNum = 0;
-    if (bt === 0x00) {
-      padNum = k - 3 - (ml as number);
+    if (blockType === 0x00) {
+      padNum = keyOctetLength - 3 - (messageLength as number);
       for (let i = 0; i < padNum; ++i) {
-        if (eb.getByte() !== 0x00) {
+        if (encodingBlock.getByte() !== 0x00) {
           throw new Error('Encryption block is invalid.');
         }
       }
-    } else if (bt === 0x01) {
+    } else if (blockType === 0x01) {
       padNum = 0;
-      while (eb.length() > 1) {
-        if (eb.getByte() !== 0xff) {
-          --eb.read;
+      while (encodingBlock.length() > 1) {
+        if (encodingBlock.getByte() !== 0xff) {
+          --encodingBlock.read;
           break;
         }
         ++padNum;
@@ -289,11 +289,11 @@ export class RsaService {
       if (padNum < 8 && !options?._skipPaddingChecks) {
         throw new Error('Encryption block is invalid.');
       }
-    } else if (bt === 0x02) {
+    } else if (blockType === 0x02) {
       padNum = 0;
-      while (eb.length() > 1) {
-        if (eb.getByte() === 0x00) {
-          --eb.read;
+      while (encodingBlock.length() > 1) {
+        if (encodingBlock.getByte() === 0x00) {
+          --encodingBlock.read;
           break;
         }
         ++padNum;
@@ -303,74 +303,74 @@ export class RsaService {
       }
     }
 
-    const zero = eb.getByte();
-    if (zero !== 0x00 || padNum !== k - 3 - eb.length()) {
+    const zero = encodingBlock.getByte();
+    if (zero !== 0x00 || padNum !== keyOctetLength - 3 - encodingBlock.length()) {
       throw new Error('Encryption block is invalid.');
     }
 
-    return eb.getBytes();
+    return encodingBlock.getBytes();
   }
 
-  encrypt(m: string, key: RsaKeyMaterial, blockType: boolean | number): string {
+  encrypt(message: string, key: RsaKeyMaterial, blockType: boolean | number): string {
     let usePublicKey: boolean;
-    let eb: ByteStringBuffer;
+    let encodingBlock: ByteStringBuffer;
 
-    const k = Math.ceil(key.n.bitLength() / 8);
+    const keyOctetLength = Math.ceil(key.n.bitLength() / 8);
 
     if (blockType !== false && blockType !== true) {
       usePublicKey = blockType === 0x02;
-      eb = this.#encodePkcs1v15(m, key, blockType as number);
+      encodingBlock = this.#encodePkcs1v15(message, key, blockType);
     } else {
-      usePublicKey = blockType as boolean;
-      eb = new ByteStringBuffer();
-      eb.putBytes(m);
+      usePublicKey = blockType;
+      encodingBlock = new ByteStringBuffer();
+      encodingBlock.putBytes(message);
     }
 
-    const x = new BigInteger(eb.toHex(), 16);
-    const y = this.#modPow(x, key, usePublicKey);
-    const yhex = y.toString(16);
-    const ed = new ByteStringBuffer();
-    let zeros = k - Math.ceil(yhex.length / 2);
+    const messageInteger = new BigInteger(encodingBlock.toHex(), 16);
+    const ciphertextInteger = this.#modPow(messageInteger, key, usePublicKey);
+    const ciphertextHex = ciphertextInteger.toString(16);
+    const encryptedData = new ByteStringBuffer();
+    let zeros = keyOctetLength - Math.ceil(ciphertextHex.length / 2);
     while (zeros > 0) {
-      ed.putByte(0x00);
+      encryptedData.putByte(0x00);
       --zeros;
     }
-    ed.putBytes(UtilNamespace.hexToBytes(yhex));
-    return ed.getBytes();
+    encryptedData.putBytes(UtilNamespace.hexToBytes(ciphertextHex));
+    return encryptedData.getBytes();
   }
 
-  decrypt(ed: string, key: RsaKeyMaterial, pub: boolean, decodePadding?: boolean | number): string {
-    const k = Math.ceil(key.n.bitLength() / 8);
+  decrypt(encryptedData: string, key: RsaKeyMaterial, usePublicKey: boolean, decodePadding?: boolean | number): string {
+    const keyOctetLength = Math.ceil(key.n.bitLength() / 8);
 
-    if (ed.length !== k) {
+    if (encryptedData.length !== keyOctetLength) {
       const error = new Error('Encrypted message length is invalid.') as Error & {
         length?: number;
         expected?: number;
       };
-      error.length = ed.length;
-      error.expected = k;
+      error.length = encryptedData.length;
+      error.expected = keyOctetLength;
       throw error;
     }
 
-    const y = new BigInteger(new ByteStringBuffer(ed).toHex(), 16);
-    if (y.compareTo(key.n) >= 0) {
+    const ciphertextInteger = new BigInteger(new ByteStringBuffer(encryptedData).toHex(), 16);
+    if (ciphertextInteger.compareTo(key.n) >= 0) {
       throw new Error('Encrypted message is invalid.');
     }
 
-    const x = this.#modPow(y, key, pub);
-    const xhex = x.toString(16);
-    const eb = new ByteStringBuffer();
-    let zeros = k - Math.ceil(xhex.length / 2);
+    const plaintextInteger = this.#modPow(ciphertextInteger, key, usePublicKey);
+    const plaintextHex = plaintextInteger.toString(16);
+    const encodingBlock = new ByteStringBuffer();
+    let zeros = keyOctetLength - Math.ceil(plaintextHex.length / 2);
     while (zeros > 0) {
-      eb.putByte(0x00);
+      encodingBlock.putByte(0x00);
       --zeros;
     }
-    eb.putBytes(UtilNamespace.hexToBytes(xhex));
+    encodingBlock.putBytes(UtilNamespace.hexToBytes(plaintextHex));
 
     if (decodePadding !== false) {
-      return this.#decodePkcs1v15(eb.getBytes(), key, pub);
+      return this.#decodePkcs1v15(encodingBlock.getBytes(), key, usePublicKey);
     }
-    return eb.getBytes();
+    return encodingBlock.getBytes();
   }
 
   setPublicKey(n: BigInteger, e: BigInteger): RsaPublicKey {
@@ -384,19 +384,19 @@ export class RsaService {
         scheme = 'RSAES-PKCS1-V1_5';
       }
 
-      let schemeObj: { encode: (m: string, key: RsaKeyMaterial, pub?: boolean) => string };
+      let schemeObj: { encode: (message: string, key: RsaKeyMaterial, pub?: boolean) => string };
       if (scheme === 'RSAES-PKCS1-V1_5') {
         schemeObj = {
-          encode(m, k) {
-            return service.#encodePkcs1v15(m, k, 0x02).getBytes();
+          encode(message, keyMaterial) {
+            return service.#encodePkcs1v15(message, keyMaterial, 0x02).getBytes();
           }
         };
       } else if (scheme === 'RSA-OAEP' || scheme === 'RSAES-OAEP') {
         schemeObj = {
-          encode(m, k) {
+          encode(message, keyMaterial) {
             return Pkcs1Codec.encodeRsaOaep(
-              k,
-              m,
+              keyMaterial,
+              message,
               schemeOptions as Parameters<typeof Pkcs1Codec.encodeRsaOaep>[2],
               undefined,
               undefined,
@@ -434,18 +434,20 @@ export class RsaService {
         _skipPaddingChecks: (options as RsaVerifyInternalOptions)._skipPaddingChecks === true
       };
 
-      let schemeObj: { verify: (digest: string, d: string, modBits?: number) => boolean };
+      let schemeObj: { verify: (digest: string, decrypted: string, modBits?: number) => boolean };
       if (scheme === 'RSASSA-PKCS1-V1_5') {
         schemeObj = {
-          verify(dig, d) {
-            d = service.#decodePkcs1v15(d, key, true, undefined, verifyOptions);
-            const asn1Object = service.#asn1.fromDer(d, { parseAllBytes: verifyOptions._parseAllDigestBytes });
+          verify(expectedDigest, decryptedPayload) {
+            decryptedPayload = service.#decodePkcs1v15(decryptedPayload, key, true, undefined, verifyOptions);
+            const asn1Object = service.#asn1.fromDer(decryptedPayload, {
+              parseAllBytes: verifyOptions._parseAllDigestBytes
+            });
             const capture: Record<string, string> = {};
             const errors: string[] = [];
             if (
               !service.#asn1.validate(asn1Object, service.digestInfoValidator, capture, errors) ||
-              !Array.isArray((asn1Object as Asn1Object).value) ||
-              ((asn1Object as Asn1Object).value as Asn1Object[]).length !== 2
+              !Array.isArray(asn1Object.value) ||
+              asn1Object.value.length !== 2
             ) {
               const error = new Error(
                 'ASN.1 object does not contain a valid RSASSA-PKCS1-v1_5 DigestInfo value.'
@@ -455,7 +457,7 @@ export class RsaService {
               error.errors = errors;
               throw error;
             }
-            const oid = service.#asn1.derToOid(capture.algorithmIdentifier!);
+            const oid = service.#asn1.derToOid(capture.algorithmIdentifier);
             const oids = service.#oids;
             if (!(
               oid === oids.md2 ||
@@ -482,22 +484,22 @@ export class RsaService {
                 );
               }
             }
-            return constantTimeEquals(dig, capture.digest!);
+            return constantTimeEquals(expectedDigest, capture.digest);
           }
         };
       } else if (scheme === 'NONE' || scheme === 'NULL' || scheme === null) {
         schemeObj = {
-          verify(dig, d) {
-            d = service.#decodePkcs1v15(d, key, true, undefined, verifyOptions);
-            return dig === d;
+          verify(expectedDigest, decryptedPayload) {
+            decryptedPayload = service.#decodePkcs1v15(decryptedPayload, key, true, undefined, verifyOptions);
+            return expectedDigest === decryptedPayload;
           }
         };
       } else {
         schemeObj = scheme as typeof schemeObj;
       }
 
-      const d = service.decrypt(signature, key, true, false);
-      return schemeObj.verify(digest, d, key.n.bitLength());
+      const decryptedPayload = service.decrypt(signature, key, true, false);
+      return schemeObj.verify(digest, decryptedPayload, key.n.bitLength());
     };
 
     return key;
@@ -528,13 +530,14 @@ export class RsaService {
       let schemeObj: { decode: (ciphertext: string, key: RsaKeyMaterial, pub?: boolean) => string };
       if (scheme === 'RSAES-PKCS1-V1_5') {
         schemeObj = {
-          decode: (ciphertext, k, pub) => service.#decodePkcs1v15(ciphertext, k, pub!)
+          decode: (ciphertext, keyMaterial, usePublicKey) =>
+            service.#decodePkcs1v15(ciphertext, keyMaterial, usePublicKey!)
         };
       } else if (scheme === 'RSA-OAEP' || scheme === 'RSAES-OAEP') {
         schemeObj = {
-          decode(ciphertext, k) {
+          decode(ciphertext, keyMaterial) {
             return Pkcs1Codec.decodeRsaOaep(
-              k,
+              keyMaterial,
               ciphertext,
               schemeOptions as Parameters<typeof Pkcs1Codec.decodeRsaOaep>[2]
             );
@@ -547,14 +550,15 @@ export class RsaService {
           }
         };
       } else {
-        throw new Error('Unsupported encryption scheme: "' + scheme + '".');
+        const schemeLabel = typeof scheme === 'string' ? scheme : 'unknown';
+        throw new Error('Unsupported encryption scheme: "' + schemeLabel + '".');
       }
 
       return schemeObj.decode(decrypted, key, false);
     };
 
     key.sign = function (md, scheme) {
-      let bt: boolean | number = false;
+      let blockType: boolean | number = false;
       if (typeof scheme === 'string') {
         scheme = scheme.toUpperCase();
       }
@@ -562,18 +566,19 @@ export class RsaService {
       let schemeObj: { encode: (md: unknown, modBits?: number) => string };
       if (scheme === undefined || scheme === 'RSASSA-PKCS1-V1_5') {
         schemeObj = {
-          encode: (m) => service.#emsaPkcs1v15encode(m as { algorithm: string; digest(): ByteStringBuffer })
+          encode: (messageDigest) =>
+            service.#emsaPkcs1v15encode(messageDigest as { algorithm: string; digest(): ByteStringBuffer })
         };
-        bt = 0x01;
+        blockType = 0x01;
       } else if (scheme === 'NONE' || scheme === 'NULL' || scheme === null) {
         schemeObj = { encode: () => md as string };
-        bt = 0x01;
+        blockType = 0x01;
       } else {
         schemeObj = scheme as typeof schemeObj;
       }
 
       const encodedDigestInfo = schemeObj.encode(md, key.n.bitLength());
-      return service.encrypt(encodedDigestInfo, key, bt);
+      return service.encrypt(encodedDigestInfo, key, blockType);
     };
 
     return key;
@@ -592,10 +597,10 @@ export class RsaService {
     options = options || {};
     const prng = (options.prng as { getBytesSync(count: number): string }) || this.#random;
     const rng: BigIntegerRandomSource = {
-      nextBytes(x: number[]): void {
-        const b = prng.getBytesSync(x.length);
-        for (let i = 0; i < x.length; ++i) {
-          x[i] = b.charCodeAt(i);
+      nextBytes(byteArray: number[]): void {
+        const randomBytes = prng.getBytesSync(byteArray.length);
+        for (let i = 0; i < byteArray.length; ++i) {
+          byteArray[i] = randomBytes.charCodeAt(i);
         }
       }
     };
@@ -611,8 +616,8 @@ export class RsaService {
         e: new BigInteger(null),
         p: null,
         q: null,
-        qBits: (bits as number) >> 1,
-        pBits: (bits as number) - ((bits as number) >> 1),
+        qBits: bits >> 1,
+        pBits: bits - (bits >> 1),
         pqState: 0,
         num: null,
         keys: null
@@ -620,7 +625,8 @@ export class RsaService {
       (generationState.e as BigInteger).fromInt(generationState.eInt as number);
       return generationState;
     }
-    throw new Error('Invalid key generation algorithm: ' + algorithm);
+    const algorithmLabel = typeof algorithm === 'string' ? algorithm : 'unknown';
+    throw new Error('Invalid key generation algorithm: ' + algorithmLabel);
   }
 
   stepKeyPairGenerationState(state: KeyPairGenerationState, timeBudgetMs: number): boolean {
@@ -631,10 +637,10 @@ export class RsaService {
     const THIRTY = new BigInteger(null);
     THIRTY.fromInt(30);
     let deltaIdx = 0;
-    const bitwiseOr = (x: number, y: number) => x | y;
+    const bitwiseOr = (left: number, right: number) => left | right;
 
-    let t1 = +new Date();
-    let t2: number;
+    let loopStart = +new Date();
+    let loopEnd: number;
     let total = 0;
     while (state.keys === null && (timeBudgetMs <= 0 || total < timeBudgetMs)) {
       if (state.state === 0) {
@@ -724,9 +730,9 @@ export class RsaService {
         };
       }
 
-      t2 = +new Date();
-      total += t2 - t1;
-      t1 = t2;
+      loopEnd = +new Date();
+      total += loopEnd - loopStart;
+      loopStart = loopEnd;
     }
 
     return state.keys !== null;
@@ -793,7 +799,7 @@ export class RsaService {
             'rsa',
             {
               modulusLength: bits as number,
-              publicExponent: e as number,
+              publicExponent: e,
               publicKeyEncoding: { type: 'spki', format: 'pem' },
               privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
             },
@@ -812,7 +818,7 @@ export class RsaService {
         if (nativeCrypto && typeof nativeCrypto.generateKeyPairSync === 'function') {
           const keypair = nativeCrypto.generateKeyPairSync('rsa', {
             modulusLength: bits as number,
-            publicExponent: e as number,
+            publicExponent: e,
             publicKeyEncoding: { type: 'spki', format: 'pem' },
             privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
           });
@@ -867,9 +873,9 @@ export class RsaService {
       });
     }
 
-    function getPrime(bits: number, cb: (err: Error | null, num?: BigInteger) => void): void {
+    function getPrime(bits: number, primeCallback: (err: Error | null, num?: BigInteger) => void): void {
       service.#primeGenerator.generateProbablePrime(bits, opts, (err, num) => {
-        cb(err, num as BigInteger | undefined);
+        primeCallback(err, num);
       });
     }
 
@@ -951,7 +957,7 @@ export class RsaService {
           asn1.Class.UNIVERSAL,
           asn1.Type.OID,
           false,
-          asn1.oidToDer(this.#oids.rsaEncryption!).getBytes()
+          asn1.oidToDer(this.#oids.rsaEncryption).getBytes()
         ),
         this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, '')
       ]),
@@ -964,7 +970,7 @@ export class RsaService {
     let capture: Record<string, string> = {};
     let errors: string[] = [];
     if (asn1.validate(asn1Object, this.privateKeyValidator, capture, errors)) {
-      asn1Object = asn1.fromDer(new ByteStringBuffer(capture.privateKey!), {}) as Asn1Object;
+      asn1Object = asn1.fromDer(new ByteStringBuffer(capture.privateKey), {});
     }
 
     capture = {};
@@ -978,14 +984,14 @@ export class RsaService {
     }
 
     return this.setPrivateKey(
-      new BigInteger(new ByteStringBuffer(capture.privateKeyModulus!).toHex(), 16),
-      new BigInteger(new ByteStringBuffer(capture.privateKeyPublicExponent!).toHex(), 16),
-      new BigInteger(new ByteStringBuffer(capture.privateKeyPrivateExponent!).toHex(), 16),
-      new BigInteger(new ByteStringBuffer(capture.privateKeyPrime1!).toHex(), 16),
-      new BigInteger(new ByteStringBuffer(capture.privateKeyPrime2!).toHex(), 16),
-      new BigInteger(new ByteStringBuffer(capture.privateKeyExponent1!).toHex(), 16),
-      new BigInteger(new ByteStringBuffer(capture.privateKeyExponent2!).toHex(), 16),
-      new BigInteger(new ByteStringBuffer(capture.privateKeyCoefficient!).toHex(), 16)
+      new BigInteger(new ByteStringBuffer(capture.privateKeyModulus).toHex(), 16),
+      new BigInteger(new ByteStringBuffer(capture.privateKeyPublicExponent).toHex(), 16),
+      new BigInteger(new ByteStringBuffer(capture.privateKeyPrivateExponent).toHex(), 16),
+      new BigInteger(new ByteStringBuffer(capture.privateKeyPrime1).toHex(), 16),
+      new BigInteger(new ByteStringBuffer(capture.privateKeyPrime2).toHex(), 16),
+      new BigInteger(new ByteStringBuffer(capture.privateKeyExponent1).toHex(), 16),
+      new BigInteger(new ByteStringBuffer(capture.privateKeyExponent2).toHex(), 16),
+      new BigInteger(new ByteStringBuffer(capture.privateKeyCoefficient).toHex(), 16)
     );
   }
 
@@ -1028,8 +1034,8 @@ export class RsaService {
     }
 
     return this.setPublicKey(
-      new BigInteger(new ByteStringBuffer(rsaKeyCapture.publicKeyModulus!).toHex(), 16),
-      new BigInteger(new ByteStringBuffer(rsaKeyCapture.publicKeyExponent!).toHex(), 16)
+      new BigInteger(new ByteStringBuffer(rsaKeyCapture.publicKeyModulus).toHex(), 16),
+      new BigInteger(new ByteStringBuffer(rsaKeyCapture.publicKeyExponent).toHex(), 16)
     );
   }
 
@@ -1041,7 +1047,7 @@ export class RsaService {
           asn1.Class.UNIVERSAL,
           asn1.Type.OID,
           false,
-          asn1.oidToDer(this.#oids.rsaEncryption!).getBytes()
+          asn1.oidToDer(this.#oids.rsaEncryption).getBytes()
         ),
         this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, '')
       ]),

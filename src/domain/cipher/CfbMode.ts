@@ -20,8 +20,8 @@ export class CfbMode {
     this.blockSize = options.blockSize || 16;
     this._ints = this.blockSize / 4;
     this._inBlock = null;
-    this._outBlock = new Array(this._ints);
-    this._partialBlock = new Array(this._ints);
+    this._outBlock = new Array<number>(this._ints);
+    this._partialBlock = new Array<number>(this._ints);
     this._partialOutput = new ByteStringBuffer();
     this._partialBytes = 0;
   }
@@ -45,8 +45,8 @@ export class CfbMode {
 
     if (this._partialBytes === 0 && inputLength >= this.blockSize) {
       for (let i = 0; i < this._ints; ++i) {
-        this._inBlock![i] = input.getInt32() ^ this._outBlock[i]!;
-        output.putInt32(this._inBlock![i]!);
+        this._inBlock![i] = input.getInt32() ^ this._outBlock[i];
+        output.putInt32(this._inBlock![i]);
       }
       return;
     }
@@ -58,8 +58,8 @@ export class CfbMode {
 
     this._partialOutput.clear();
     for (let i = 0; i < this._ints; ++i) {
-      this._partialBlock[i] = input.getInt32() ^ this._outBlock[i]!;
-      this._partialOutput.putInt32(this._partialBlock[i]!);
+      this._partialBlock[i] = input.getInt32() ^ this._outBlock[i];
+      this._partialOutput.putInt32(this._partialBlock[i]);
     }
 
     if (partialBytes > 0) {
@@ -95,7 +95,7 @@ export class CfbMode {
     if (this._partialBytes === 0 && inputLength >= this.blockSize) {
       for (let i = 0; i < this._ints; ++i) {
         this._inBlock![i] = input.getInt32();
-        output.putInt32(this._inBlock![i]! ^ this._outBlock[i]!);
+        output.putInt32(this._inBlock![i] ^ this._outBlock[i]);
       }
       return;
     }
@@ -108,7 +108,7 @@ export class CfbMode {
     this._partialOutput.clear();
     for (let i = 0; i < this._ints; ++i) {
       this._partialBlock[i] = input.getInt32();
-      this._partialOutput.putInt32(this._partialBlock[i]! ^ this._outBlock[i]!);
+      this._partialOutput.putInt32(this._partialBlock[i] ^ this._outBlock[i]);
     }
 
     if (partialBytes > 0) {

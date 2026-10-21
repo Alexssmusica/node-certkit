@@ -19,7 +19,7 @@ function createPkiDeps(certkit: MutableCertkit, includePbe = false): PkiFacadeDe
   const deps: PkiFacadeDeps = {
     asn1: certkit.asn1!,
     oids: certkit.pki.oids || certkit.oids!,
-    md: certkit.md! as MdRegistry,
+    digestRegistry: certkit.md! as MdRegistry,
     util: certkit.util!,
     pem: certkit.pem!,
     aes: certkit.aes!,
@@ -38,7 +38,7 @@ function createPkiDeps(certkit: MutableCertkit, includePbe = false): PkiFacadeDe
   if (includePbe) {
     return {
       ...deps,
-      pbe: (certkit.pki.pbe || certkit.pbe!) as CertkitPbeNamespace
+      pbe: certkit.pki.pbe || certkit.pbe!
     } as PkiFacadeDeps & { pbe: CertkitPbeNamespace };
   }
   return deps;

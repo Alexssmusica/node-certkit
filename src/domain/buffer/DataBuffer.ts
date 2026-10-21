@@ -33,19 +33,19 @@ export class DataBuffer {
   write: number;
   growSize: number;
 
-  constructor(b?: DataBufferInput, options?: DataBufferOptions) {
+  constructor(input?: DataBufferInput, options?: DataBufferOptions) {
     const opts = options || {};
 
     this.read = opts.readOffset || 0;
     this.growSize = opts.growSize || 1024;
 
-    const isAB = isArrayBuffer(b);
-    const isABV = isArrayBufferView(b);
+    const isAB = isArrayBuffer(input);
+    const isABV = isArrayBufferView(input);
     if (isAB || isABV) {
       if (isAB) {
-        this.data = new DataView(b as ArrayBuffer);
+        this.data = new DataView(input);
       } else {
-        const view = b as ArrayBufferView;
+        const view = input;
         this.data = new DataView(view.buffer, view.byteOffset, view.byteLength);
       }
       this.write = 'writeOffset' in opts ? opts.writeOffset! : this.data.byteLength;
@@ -55,8 +55,8 @@ export class DataBuffer {
     this.data = new DataView(new ArrayBuffer(0));
     this.write = 0;
 
-    if (b !== null && b !== undefined) {
-      this.putBytes(b as string);
+    if (input !== null && input !== undefined) {
+      this.putBytes(input);
     }
 
     if ('writeOffset' in opts) {
@@ -86,23 +86,23 @@ export class DataBuffer {
     return this;
   }
 
-  putByte(b: number): this {
+  putByte(byteValue: number): this {
     this.accommodate(1);
-    this.data.setUint8(this.write++, b);
+    this.data.setUint8(this.write++, byteValue);
     return this;
   }
 
-  fillWithByte(b: number, n: number): this {
-    this.accommodate(n);
-    for (let i = 0; i < n; ++i) {
-      (this.data as unknown as { setUint8(byte: number): void }).setUint8(b);
+  fillWithByte(byteValue: number, repeatCount: number): this {
+    this.accommodate(repeatCount);
+    for (let i = 0; i < repeatCount; ++i) {
+      (this.data as unknown as { setUint8(byte: number): void }).setUint8(byteValue);
     }
     return this;
   }
 
   putBytes(bytes: DataBufferInput, encoding?: string): this {
     if (isArrayBufferView(bytes)) {
-      const view = bytes as ArrayBufferView;
+      const view = bytes;
       const src = new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
       const len = src.byteLength - src.byteOffset;
       this.accommodate(len);
@@ -113,7 +113,7 @@ export class DataBuffer {
     }
 
     if (isArrayBuffer(bytes)) {
-      const src = new Uint8Array(bytes as ArrayBuffer);
+      const src = new Uint8Array(bytes);
       this.accommodate(src.byteLength);
       const dst = new Uint8Array(this.data.buffer);
       dst.set(src, this.write);
@@ -158,13 +158,13 @@ export class DataBuffer {
       if (encoding === 'hex') {
         this.accommodate(Math.ceil(bytes.length / 2));
         view = new Uint8Array(this.data.buffer, this.write);
-        this.write += HexCodec.decode(bytes, view, this.write) as number;
+        this.write += HexCodec.decode(bytes, view, this.write);
         return this;
       }
       if (encoding === 'base64') {
         this.accommodate(Math.ceil(bytes.length / 4) * 3);
         view = new Uint8Array(this.data.buffer, this.write);
-        this.write += Base64Codec.decode(bytes, view, this.write) as number;
+        this.write += Base64Codec.decode(bytes, view, this.write);
         return this;
       }
 
@@ -176,7 +176,7 @@ export class DataBuffer {
       if (encoding === 'binary' || encoding === 'raw') {
         this.accommodate(bytes.length);
         view = new Uint8Array(this.data.buffer, this.write);
-        this.write += RawCodec.decode(view as unknown as string, view, this.write) as number;
+        this.write += RawCodec.decode(view, view, this.write);
         return this;
       }
 
@@ -190,7 +190,17 @@ export class DataBuffer {
       throw new Error('Invalid encoding: ' + encoding);
     }
 
-    throw Error('Invalid parameter: ' + bytes);
+    throw Error(
+      'Invalid parameter: ' +
+        (typeof bytes === 'string' ||
+        typeof bytes === 'number' ||
+        typeof bytes === 'boolean' ||
+        typeof bytes === 'bigint'
+          ? String(bytes)
+          : typeof bytes === 'undefined'
+            ? 'undefined'
+            : 'object')
+    );
   }
 
   putBuffer(buffer: DataBuffer): this {
@@ -247,23 +257,24 @@ export class DataBuffer {
     return this;
   }
 
-  putInt(i: number, n: number): this {
-    checkBitsParam(n);
-    this.accommodate(n / 8);
+  putInt(i: number, bitCount: number): this {
+    checkBitsParam(bitCount);
+    this.accommodate(bitCount / 8);
+    let remainingBits = bitCount;
     do {
-      n -= 8;
-      this.data.setInt8(this.write++, (i >> n) & 0xff);
-    } while (n > 0);
+      remainingBits -= 8;
+      this.data.setInt8(this.write++, (i >> remainingBits) & 0xff);
+    } while (remainingBits > 0);
     return this;
   }
 
-  putSignedInt(i: number, n: number): this {
-    checkBitsParam(n);
-    this.accommodate(n / 8);
+  putSignedInt(i: number, bitCount: number): this {
+    checkBitsParam(bitCount);
+    this.accommodate(bitCount / 8);
     if (i < 0) {
-      i += 2 << (n - 1);
+      i += 2 << (bitCount - 1);
     }
-    return this.putInt(i, n);
+    return this.putInt(i, bitCount);
   }
 
   getByte(): number {
@@ -306,23 +317,24 @@ export class DataBuffer {
     return value;
   }
 
-  getInt(n: number): number {
-    checkBitsParam(n);
+  getInt(bitCount: number): number {
+    checkBitsParam(bitCount);
     let value = 0;
+    let remainingBits = bitCount;
     do {
       value = (value << 8) + this.data.getInt8(this.read++);
-      n -= 8;
-    } while (n > 0);
+      remainingBits -= 8;
+    } while (remainingBits > 0);
     return value;
   }
 
-  getSignedInt(n: number): number {
-    let x = this.getInt(n);
-    const max = 2 << (n - 2);
-    if (x >= max) {
-      x -= max << 1;
+  getSignedInt(bitCount: number): number {
+    let signedValue = this.getInt(bitCount);
+    const max = 2 << (bitCount - 2);
+    if (signedValue >= max) {
+      signedValue -= max << 1;
     }
-    return x;
+    return signedValue;
   }
 
   getBytes(count?: number | null): DataView | string {
@@ -350,8 +362,8 @@ export class DataBuffer {
     return this.data.getUint8(this.read + i);
   }
 
-  setAt(i: number, b: number): this {
-    this.data.setUint8(i, b);
+  setAt(index: number, byteValue: number): this {
+    this.data.setUint8(index, byteValue);
     return this;
   }
 
@@ -368,7 +380,7 @@ export class DataBuffer {
       const src = new Uint8Array(this.data.buffer, this.read);
       const dst = new Uint8Array(src.byteLength);
       dst.set(src);
-      this.data = new DataView(dst.buffer as ArrayBuffer);
+      this.data = new DataView(dst.buffer);
       this.write -= this.read;
       this.read = 0;
     }
@@ -390,11 +402,11 @@ export class DataBuffer {
   toHex(): string {
     let value = '';
     for (let i = this.read; i < this.data.byteLength; ++i) {
-      const b = this.data.getUint8(i);
-      if (b < 16) {
+      const byteValue = this.data.getUint8(i);
+      if (byteValue < 16) {
         value += '0';
       }
-      value += b.toString(16);
+      value += byteValue.toString(16);
     }
     return value;
   }

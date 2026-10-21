@@ -16,12 +16,12 @@ import type {
 
 function resolveMdDigestKey(
   oids: Record<string, string>,
-  md: MdRegistry,
+  digestRegistry: MdRegistry,
   algorithmOid: string,
   errorMessage: string
 ): MdDigestKey {
   const name = oids[algorithmOid];
-  if (name === undefined || name === 'algorithms' || !(name in md)) {
+  if (name === undefined || name === 'algorithms' || !(name in digestRegistry)) {
     const error = new Error(errorMessage) as DerError;
     error.oid = algorithmOid;
     error.name = name;
@@ -34,7 +34,7 @@ function resolveMgfCreate(
   oids: Record<string, string>,
   mgf: CertkitMgfNamespace,
   algorithmOid: string
-): (md: MgfMessageDigest) => { generate: (seed: string, maskLen: number) => string } {
+): (mgfDigest: MgfMessageDigest) => { generate: (seed: string, maskLen: number) => string } {
   const mgfScheme = oids[algorithmOid];
   if (mgfScheme === undefined || !(mgfScheme in mgf)) {
     const error = new Error('Unsupported MGF function.') as DerError;
@@ -49,11 +49,11 @@ function resolveMgfCreate(
     error.name = mgfScheme;
     throw error;
   }
-  return factory.create as (md: MgfMessageDigest) => { generate: (seed: string, maskLen: number) => string };
+  return factory.create;
 }
 
 export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509Validators): X509SignatureHelpers {
-  const { asn1, oids, md, pss, mgf } = deps;
+  const { asn1, oids, digestRegistry, pss, mgf } = deps;
 
   /**
    * Converts signature parameters from ASN.1 structure.
@@ -149,23 +149,24 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
     switch (oids[options.signatureOid]) {
       case 'sha1WithRSAEncryption':
       case 'sha1WithRSASignature':
-        return md.sha1.create() as MessageDigest;
+        return digestRegistry.sha1.create();
       case 'md5WithRSAEncryption':
-        return md.md5.create() as MessageDigest;
+        return digestRegistry.md5.create();
       case 'sha256WithRSAEncryption':
-        return md.sha256.create() as MessageDigest;
+        return digestRegistry.sha256.create();
       case 'sha384WithRSAEncryption':
-        return md.sha384.create() as MessageDigest;
+        return digestRegistry.sha384.create();
       case 'sha512WithRSAEncryption':
-        return md.sha512.create() as MessageDigest;
+        return digestRegistry.sha512.create();
       case 'RSASSA-PSS':
-        return md.sha256.create() as MessageDigest;
-      default:
+        return digestRegistry.sha256.create();
+      default: {
         const error = new Error(
           'Could not compute ' + options.type + ' digest. ' + 'Unknown signature OID.'
         ) as DerError;
         error.signatureOid = options.signatureOid;
         throw error;
+      }
     }
   };
 
@@ -181,7 +182,7 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
   const verifySignature = function (options: {
     certificate: X509Certificate | X509CertificationRequest;
     subject?: X509Certificate | X509CertificationRequest;
-    md: MessageDigest;
+    messageDigest: MessageDigest;
     signature: string | null;
   }) {
     const issuer = options.certificate;
@@ -204,23 +205,23 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
 
         const mgfHashKey = resolveMdDigestKey(
           oids,
-          md,
+          digestRegistry,
           signatureParameters.mgf.hash.algorithmOid,
           'Unsupported MGF hash function.'
         );
 
         const mgfCreate = resolveMgfCreate(oids, mgf, signatureParameters.mgf.algorithmOid);
-        const mgfScheme = mgfCreate(md[mgfHashKey].create() as MgfMessageDigest);
+        const mgfScheme = mgfCreate(digestRegistry[mgfHashKey].create());
 
         const hashKey = resolveMdDigestKey(
           oids,
-          md,
+          digestRegistry,
           signatureParameters.hash.algorithmOid,
           'Unsupported RSASSA-PSS hash function.'
         );
 
         scheme = pss.create({
-          md: md[hashKey].create() as MgfMessageDigest,
+          md: digestRegistry[hashKey].create(),
           mgf: mgfScheme,
           saltLength: signatureParameters.saltLength
         });
@@ -232,7 +233,7 @@ export function createX509SignatureHelpers(deps: SignatureDeps, validators: X509
       throw new Error('Certificate is missing a public key.');
     }
 
-    return issuer.publicKey.verify(options.md.digest().getBytes(), options.signature as string, scheme);
+    return issuer.publicKey.verify(options.messageDigest.digest().getBytes(), options.signature as string, scheme);
   };
 
   /**

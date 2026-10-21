@@ -1,4 +1,4 @@
-type MessageDigestInstance = {
+export type MessageDigestInstance = {
   messageLength: number;
   start: () => void;
   update: (bytes: string) => void;

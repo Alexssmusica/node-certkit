@@ -1,8 +1,6 @@
-import type { Asn1NamespaceObject, Asn1Object } from '../asn1/Asn1Types.js';
-import type { PemKeyCodec } from '../ports/index.js';
+import type { Asn1Object } from '../asn1/Asn1Types.js';
 import type { RsaPrivateKey } from './RsaTypes.js';
 import type { PemMessage } from './PemTypes.js';
-import { PemCodec } from './PemCodec.js';
 import { PbeService } from './PbeService.js';
 import { Pkcs12Service } from './Pkcs12Service.js';
 import { X509Service } from './X509Service.js';
@@ -25,7 +23,7 @@ export class PkiFacade {
     const { pbe, pkiMethods } = PbeService.createCertkitNamespace({
       asn1: deps.asn1,
       oids: deps.oids,
-      md: deps.md,
+      digestRegistry: deps.digestRegistry,
       util: deps.util,
       aes: deps.aes,
       des: deps.des,
@@ -44,7 +42,7 @@ export class PkiFacade {
     const x509Methods = X509Service.createCertkitNamespace({
       asn1: deps.asn1,
       oids: deps.oids,
-      md: deps.md,
+      digestRegistry: deps.digestRegistry,
       util: deps.util,
       pem: deps.pem,
       rsa: deps.pki.rsa!,
@@ -60,7 +58,7 @@ export class PkiFacade {
     return Pkcs12Service.createCertkitNamespace({
       asn1: deps.asn1,
       oids: deps.oids,
-      md: deps.md,
+      digestRegistry: deps.digestRegistry,
       util: deps.util,
       hmac: deps.hmac,
       pbe: deps.pbe,
@@ -86,7 +84,7 @@ export class PkiFacade {
     const asn1 = deps.asn1;
 
     pki.pemToDer = function (pem: string) {
-      const pemMessage = deps.pem.decode(pem)[0]!;
+      const pemMessage = deps.pem.decode(pem)[0];
       if (pemMessage.procType?.type === 'ENCRYPTED') {
         throw new Error('Could not convert PEM to DER; PEM is encrypted.');
       }
@@ -94,7 +92,7 @@ export class PkiFacade {
     };
 
     pki.privateKeyFromPem = function (pem: string) {
-      const pemMessage = deps.pem.decode(pem)[0]!;
+      const pemMessage = deps.pem.decode(pem)[0];
       if (pemMessage.type !== 'PRIVATE KEY' && pemMessage.type !== 'RSA PRIVATE KEY') {
         const error = new Error(
           'Could not convert private key from PEM; PEM header type is not "PRIVATE KEY" or "RSA PRIVATE KEY".'

@@ -1,5 +1,5 @@
 import { Base64Codec } from '../encoding/Base64Codec.js';
-import type { PemDekInfo, PemEncodeOptions, PemHeader, PemMessage, PemProcType } from './PemTypes.js';
+import type { PemEncodeOptions, PemHeader, PemMessage } from './PemTypes.js';
 
 export class PemCodec {
   /** Maximum PEM input size accepted by decode (16 MiB). */
@@ -31,7 +31,7 @@ export class PemCodec {
 
     if (pemMessage.headers) {
       for (let i = 0; i < pemMessage.headers.length; ++i) {
-        pemText += PemCodec.foldHeader(pemMessage.headers[i]!);
+        pemText += PemCodec.foldHeader(pemMessage.headers[i]);
       }
     }
 
@@ -133,10 +133,10 @@ export class PemCodec {
     let lineIndex = 0;
 
     while (lineIndex < lines.length) {
-      let line = lines[lineIndex]!.replace(/\s+$/, '');
+      let line = lines[lineIndex].replace(/\s+$/, '');
 
       for (let nextLineIndex = lineIndex + 1; nextLineIndex < lines.length; ++nextLineIndex) {
-        const next = lines[nextLineIndex]!;
+        const next = lines[nextLineIndex];
         if (!/\s/.test(next.charAt(0))) {
           break;
         }
@@ -146,10 +146,10 @@ export class PemCodec {
 
       const match = rHeader.exec(line);
       if (match) {
-        const header: PemHeader = { name: match[1]!, values: [] };
-        const values = match[2]!.split(',');
+        const header: PemHeader = { name: match[1], values: [] };
+        const values = match[2].split(',');
         for (let valueIndex = 0; valueIndex < values.length; ++valueIndex) {
-          header.values.push(PemCodec.ltrim(values[valueIndex]!));
+          header.values.push(PemCodec.ltrim(values[valueIndex]));
         }
 
         if (!pemMessage.procType) {
@@ -158,7 +158,7 @@ export class PemCodec {
           } else if (header.values.length !== 2) {
             throw new Error('Invalid PEM formatted message. The "Proc-Type" ' + 'header must have two subfields.');
           }
-          pemMessage.procType = { version: values[0]!, type: values[1]! };
+          pemMessage.procType = { version: values[0], type: values[1] };
         } else if (!pemMessage.contentDomain && header.name === 'Content-Domain') {
           pemMessage.contentDomain = values[0] || '';
         } else if (!pemMessage.dekInfo && header.name === 'DEK-Info') {
@@ -167,7 +167,7 @@ export class PemCodec {
               'Invalid PEM formatted message. The "DEK-Info" ' + 'header must have at least one subfield.'
             );
           }
-          pemMessage.dekInfo = { algorithm: values[0]!, parameters: values[1] || null };
+          pemMessage.dekInfo = { algorithm: values[0], parameters: values[1] || null };
         } else {
           pemMessage.headers.push(header);
         }
@@ -194,11 +194,11 @@ export class PemCodec {
     let headerLine = header.name + ': ';
 
     const values: string[] = [];
-    const insertSpace = (_match: string, $1: string) => {
-      return ' ' + $1;
+    const insertSpace = (_match: string, firstLine: string) => {
+      return ' ' + firstLine;
     };
     for (let i = 0; i < header.values.length; ++i) {
-      values.push(header.values[i]!.replace(/^(\S+\r\n)/, insertSpace));
+      values.push(header.values[i].replace(/^(\S+\r\n)/, insertSpace));
     }
     headerLine += values.join(',') + '\r\n';
 

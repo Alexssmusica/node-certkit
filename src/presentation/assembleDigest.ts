@@ -10,43 +10,43 @@ import { NodeCryptoProvider } from '../infrastructure/crypto/NodeCryptoProvider.
 import type { MutableCertkit } from './CertkitAssemblyTypes.js';
 
 export function assembleMd(certkit: MutableCertkit): void {
-  const md = DigestRegistry.createCertkitNamespace();
-  certkit.md = certkit.md || md;
+  const digestRegistry = DigestRegistry.createCertkitNamespace();
+  certkit.md = certkit.md || digestRegistry;
   if (!certkit.md.algorithms) {
-    certkit.md.algorithms = md.algorithms;
+    certkit.md.algorithms = digestRegistry.algorithms;
   }
 }
 
 export function assembleMd5(certkit: MutableCertkit): void {
   const md5 = { create: Md5.create.bind(Md5) };
   certkit.md5 = certkit.md5 || md5;
-  const md = certkit.md!;
-  const algorithms = md.algorithms!;
-  md.md5 = algorithms.md5 = md5;
+  const digestRegistry = certkit.md!;
+  const algorithms = digestRegistry.algorithms!;
+  digestRegistry.md5 = algorithms.md5 = md5;
 }
 
 export function assembleSha1(certkit: MutableCertkit): void {
   const sha1 = { create: Sha1.create.bind(Sha1) };
   certkit.sha1 = certkit.sha1 || sha1;
-  const md = certkit.md!;
-  const algorithms = md.algorithms!;
-  md.sha1 = algorithms.sha1 = sha1;
+  const digestRegistry = certkit.md!;
+  const algorithms = digestRegistry.algorithms!;
+  digestRegistry.sha1 = algorithms.sha1 = sha1;
 }
 
 export function assembleSha256(certkit: MutableCertkit): void {
   const sha256 = { create: Sha256.create.bind(Sha256) };
   certkit.sha256 = certkit.sha256 || sha256;
-  const md = certkit.md!;
-  const algorithms = md.algorithms!;
-  md.sha256 = algorithms.sha256 = sha256;
+  const digestRegistry = certkit.md!;
+  const algorithms = digestRegistry.algorithms!;
+  digestRegistry.sha256 = algorithms.sha256 = sha256;
 }
 
 export function assembleSha512(certkit: MutableCertkit): void {
   const sha512 = { create: Sha512.create.bind(Sha512) };
   certkit.sha512 = certkit.sha512 || sha512;
-  const md = certkit.md!;
-  const algorithms = md.algorithms!;
-  md.sha512 = algorithms.sha512 = sha512;
+  const digestRegistry = certkit.md!;
+  const algorithms = digestRegistry.algorithms!;
+  digestRegistry.sha512 = algorithms.sha512 = sha512;
 
   const sha384 =
     (certkit.sha384 =
@@ -54,17 +54,17 @@ export function assembleSha512(certkit: MutableCertkit): void {
       certkit.sha512.sha384 || {
         create: () => Sha512.create('SHA-384')
       });
-  md.sha384 = algorithms.sha384 = sha384;
+  digestRegistry.sha384 = algorithms.sha384 = sha384;
 
   const sha512Trunc256 = (certkit.sha512.sha256 = certkit.sha512.sha256 || {
     create: () => Sha512.create('SHA-512/256')
   });
-  md['sha512/256'] = algorithms['sha512/256'] = sha512Trunc256;
+  digestRegistry['sha512/256'] = algorithms['sha512/256'] = sha512Trunc256;
 
   const sha512Trunc224 = (certkit.sha512.sha224 = certkit.sha512.sha224 || {
     create: () => Sha512.create('SHA-512/224')
   });
-  md['sha512/224'] = algorithms['sha512/224'] = sha512Trunc224;
+  digestRegistry['sha512/224'] = algorithms['sha512/224'] = sha512Trunc224;
 }
 
 export function assembleHmac(certkit: MutableCertkit): void {
@@ -80,7 +80,7 @@ export function assemblePbkdf2(certkit: MutableCertkit): void {
     usePureJavaScript: certkit.options.usePureJavaScript,
     nativeCrypto,
     mdAlgorithms: certkit.md!.algorithms as DigestAlgorithmRegistry,
-    hmacCreate: () => certkit.hmac!.create() as ReturnType<typeof Hmac.create>
+    hmacCreate: () => certkit.hmac!.create()
   });
 
   certkit.pkcs5 = certkit.pkcs5 || {};

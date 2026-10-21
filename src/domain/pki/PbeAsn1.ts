@@ -1,4 +1,4 @@
-import type { Asn1NamespaceObject, Asn1Validator } from '../asn1/Asn1Types.js';
+import type { Asn1NamespaceObject } from '../asn1/Asn1Types.js';
 import type { PbeValidators } from './PbeTypes.js';
 
 export function createPbeValidators(asn1: Asn1NamespaceObject): PbeValidators {

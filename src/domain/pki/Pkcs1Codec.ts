@@ -7,15 +7,15 @@ function rsaMgf1(seed: string, maskLength: number, hash?: MessageDigest): string
   if (!hash) {
     hash = Sha1.create();
   }
-  let t = '';
+  let maskOctets = '';
   const count = Math.ceil(maskLength / hash.digestLength);
   for (let i = 0; i < count; ++i) {
-    const c = String.fromCharCode((i >> 24) & 0xff, (i >> 16) & 0xff, (i >> 8) & 0xff, i & 0xff);
+    const counterOctets = String.fromCharCode((i >> 24) & 0xff, (i >> 16) & 0xff, (i >> 8) & 0xff, i & 0xff);
     hash.start();
-    hash.update(seed + c);
-    t += hash.digest().getBytes();
+    hash.update(seed + counterOctets);
+    maskOctets += hash.digest().getBytes();
   }
-  return t.substring(0, maskLength);
+  return maskOctets.substring(0, maskLength);
 }
 
 /**
@@ -82,8 +82,8 @@ export class Pkcs1Codec {
     const lHash = md.digest();
 
     const psLength = maxLength - message.length;
-    const PS = UtilNamespace.fillString('\x00', psLength);
-    const DB = lHash.getBytes() + PS + '\x01' + message;
+    const paddingString = UtilNamespace.fillString('\x00', psLength);
+    const dataBlock = lHash.getBytes() + paddingString + '\x01' + message;
 
     if (!seed) {
       if (!getRandomBytes) {
@@ -101,7 +101,7 @@ export class Pkcs1Codec {
     }
 
     const dbMask = rsaMgf1(seed, keyLength - md.digestLength - 1, mgf1Md);
-    const maskedDB = UtilNamespace.xorBytes(DB, dbMask, DB.length);
+    const maskedDB = UtilNamespace.xorBytes(dataBlock, dbMask, dataBlock.length);
     const seedMask = rsaMgf1(maskedDB, md.digestLength, mgf1Md);
     const maskedSeed = UtilNamespace.xorBytes(seed, seedMask, seed.length);
 
@@ -109,7 +109,12 @@ export class Pkcs1Codec {
   }
 
   /** RSAES-OAEP-DECRYPT (RFC 8017 section 7.1.2). */
-  static decodeRsaOaep(key: RsaOaepKey, em: string, options?: RsaOaepOptions | string, mdArg?: MessageDigest): string {
+  static decodeRsaOaep(
+    key: RsaOaepKey,
+    encodedMessage: string,
+    options?: RsaOaepOptions | string,
+    mdArg?: MessageDigest
+  ): string {
     let label: string | undefined;
     let md: MessageDigest | undefined;
     let mgf1Md: MessageDigest | undefined;
@@ -127,12 +132,12 @@ export class Pkcs1Codec {
 
     const keyLength = Math.ceil(key.n.bitLength() / 8);
 
-    if (em.length !== keyLength) {
+    if (encodedMessage.length !== keyLength) {
       const error = new Error('RSAES-OAEP encoded message length is invalid.') as Error & {
         length?: number;
         expectedLength?: number;
       };
-      error.length = em.length;
+      error.length = encodedMessage.length;
       error.expectedLength = keyLength;
       throw error;
     }
@@ -157,17 +162,17 @@ export class Pkcs1Codec {
     md.update(label);
     const lHash = md.digest().getBytes();
 
-    const y = em.charAt(0);
-    const maskedSeed = em.substring(1, md.digestLength + 1);
-    const maskedDB = em.substring(1 + md.digestLength);
+    const leadingOctet = encodedMessage.charAt(0);
+    const maskedSeed = encodedMessage.substring(1, md.digestLength + 1);
+    const maskedDB = encodedMessage.substring(1 + md.digestLength);
 
     const seedMask = rsaMgf1(maskedDB, md.digestLength, mgf1Md);
     const seed = UtilNamespace.xorBytes(maskedSeed, seedMask, maskedSeed.length);
     const dbMask = rsaMgf1(seed, keyLength - md.digestLength - 1, mgf1Md);
-    const db = UtilNamespace.xorBytes(maskedDB, dbMask, maskedDB.length);
-    const lHashPrime = db.substring(0, md.digestLength);
+    const decodedBlock = UtilNamespace.xorBytes(maskedDB, dbMask, maskedDB.length);
+    const lHashPrime = decodedBlock.substring(0, md.digestLength);
 
-    let failureFlags: number = y !== '\x00' ? 1 : 0;
+    let failureFlags: number = leadingOctet !== '\x00' ? 1 : 0;
 
     for (let i = 0; i < md.digestLength; ++i) {
       failureFlags |= lHash.charAt(i) !== lHashPrime.charAt(i) ? 1 : 0;
@@ -175,8 +180,8 @@ export class Pkcs1Codec {
 
     let insidePaddingString = 1;
     let index = md.digestLength;
-    for (let j = md.digestLength; j < db.length; j++) {
-      const code = db.charCodeAt(j);
+    for (let j = md.digestLength; j < decodedBlock.length; j++) {
+      const code = decodedBlock.charCodeAt(j);
       const isZeroBit = (code & 0x1) ^ 0x1;
       const errorMask = insidePaddingString ? 0xfffe : 0x0000;
       failureFlags |= code & errorMask ? 1 : 0;
@@ -184,23 +189,23 @@ export class Pkcs1Codec {
       index += insidePaddingString;
     }
 
-    if (failureFlags || db.charCodeAt(index) !== 0x1) {
+    if (failureFlags || decodedBlock.charCodeAt(index) !== 0x1) {
       throw new Error('Invalid RSAES-OAEP padding.');
     }
 
-    return db.substring(index + 1);
+    return decodedBlock.substring(index + 1);
   }
 
   static createCertkitNamespace(getRandomBytes: (count: number) => string): {
     encode_rsa_oaep: (key: RsaOaepKey, message: string, options?: RsaOaepOptions | string) => string;
-    decode_rsa_oaep: (key: RsaOaepKey, em: string, options?: RsaOaepOptions | string) => string;
+    decode_rsa_oaep: (key: RsaOaepKey, encodedMessage: string, options?: RsaOaepOptions | string) => string;
   } {
     return {
       encode_rsa_oaep(key, message, options) {
         return Pkcs1Codec.encodeRsaOaep(key, message, options, undefined, undefined, getRandomBytes);
       },
-      decode_rsa_oaep(key, em, options) {
-        return Pkcs1Codec.decodeRsaOaep(key, em, options);
+      decode_rsa_oaep(key, encodedMessage, options) {
+        return Pkcs1Codec.decodeRsaOaep(key, encodedMessage, options);
       }
     };
   }

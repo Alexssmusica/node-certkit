@@ -3,7 +3,14 @@ import { UtilNamespace } from '../util/UtilNamespace.js';
 import { Asn1Codec } from './Asn1Codec.js';
 import type { Asn1Object } from './Asn1Types.js';
 
-const nonLatinRegex = /[^\u0000-\u00ff]/;
+function hasCharOutsideLatin1(text: string): boolean {
+  for (let index = 0; index < text.length; ++index) {
+    if (text.charCodeAt(index) > 0xff) {
+      return true;
+    }
+  }
+  return false;
+}
 
 let pkiOids: Record<string, string> | undefined;
 
@@ -131,7 +138,7 @@ export function prettyPrintAsn1(asn1Object: Asn1Object, level?: number, indentat
     for (let i = 0; i < children.length; ++i) {
       if (children[i] !== undefined) {
         subvalues += 1;
-        sub += prettyPrintAsn1(children[i]!, indentLevel + 1, indentSize);
+        sub += prettyPrintAsn1(children[i], indentLevel + 1, indentSize);
         if (i + 1 < children.length) {
           sub += ',';
         }
@@ -172,23 +179,23 @@ export function prettyPrintAsn1(asn1Object: Asn1Object, level?: number, indentat
         }
       }
     } else if (asn1Object.type === Asn1Codec.Type.OCTETSTRING) {
-      if (!nonLatinRegex.test(primitive)) {
+      if (!hasCharOutsideLatin1(primitive)) {
         output += '(' + primitive + ') ';
       }
       output += '0x' + UtilNamespace.bytesToHex(primitive);
     } else if (asn1Object.type === Asn1Codec.Type.UTF8) {
       try {
         output += decodeUtf8(primitive);
-      } catch (e: unknown) {
-        if (e instanceof Error && e.message === 'URI malformed') {
+      } catch (caughtError: unknown) {
+        if (caughtError instanceof Error && caughtError.message === 'URI malformed') {
           output += '0x' + UtilNamespace.bytesToHex(primitive) + ' (malformed UTF8)';
         } else {
-          throw e;
+          throw caughtError;
         }
       }
     } else if (asn1Object.type === Asn1Codec.Type.PRINTABLESTRING || asn1Object.type === Asn1Codec.Type.IA5STRING) {
       output += primitive;
-    } else if (nonLatinRegex.test(primitive)) {
+    } else if (hasCharOutsideLatin1(primitive)) {
       output += '0x' + UtilNamespace.bytesToHex(primitive);
     } else if (primitive.length === 0) {
       output += '[null]';

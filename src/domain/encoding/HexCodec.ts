@@ -11,7 +11,7 @@ export class HexCodec {
     let j = off;
     if (hex.length & 1) {
       i = 1;
-      out[j++] = parseInt(hex[0]!, 16);
+      out[j++] = parseInt(hex[0], 16);
     }
     for (; i < hex.length; i += 2) {
       out[j++] = parseInt(hex.substr(i, 2), 16);
@@ -24,7 +24,7 @@ export class HexCodec {
     let i = 0;
     if (hex.length & 1) {
       i = 1;
-      chars.push(String.fromCharCode(parseInt(hex[0]!, 16)));
+      chars.push(String.fromCharCode(parseInt(hex[0], 16)));
     }
     for (; i < hex.length; i += 2) {
       chars.push(String.fromCharCode(parseInt(hex.substr(i, 2), 16)));
@@ -35,8 +35,8 @@ export class HexCodec {
   static encode(bytes: Uint8Array): string {
     const hex: string[] = [];
     for (let i = 0; i < bytes.length; ++i) {
-      const b = bytes[i]!;
-      hex.push((b < 16 ? '0' : '') + b.toString(16));
+      const byteValue = bytes[i];
+      hex.push((byteValue < 16 ? '0' : '') + byteValue.toString(16));
     }
     return hex.join('');
   }

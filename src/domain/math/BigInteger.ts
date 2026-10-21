@@ -16,10 +16,10 @@ import {
   nbits,
   lbit,
   cbit,
-  op_and,
-  op_or,
-  op_xor,
-  op_andnot,
+  opAnd,
+  opOr,
+  opXor,
+  opAndNot,
   bnGetPrng,
   am3,
   lowprimes,
@@ -41,13 +41,13 @@ export class BigInteger {
   data: number[] = [];
   t = 0;
   s = 0;
-  declare DB: number;
-  declare DM: number;
-  declare DV: number;
-  declare FV: number;
-  declare F1: number;
-  declare F2: number;
-  declare am: (i: number, x: number, w: BigInteger, j: number, c: number, n: number) => number;
+  declare digitBits: number;
+  declare digitMask: number;
+  declare digitMax: number;
+  declare floatScale: number;
+  declare floatHighBits: number;
+  declare floatLowBits: number;
+  declare multiplyAdd: (i: number, x: number, w: BigInteger, j: number, c: number, n: number) => number;
 
   static ZERO: BigInteger;
   static ONE: BigInteger;
@@ -61,7 +61,7 @@ export class BigInteger {
       if (typeof a === 'number') {
         if (typeof b === 'number') this.fromNumber(a, b, c);
         else this.fromNumber(a, b!);
-      } else if (b == null && typeof a !== 'string') this.fromString(a as number[], 256);
+      } else if (b == null && typeof a !== 'string') this.fromString(a, 256);
       else this.fromString(a as string, b as number);
     }
   }
@@ -76,7 +76,7 @@ export class BigInteger {
     this.t = 1;
     this.s = x < 0 ? -1 : 0;
     if (x > 0) this.data[0] = x;
-    else if (x < -1) this.data[0] = x + this.DV;
+    else if (x < -1) this.data[0] = x + this.digitMax;
     else this.t = 0;
   }
 
@@ -101,30 +101,30 @@ export class BigInteger {
       mi = false,
       sh = 0;
     while (--i >= 0) {
-      const x = k == 8 ? (s as number[])[i]! & 0xff : intAt(s as string, i);
+      const x = k == 8 ? (s as number[])[i] & 0xff : intAt(s as string, i);
       if (x < 0) {
         if ((s as string).charAt(i) == '-') mi = true;
         continue;
       }
       mi = false;
       if (sh == 0) this.data[this.t++] = x;
-      else if (sh + k > this.DB) {
-        this.data[this.t - 1] |= (x & ((1 << (this.DB - sh)) - 1)) << sh;
-        this.data[this.t++] = x >> (this.DB - sh);
+      else if (sh + k > this.digitBits) {
+        this.data[this.t - 1] |= (x & ((1 << (this.digitBits - sh)) - 1)) << sh;
+        this.data[this.t++] = x >> (this.digitBits - sh);
       } else this.data[this.t - 1] |= x << sh;
       sh += k;
-      if (sh >= this.DB) sh -= this.DB;
+      if (sh >= this.digitBits) sh -= this.digitBits;
     }
-    if (k == 8 && ((s as number[])[0]! & 0x80) != 0) {
+    if (k == 8 && ((s as number[])[0] & 0x80) != 0) {
       this.s = -1;
-      if (sh > 0) this.data[this.t - 1] |= ((1 << (this.DB - sh)) - 1) << sh;
+      if (sh > 0) this.data[this.t - 1] |= ((1 << (this.digitBits - sh)) - 1) << sh;
     }
     this.clamp();
     if (mi) BigInteger.ZERO.subTo(this, this);
   }
 
   clamp() {
-    const c = this.s & this.DM;
+    const c = this.s & this.digitMask;
     while (this.t > 0 && this.data[this.t - 1] == c) --this.t;
   }
 
@@ -142,20 +142,20 @@ export class BigInteger {
       m = false,
       r = '',
       i = this.t;
-    let p = this.DB - ((i * this.DB) % k);
+    let p = this.digitBits - ((i * this.digitBits) % k);
     if (i-- > 0) {
-      if (p < this.DB && (d = this.data[i] >> p) > 0) {
+      if (p < this.digitBits && (d = this.data[i] >> p) > 0) {
         m = true;
         r = int2char(d);
       }
       while (i >= 0) {
         if (p < k) {
           d = (this.data[i] & ((1 << p) - 1)) << (k - p);
-          d |= this.data[--i] >> (p += this.DB - k);
+          d |= this.data[--i] >> (p += this.digitBits - k);
         } else {
           d = (this.data[i] >> (p -= k)) & km;
           if (p <= 0) {
-            p += this.DB;
+            p += this.digitBits;
             --i;
           }
         }
@@ -188,7 +188,7 @@ export class BigInteger {
 
   bitLength() {
     if (this.t <= 0) return 0;
-    return this.DB * (this.t - 1) + nbits(this.data[this.t - 1] ^ (this.s & this.DM));
+    return this.digitBits * (this.t - 1) + nbits(this.data[this.t - 1] ^ (this.s & this.digitMask));
   }
 
   dlShiftTo(n: number, r: BigInteger) {
@@ -206,11 +206,11 @@ export class BigInteger {
   }
 
   lShiftTo(n: number, r: BigInteger) {
-    const bs = n % this.DB;
-    const cbs = this.DB - bs;
+    const bs = n % this.digitBits;
+    const cbs = this.digitBits - bs;
     const bm = (1 << cbs) - 1;
-    let ds = Math.floor(n / this.DB),
-      c = (this.s << bs) & this.DM,
+    let ds = Math.floor(n / this.digitBits),
+      c = (this.s << bs) & this.digitMask,
       i;
     for (i = this.t - 1; i >= 0; --i) {
       r.data[i + ds + 1] = (this.data[i] >> cbs) | c;
@@ -225,13 +225,13 @@ export class BigInteger {
 
   rShiftTo(n: number, r: BigInteger) {
     r.s = this.s;
-    const ds = Math.floor(n / this.DB);
+    const ds = Math.floor(n / this.digitBits);
     if (ds >= this.t) {
       r.t = 0;
       return;
     }
-    const bs = n % this.DB;
-    const cbs = this.DB - bs;
+    const bs = n % this.digitBits;
+    const cbs = this.digitBits - bs;
     const bm = (1 << bs) - 1;
     r.data[0] = this.data[ds] >> bs;
     for (let i = ds + 1; i < this.t; ++i) {
@@ -249,28 +249,28 @@ export class BigInteger {
       m = Math.min(a.t, this.t);
     while (i < m) {
       c += this.data[i] - a.data[i];
-      r.data[i++] = c & this.DM;
-      c >>= this.DB;
+      r.data[i++] = c & this.digitMask;
+      c >>= this.digitBits;
     }
     if (a.t < this.t) {
       c -= a.s;
       while (i < this.t) {
         c += this.data[i];
-        r.data[i++] = c & this.DM;
-        c >>= this.DB;
+        r.data[i++] = c & this.digitMask;
+        c >>= this.digitBits;
       }
       c += this.s;
     } else {
       c += this.s;
       while (i < a.t) {
         c -= a.data[i];
-        r.data[i++] = c & this.DM;
-        c >>= this.DB;
+        r.data[i++] = c & this.digitMask;
+        c >>= this.digitBits;
       }
       c -= a.s;
     }
     r.s = c < 0 ? -1 : 0;
-    if (c < -1) r.data[i++] = this.DV + c;
+    if (c < -1) r.data[i++] = this.digitMax + c;
     else if (c > 0) r.data[i++] = c;
     r.t = i;
     r.clamp();
@@ -284,7 +284,7 @@ export class BigInteger {
     let i = x.t;
     r.t = i + y.t;
     while (--i >= 0) r.data[i] = 0;
-    for (i = 0; i < y.t; ++i) r.data[i + x.t] = x.am(0, y.data[i], r, i, 0, x.t);
+    for (i = 0; i < y.t; ++i) r.data[i + x.t] = x.multiplyAdd(0, y.data[i], r, i, 0, x.t);
     r.s = 0;
     r.clamp();
     if (this.s != a.s) BigInteger.ZERO.subTo(r, r);
@@ -296,13 +296,13 @@ export class BigInteger {
     let i = (r.t = 2 * x.t);
     while (--i >= 0) r.data[i] = 0;
     for (i = 0; i < x.t - 1; ++i) {
-      const c = x.am(i, x.data[i], r, 2 * i, 0, 1);
-      if ((r.data[i + x.t] += x.am(i + 1, 2 * x.data[i], r, 2 * i + 1, c, x.t - i - 1)) >= x.DV) {
-        r.data[i + x.t] -= x.DV;
+      const c = x.multiplyAdd(i, x.data[i], r, 2 * i, 0, 1);
+      if ((r.data[i + x.t] += x.multiplyAdd(i + 1, 2 * x.data[i], r, 2 * i + 1, c, x.t - i - 1)) >= x.digitMax) {
+        r.data[i + x.t] -= x.digitMax;
         r.data[i + x.t + 1] = 1;
       }
     }
-    if (r.t > 0) r.data[r.t - 1] += x.am(i, x.data[i], r, 2 * i, 0, 1);
+    if (r.t > 0) r.data[r.t - 1] += x.multiplyAdd(i, x.data[i], r, 2 * i, 0, 1);
     r.s = 0;
     r.clamp();
   }
@@ -322,7 +322,7 @@ export class BigInteger {
     const y = nbi(),
       ts = this.s,
       ms = m.s;
-    const nsh = this.DB - nbits(pm.data[pm.t - 1]); // normalize modulus
+    const nsh = this.digitBits - nbits(pm.data[pm.t - 1]); // normalize modulus
     if (nsh > 0) {
       pm.lShiftTo(nsh, y);
       pt.lShiftTo(nsh, r);
@@ -333,10 +333,10 @@ export class BigInteger {
     const ys = y.t;
     const y0 = y.data[ys - 1];
     if (y0 == 0) return;
-    const yt = y0 * (1 << this.F1) + (ys > 1 ? y.data[ys - 2] >> this.F2 : 0);
-    const d1 = this.FV / yt,
-      d2 = (1 << this.F1) / yt,
-      e = 1 << this.F2;
+    const yt = y0 * (1 << this.floatHighBits) + (ys > 1 ? y.data[ys - 2] >> this.floatLowBits : 0);
+    const d1 = this.floatScale / yt,
+      d2 = (1 << this.floatHighBits) / yt,
+      e = 1 << this.floatLowBits;
     let i = r.t,
       j = i - ys,
       t = q == null ? nbi() : q;
@@ -350,8 +350,8 @@ export class BigInteger {
     while (y.t < ys) y.data[y.t++] = 0;
     while (--j >= 0) {
       // Estimate quotient digit
-      let qd = r.data[--i] == y0 ? this.DM : Math.floor(r.data[i] * d1 + (r.data[i - 1] + e) * d2);
-      if ((r.data[i] += y.am(0, qd, r, j, 0, ys)) < qd) {
+      let qd = r.data[--i] == y0 ? this.digitMask : Math.floor(r.data[i] * d1 + (r.data[i - 1] + e) * d2);
+      if ((r.data[i] += y.multiplyAdd(0, qd, r, j, 0, ys)) < qd) {
         // Try it out
         y.dlShiftTo(j, t);
         r.subTo(t, r);
@@ -394,9 +394,9 @@ export class BigInteger {
     y = (y * (2 - (((x & 0xffff) * y) & 0xffff))) & 0xffff; // y == 1/x mod 2^16
     // last step - calculate inverse mod DV directly;
     // assumes 16 < DB <= 32 and assumes ability to handle 48-bit ints
-    y = (y * (2 - ((x * y) % this.DV))) % this.DV; // y == 1/x mod 2^dbits
+    y = (y * (2 - ((x * y) % this.digitMax))) % this.digitMax; // y == 1/x mod 2^dbits
     // we really want the negative inverse, and -DV < y < DV
-    return y > 0 ? this.DV - y : -y;
+    return y > 0 ? this.digitMax - y : -y;
   }
 
   isEven() {
@@ -438,12 +438,12 @@ export class BigInteger {
 
   intValue() {
     if (this.s < 0) {
-      if (this.t == 1) return this.data[0] - this.DV;
+      if (this.t == 1) return this.data[0] - this.digitMax;
       else if (this.t == 0) return -1;
     } else if (this.t == 1) return this.data[0];
     else if (this.t == 0) return 0;
     // assumes 16 < DB < 32
-    return ((this.data[1] & ((1 << (32 - this.DB)) - 1)) << this.DB) | this.data[0];
+    return ((this.data[1] & ((1 << (32 - this.digitBits)) - 1)) << this.digitBits) | this.data[0];
   }
 
   byteValue() {
@@ -455,7 +455,7 @@ export class BigInteger {
   }
 
   chunkSize(r: number) {
-    return Math.floor((Math.LN2 * this.DB) / Math.log(r));
+    return Math.floor((Math.LN2 * this.digitBits) / Math.log(r));
   }
 
   signum() {
@@ -520,7 +520,7 @@ export class BigInteger {
         this.fromNumber(a, c!);
         if (!this.testBit(a - 1))
           // force MSB set
-          this.bitwiseTo(BigInteger.ONE.shiftLeft(a - 1), op_or, this);
+          this.bitwiseTo(BigInteger.ONE.shiftLeft(a - 1), opOr, this);
         if (this.isEven()) this.dAddOffset(1, 0); // force odd
         while (!this.isProbablePrime(b)) {
           this.dAddOffset(2, 0);
@@ -544,19 +544,20 @@ export class BigInteger {
     let i = this.t,
       r = [];
     r[0] = this.s;
-    let p = this.DB - ((i * this.DB) % 8),
+    let p = this.digitBits - ((i * this.digitBits) % 8),
       d,
       k = 0;
     if (i-- > 0) {
-      if (p < this.DB && (d = this.data[i] >> p) != (this.s & this.DM) >> p) r[k++] = d | (this.s << (this.DB - p));
+      if (p < this.digitBits && (d = this.data[i] >> p) != (this.s & this.digitMask) >> p)
+        r[k++] = d | (this.s << (this.digitBits - p));
       while (i >= 0) {
         if (p < 8) {
           d = (this.data[i] & ((1 << p) - 1)) << (8 - p);
-          d |= this.data[--i] >> (p += this.DB - 8);
+          d |= this.data[--i] >> (p += this.digitBits - 8);
         } else {
           d = (this.data[i] >> (p -= 8)) & 0xff;
           if (p <= 0) {
-            p += this.DB;
+            p += this.digitBits;
             --i;
           }
         }
@@ -584,11 +585,11 @@ export class BigInteger {
       m = Math.min(a.t, this.t);
     for (i = 0; i < m; ++i) r.data[i] = op(this.data[i], a.data[i]);
     if (a.t < this.t) {
-      f = a.s & this.DM;
+      f = a.s & this.digitMask;
       for (i = m; i < this.t; ++i) r.data[i] = op(this.data[i], f);
       r.t = this.t;
     } else {
-      f = this.s & this.DM;
+      f = this.s & this.digitMask;
       for (i = m; i < a.t; ++i) r.data[i] = op(f, a.data[i]);
       r.t = a.t;
     }
@@ -598,31 +599,31 @@ export class BigInteger {
 
   and(a: BigInteger) {
     const r = nbi();
-    this.bitwiseTo(a, op_and, r);
+    this.bitwiseTo(a, opAnd, r);
     return r;
   }
 
   or(a: BigInteger) {
     const r = nbi();
-    this.bitwiseTo(a, op_or, r);
+    this.bitwiseTo(a, opOr, r);
     return r;
   }
 
   xor(a: BigInteger) {
     const r = nbi();
-    this.bitwiseTo(a, op_xor, r);
+    this.bitwiseTo(a, opXor, r);
     return r;
   }
 
   andNot(a: BigInteger) {
     const r = nbi();
-    this.bitwiseTo(a, op_andnot, r);
+    this.bitwiseTo(a, opAndNot, r);
     return r;
   }
 
   not() {
     const r = nbi();
-    for (let i = 0; i < this.t; ++i) r.data[i] = this.DM & ~this.data[i];
+    for (let i = 0; i < this.t; ++i) r.data[i] = this.digitMask & ~this.data[i];
     r.t = this.t;
     r.s = ~this.s;
     return r;
@@ -643,22 +644,22 @@ export class BigInteger {
   }
 
   getLowestSetBit() {
-    for (let i = 0; i < this.t; ++i) if (this.data[i] != 0) return i * this.DB + lbit(this.data[i]);
-    if (this.s < 0) return this.t * this.DB;
+    for (let i = 0; i < this.t; ++i) if (this.data[i] != 0) return i * this.digitBits + lbit(this.data[i]);
+    if (this.s < 0) return this.t * this.digitBits;
     return -1;
   }
 
   bitCount() {
     let r = 0,
-      x = this.s & this.DM;
+      x = this.s & this.digitMask;
     for (let i = 0; i < this.t; ++i) r += cbit(this.data[i] ^ x);
     return r;
   }
 
   testBit(n: number) {
-    const j = Math.floor(n / this.DB);
+    const j = Math.floor(n / this.digitBits);
     if (j >= this.t) return this.s != 0;
-    return (this.data[j] & (1 << (n % this.DB))) != 0;
+    return (this.data[j] & (1 << (n % this.digitBits))) != 0;
   }
 
   changeBit(n: number, op: BitwiseWordOp) {
@@ -668,15 +669,15 @@ export class BigInteger {
   }
 
   setBit(n: number) {
-    return this.changeBit(n, op_or);
+    return this.changeBit(n, opOr);
   }
 
   clearBit(n: number) {
-    return this.changeBit(n, op_andnot);
+    return this.changeBit(n, opAndNot);
   }
 
   flipBit(n: number) {
-    return this.changeBit(n, op_xor);
+    return this.changeBit(n, opXor);
   }
 
   addTo(a: BigInteger, r: BigInteger) {
@@ -685,29 +686,29 @@ export class BigInteger {
       m = Math.min(a.t, this.t);
     while (i < m) {
       c += this.data[i] + a.data[i];
-      r.data[i++] = c & this.DM;
-      c >>= this.DB;
+      r.data[i++] = c & this.digitMask;
+      c >>= this.digitBits;
     }
     if (a.t < this.t) {
       c += a.s;
       while (i < this.t) {
         c += this.data[i];
-        r.data[i++] = c & this.DM;
-        c >>= this.DB;
+        r.data[i++] = c & this.digitMask;
+        c >>= this.digitBits;
       }
       c += this.s;
     } else {
       c += this.s;
       while (i < a.t) {
         c += a.data[i];
-        r.data[i++] = c & this.DM;
-        c >>= this.DB;
+        r.data[i++] = c & this.digitMask;
+        c >>= this.digitBits;
       }
       c += a.s;
     }
     r.s = c < 0 ? -1 : 0;
     if (c > 0) r.data[i++] = c;
-    else if (c < -1) r.data[i++] = this.DV + c;
+    else if (c < -1) r.data[i++] = this.digitMax + c;
     r.t = i;
     r.clamp();
   }
@@ -756,7 +757,7 @@ export class BigInteger {
   }
 
   dMultiply(n: number) {
-    this.data[this.t] = this.am(0, n - 1, this, 0, 0, this.t);
+    this.data[this.t] = this.multiplyAdd(0, n - 1, this, 0, 0, this.t);
     ++this.t;
     this.clamp();
   }
@@ -765,8 +766,8 @@ export class BigInteger {
     if (n == 0) return;
     while (this.t <= w) this.data[this.t++] = 0;
     this.data[w] += n;
-    while (this.data[w] >= this.DV) {
-      this.data[w] -= this.DV;
+    while (this.data[w] >= this.digitMax) {
+      this.data[w] -= this.digitMax;
       if (++w >= this.t) this.data[this.t++] = 0;
       ++this.data[w];
     }
@@ -783,8 +784,8 @@ export class BigInteger {
     r.t = i;
     while (i > 0) r.data[--i] = 0;
     let j;
-    for (j = r.t - this.t; i < j; ++i) r.data[i + this.t] = this.am(0, a.data[i], r, i, 0, this.t);
-    for (j = Math.min(a.t, n); i < j; ++i) this.am(0, a.data[i], r, i, 0, n - i);
+    for (j = r.t - this.t; i < j; ++i) r.data[i + this.t] = this.multiplyAdd(0, a.data[i], r, i, 0, this.t);
+    for (j = Math.min(a.t, n); i < j; ++i) this.multiplyAdd(0, a.data[i], r, i, 0, n - i);
     r.clamp();
   }
 
@@ -795,7 +796,7 @@ export class BigInteger {
     r.s = 0; // assumes a,this >= 0
     while (--i >= 0) r.data[i] = 0;
     for (i = Math.max(n - this.t, 0); i < a.t; ++i)
-      r.data[this.t + i - n] = this.am(n - i, a.data[i], r, 0, 0, this.t + i - n);
+      r.data[this.t + i - n] = this.multiplyAdd(n - i, a.data[i], r, 0, 0, this.t + i - n);
     r.clamp();
     r.drShiftTo(1, r);
   }
@@ -840,7 +841,7 @@ export class BigInteger {
       if (i >= k1) w = (e.data[j] >> (i - k1)) & km;
       else {
         w = (e.data[j] & ((1 << (i + 1)) - 1)) << (k1 - i);
-        if (j > 0) w |= e.data[j - 1] >> (this.DB + i - k1);
+        if (j > 0) w |= e.data[j - 1] >> (this.digitBits + i - k1);
       }
 
       n = k;
@@ -849,7 +850,7 @@ export class BigInteger {
         --n;
       }
       if ((i -= n) < 0) {
-        i += this.DB;
+        i += this.digitBits;
         --j;
       }
       if (is1) {
@@ -877,7 +878,7 @@ export class BigInteger {
         r = r2;
         r2 = t;
         if (--i < 0) {
-          i = this.DB - 1;
+          i = this.digitBits - 1;
           --j;
         }
       }
@@ -918,7 +919,7 @@ export class BigInteger {
 
   modInt(n: number) {
     if (n <= 0) return 0;
-    let d = this.DV % n,
+    let d = this.digitMax % n,
       r = this.s < 0 ? n - 1 : 0;
     if (this.t > 0)
       if (d == 0) r = this.data[0] % n;
@@ -1026,13 +1027,13 @@ export class BigInteger {
 }
 
 Object.assign(BigInteger.prototype, {
-  DB: dbits,
-  DM: (1 << dbits) - 1,
-  DV: 1 << dbits,
-  FV: Math.pow(2, BI_FP),
-  F1: BI_FP - dbits,
-  F2: 2 * dbits - BI_FP,
-  am: am3
+  digitBits: dbits,
+  digitMask: (1 << dbits) - 1,
+  digitMax: 1 << dbits,
+  floatScale: Math.pow(2, BI_FP),
+  floatHighBits: BI_FP - dbits,
+  floatLowBits: 2 * dbits - BI_FP,
+  multiplyAdd: am3
 });
 
 BigInteger.ZERO = nbv(0);

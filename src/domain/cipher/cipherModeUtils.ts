@@ -1,17 +1,15 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { isArray } from '../util/typeChecks.js';
-import type { BlockCipherApi, CipherModeOptions, CipherModeStartOptions, PadOptions } from './CipherTypes.js';
-
-export function transformIV(iv: string | ByteStringBuffer | number[] | unknown, blockSize: number): number[] {
+export function transformIV(iv: string | ByteStringBuffer | number[], blockSize: number): number[] {
   if (typeof iv === 'string') {
     iv = new ByteStringBuffer(iv);
   }
 
-  if (isArray(iv) && (iv as unknown[]).length > 4) {
-    const tmp = iv as number[];
+  if (isArray(iv) && iv.length > 4) {
+    const ivBytes = iv;
     iv = new ByteStringBuffer();
-    for (let i = 0; i < tmp.length; ++i) {
-      (iv as ByteStringBuffer).putByte(tmp[i]!);
+    for (let i = 0; i < ivBytes.length; ++i) {
+      iv.putByte(ivBytes[i]);
     }
   }
 
@@ -29,11 +27,11 @@ export function transformIV(iv: string | ByteStringBuffer | number[] | unknown, 
     iv = ints;
   }
 
-  return iv as number[];
+  return iv;
 }
 
 export function inc32(block: number[]): void {
-  block[block.length - 1] = (block[block.length - 1]! + 1) & 0xffffffff;
+  block[block.length - 1] = (block[block.length - 1] + 1) & 0xffffffff;
 }
 
 export function from64To32(num: number): [number, number] {
@@ -44,22 +42,22 @@ export function from64To32(num: number): [number, number] {
  * Validate and remove PKCS#7 padding from a decrypted buffer.
  */
 export function validatePkcs7Padding(output: ByteStringBuffer, blockSize: number): boolean {
-  const len = output.length();
-  if (len === 0 || len % blockSize !== 0) {
+  const bufferLength = output.length();
+  if (bufferLength === 0 || bufferLength % blockSize !== 0) {
     return false;
   }
 
-  const count = output.at(len - 1);
-  if (count < 1 || count > blockSize || count > len) {
+  const paddingByteCount = output.at(bufferLength - 1);
+  if (paddingByteCount < 1 || paddingByteCount > blockSize || paddingByteCount > bufferLength) {
     return false;
   }
 
-  for (let i = len - count; i < len; ++i) {
-    if (output.at(i) !== count) {
+  for (let i = bufferLength - paddingByteCount; i < bufferLength; ++i) {
+    if (output.at(i) !== paddingByteCount) {
       return false;
     }
   }
 
-  output.truncate(count);
+  output.truncate(paddingByteCount);
   return true;
 }

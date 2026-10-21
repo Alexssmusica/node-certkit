@@ -15,33 +15,33 @@ export class ByteStringBuffer {
   /** When true, reads past the end throw instead of returning stale values. */
   strictReads: boolean;
 
-  constructor(b?: ByteStringBufferInput | null) {
+  constructor(input?: ByteStringBufferInput | null) {
     this.data = '';
     this.read = 0;
     this._constructedStringLength = 0;
     this.strictReads = false;
 
-    if (typeof b === 'string') {
-      this.data = b;
-    } else if (isArrayBuffer(b) || isArrayBufferView(b)) {
-      if (typeof Buffer !== 'undefined' && b instanceof Buffer) {
-        this.data = b.toString('binary');
+    if (typeof input === 'string') {
+      this.data = input;
+    } else if (isArrayBuffer(input) || isArrayBufferView(input)) {
+      if (typeof Buffer !== 'undefined' && input instanceof Buffer) {
+        this.data = input.toString('binary');
       } else {
-        const arr = new Uint8Array(b as ArrayBuffer);
+        const arr = new Uint8Array(input as ArrayBuffer);
         try {
           this.data = String.fromCharCode.apply(null, Array.from(arr));
         } catch {
           for (let i = 0; i < arr.length; ++i) {
-            this.putByte(arr[i]!);
+            this.putByte(arr[i]);
           }
         }
       }
     } else if (
-      b instanceof ByteStringBuffer ||
-      (typeof b === 'object' && b !== null && typeof b.data === 'string' && typeof b.read === 'number')
+      input instanceof ByteStringBuffer ||
+      (typeof input === 'object' && input !== null && typeof input.data === 'string' && typeof input.read === 'number')
     ) {
-      this.data = b.data;
-      this.read = b.read;
+      this.data = input.data;
+      this.read = input.read;
     }
   }
 
@@ -50,8 +50,8 @@ export class ByteStringBuffer {
    * buffer. The discarded `substr(0, 1)` call is intentional: it nudges the
    * JS engine to flatten cons strings (node-forge legacy heuristic).
    */
-  _optimizeConstructedString(x: number): void {
-    this._constructedStringLength += x;
+  _optimizeConstructedString(lengthDelta: number): void {
+    this._constructedStringLength += lengthDelta;
     if (this._constructedStringLength > MAX_CONSTRUCTED_STRING_LENGTH) {
       this.data.substr(0, 1);
       this._constructedStringLength = 0;
@@ -66,24 +66,24 @@ export class ByteStringBuffer {
     return this.length() <= 0;
   }
 
-  putByte(b: number): this {
-    return this.putBytes(String.fromCharCode(b));
+  putByte(byteValue: number): this {
+    return this.putBytes(String.fromCharCode(byteValue));
   }
 
-  fillWithByte(b: number, repeatCount: number): this {
-    let byte = String.fromCharCode(b);
-    let d = this.data;
+  fillWithByte(byteValue: number, repeatCount: number): this {
+    let byte = String.fromCharCode(byteValue);
+    let data = this.data;
     let remaining = repeatCount;
     while (remaining > 0) {
       if (remaining & 1) {
-        d += byte;
+        data += byte;
       }
       remaining >>>= 1;
       if (remaining > 0) {
         byte += byte;
       }
     }
-    this.data = d;
+    this.data = data;
     this._optimizeConstructedString(repeatCount);
     return this;
   }
@@ -136,21 +136,22 @@ export class ByteStringBuffer {
     );
   }
 
-  putInt(i: number, n: number): this {
-    checkBitsParam(n);
+  putInt(i: number, bitCount: number): this {
+    checkBitsParam(bitCount);
     let bytes = '';
+    let remainingBits = bitCount;
     do {
-      n -= 8;
-      bytes += String.fromCharCode((i >> n) & 0xff);
-    } while (n > 0);
+      remainingBits -= 8;
+      bytes += String.fromCharCode((i >> remainingBits) & 0xff);
+    } while (remainingBits > 0);
     return this.putBytes(bytes);
   }
 
-  putSignedInt(i: number, n: number): this {
+  putSignedInt(i: number, bitCount: number): this {
     if (i < 0) {
-      i += 2 << (n - 1);
+      i += 2 << (bitCount - 1);
     }
-    return this.putInt(i, n);
+    return this.putInt(i, bitCount);
   }
 
   putBuffer(buffer: { getBytes(count?: number): string }): this {
@@ -232,27 +233,28 @@ export class ByteStringBuffer {
     return value;
   }
 
-  getInt(n: number): number {
-    checkBitsParam(n);
-    const byteCount = n >> 3;
+  getInt(bitCount: number): number {
+    checkBitsParam(bitCount);
+    const byteCount = bitCount >> 3;
     if (this.strictReads && this.read + byteCount > this.data.length) {
       throw new RangeError('ByteStringBuffer read past end of buffer.');
     }
     let value = 0;
+    let remainingBits = bitCount;
     do {
       value = (value << 8) + this.data.charCodeAt(this.read++);
-      n -= 8;
-    } while (n > 0);
+      remainingBits -= 8;
+    } while (remainingBits > 0);
     return value;
   }
 
-  getSignedInt(n: number): number {
-    let x = this.getInt(n);
-    const max = 2 << (n - 2);
-    if (x >= max) {
-      x -= max << 1;
+  getSignedInt(bitCount: number): number {
+    let signedValue = this.getInt(bitCount);
+    const max = 2 << (bitCount - 2);
+    if (signedValue >= max) {
+      signedValue -= max << 1;
     }
-    return x;
+    return signedValue;
   }
 
   getBytes(count?: number | null): string {
@@ -281,8 +283,9 @@ export class ByteStringBuffer {
     return this.data.charCodeAt(this.read + i);
   }
 
-  setAt(i: number, b: number): this {
-    this.data = this.data.substr(0, this.read + i) + String.fromCharCode(b) + this.data.substr(this.read + i + 1);
+  setAt(index: number, byteValue: number): this {
+    this.data =
+      this.data.substr(0, this.read + index) + String.fromCharCode(byteValue) + this.data.substr(this.read + index + 1);
     return this;
   }
 
@@ -291,9 +294,9 @@ export class ByteStringBuffer {
   }
 
   copy(): ByteStringBuffer {
-    const c = new ByteStringBuffer(this.data);
-    c.read = this.read;
-    return c;
+    const copyBuffer = new ByteStringBuffer(this.data);
+    copyBuffer.read = this.read;
+    return copyBuffer;
   }
 
   compact(): this {
@@ -320,11 +323,11 @@ export class ByteStringBuffer {
   toHex(): string {
     let value = '';
     for (let i = this.read; i < this.data.length; ++i) {
-      const b = this.data.charCodeAt(i);
-      if (b < 16) {
+      const byteValue = this.data.charCodeAt(i);
+      if (byteValue < 16) {
         value += '0';
       }
-      value += b.toString(16);
+      value += byteValue.toString(16);
     }
     return value;
   }

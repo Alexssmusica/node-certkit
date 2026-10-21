@@ -191,17 +191,18 @@ function _createCipher(options?: CreateCipherOptions) {
 
   // backwards compatible start API
   const start = cipher.start;
-  cipher.start = function (iv, options) {
+  cipher.start = function (iv, startOptions) {
     // backwards compatibility: support second arg as output buffer
     let output = null;
-    if (options instanceof ByteStringBuffer) {
-      output = options;
-      options = {};
+    let resolvedOptions = startOptions;
+    if (startOptions instanceof ByteStringBuffer) {
+      output = startOptions;
+      resolvedOptions = {};
     }
-    options = options || {};
-    (options as Record<string, unknown>).output = output;
-    (options as Record<string, unknown>).iv = iv;
-    start.call(cipher, options);
+    resolvedOptions = resolvedOptions || {};
+    (resolvedOptions as Record<string, unknown>).output = output;
+    (resolvedOptions as Record<string, unknown>).iv = iv;
+    start.call(cipher, resolvedOptions);
   };
 
   return cipher;
@@ -436,46 +437,46 @@ export class DesAlgorithm {
     // now define the left shifts which need to be done
     const shifts = [0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0];
 
-    let n = 0;
-    let tmp: number;
+    let keySlotIndex = 0;
+    let swapMask: number;
     for (let j = 0; j < iterations; j++) {
       let left = key.getInt32();
       let right = key.getInt32();
 
-      tmp = ((left >>> 4) ^ right) & 0x0f0f0f0f;
-      right ^= tmp;
-      left ^= tmp << 4;
+      swapMask = ((left >>> 4) ^ right) & 0x0f0f0f0f;
+      right ^= swapMask;
+      left ^= swapMask << 4;
 
-      tmp = ((right >>> -16) ^ left) & 0x0000ffff;
-      left ^= tmp;
-      right ^= tmp << -16;
+      swapMask = ((right >>> -16) ^ left) & 0x0000ffff;
+      left ^= swapMask;
+      right ^= swapMask << -16;
 
-      tmp = ((left >>> 2) ^ right) & 0x33333333;
-      right ^= tmp;
-      left ^= tmp << 2;
+      swapMask = ((left >>> 2) ^ right) & 0x33333333;
+      right ^= swapMask;
+      left ^= swapMask << 2;
 
-      tmp = ((right >>> -16) ^ left) & 0x0000ffff;
-      left ^= tmp;
-      right ^= tmp << -16;
+      swapMask = ((right >>> -16) ^ left) & 0x0000ffff;
+      left ^= swapMask;
+      right ^= swapMask << -16;
 
-      tmp = ((left >>> 1) ^ right) & 0x55555555;
-      right ^= tmp;
-      left ^= tmp << 1;
+      swapMask = ((left >>> 1) ^ right) & 0x55555555;
+      right ^= swapMask;
+      left ^= swapMask << 1;
 
-      tmp = ((right >>> 8) ^ left) & 0x00ff00ff;
-      left ^= tmp;
-      right ^= tmp << 8;
+      swapMask = ((right >>> 8) ^ left) & 0x00ff00ff;
+      left ^= swapMask;
+      right ^= swapMask << 8;
 
-      tmp = ((left >>> 1) ^ right) & 0x55555555;
-      right ^= tmp;
-      left ^= tmp << 1;
+      swapMask = ((left >>> 1) ^ right) & 0x55555555;
+      right ^= swapMask;
+      left ^= swapMask << 1;
 
       // right needs to be shifted and OR'd with last four bits of left
-      tmp = (left << 8) | ((right >>> 20) & 0x000000f0);
+      swapMask = (left << 8) | ((right >>> 20) & 0x000000f0);
 
       // left needs to be put upside down
       left = (right << 24) | ((right << 8) & 0xff0000) | ((right >>> 8) & 0xff00) | ((right >>> 24) & 0xf0);
-      right = tmp;
+      right = swapMask;
 
       // now go through and perform these shifts on the left and right keys
       for (let i = 0; i < shifts.length; ++i) {
@@ -495,25 +496,25 @@ export class DesAlgorithm {
         // bits of each byte are used rather than 48 consecutive bits and the
         // order of lines will be according to how the S selection functions will
         // be applied: S2, S4, S6, S8, S1, S3, S5, S7
-        const lefttmp =
-          DesAlgorithm.#pc2bytes0![left >>> 28]! |
-          DesAlgorithm.#pc2bytes1![(left >>> 24) & 0xf]! |
-          DesAlgorithm.#pc2bytes2![(left >>> 20) & 0xf]! |
-          DesAlgorithm.#pc2bytes3![(left >>> 16) & 0xf]! |
-          DesAlgorithm.#pc2bytes4![(left >>> 12) & 0xf]! |
-          DesAlgorithm.#pc2bytes5![(left >>> 8) & 0xf]! |
-          DesAlgorithm.#pc2bytes6![(left >>> 4) & 0xf]!;
-        const righttmp =
-          DesAlgorithm.#pc2bytes7![right >>> 28]! |
-          DesAlgorithm.#pc2bytes8![(right >>> 24) & 0xf]! |
-          DesAlgorithm.#pc2bytes9![(right >>> 20) & 0xf]! |
-          DesAlgorithm.#pc2bytes10![(right >>> 16) & 0xf]! |
-          DesAlgorithm.#pc2bytes11![(right >>> 12) & 0xf]! |
-          DesAlgorithm.#pc2bytes12![(right >>> 8) & 0xf]! |
-          DesAlgorithm.#pc2bytes13![(right >>> 4) & 0xf]!;
-        tmp = ((righttmp >>> 16) ^ lefttmp) & 0x0000ffff;
-        keys[n++] = lefttmp ^ tmp;
-        keys[n++] = righttmp ^ (tmp << 16);
+        const leftPc2Word =
+          DesAlgorithm.#pc2bytes0![left >>> 28] |
+          DesAlgorithm.#pc2bytes1![(left >>> 24) & 0xf] |
+          DesAlgorithm.#pc2bytes2![(left >>> 20) & 0xf] |
+          DesAlgorithm.#pc2bytes3![(left >>> 16) & 0xf] |
+          DesAlgorithm.#pc2bytes4![(left >>> 12) & 0xf] |
+          DesAlgorithm.#pc2bytes5![(left >>> 8) & 0xf] |
+          DesAlgorithm.#pc2bytes6![(left >>> 4) & 0xf];
+        const rightPc2Word =
+          DesAlgorithm.#pc2bytes7![right >>> 28] |
+          DesAlgorithm.#pc2bytes8![(right >>> 24) & 0xf] |
+          DesAlgorithm.#pc2bytes9![(right >>> 20) & 0xf] |
+          DesAlgorithm.#pc2bytes10![(right >>> 16) & 0xf] |
+          DesAlgorithm.#pc2bytes11![(right >>> 12) & 0xf] |
+          DesAlgorithm.#pc2bytes12![(right >>> 8) & 0xf] |
+          DesAlgorithm.#pc2bytes13![(right >>> 4) & 0xf];
+        swapMask = ((rightPc2Word >>> 16) ^ leftPc2Word) & 0x0000ffff;
+        keys[keySlotIndex++] = leftPc2Word ^ swapMask;
+        keys[keySlotIndex++] = rightPc2Word ^ (swapMask << 16);
       }
     }
 
@@ -532,63 +533,63 @@ export class DesAlgorithm {
       looping = decrypt ? [94, 62, -2, 32, 64, 2, 30, -2, -2] : [0, 32, 2, 62, 30, -2, 64, 96, 2];
     }
 
-    let tmp: number;
+    let swapMask: number;
 
-    let left = input[0]!;
-    let right = input[1]!;
+    let left = input[0];
+    let right = input[1];
 
     // first each 64 bit chunk of the message must be permuted according to IP
-    tmp = ((left >>> 4) ^ right) & 0x0f0f0f0f;
-    right ^= tmp;
-    left ^= tmp << 4;
+    swapMask = ((left >>> 4) ^ right) & 0x0f0f0f0f;
+    right ^= swapMask;
+    left ^= swapMask << 4;
 
-    tmp = ((left >>> 16) ^ right) & 0x0000ffff;
-    right ^= tmp;
-    left ^= tmp << 16;
+    swapMask = ((left >>> 16) ^ right) & 0x0000ffff;
+    right ^= swapMask;
+    left ^= swapMask << 16;
 
-    tmp = ((right >>> 2) ^ left) & 0x33333333;
-    left ^= tmp;
-    right ^= tmp << 2;
+    swapMask = ((right >>> 2) ^ left) & 0x33333333;
+    left ^= swapMask;
+    right ^= swapMask << 2;
 
-    tmp = ((right >>> 8) ^ left) & 0x00ff00ff;
-    left ^= tmp;
-    right ^= tmp << 8;
+    swapMask = ((right >>> 8) ^ left) & 0x00ff00ff;
+    left ^= swapMask;
+    right ^= swapMask << 8;
 
-    tmp = ((left >>> 1) ^ right) & 0x55555555;
-    right ^= tmp;
-    left ^= tmp << 1;
+    swapMask = ((left >>> 1) ^ right) & 0x55555555;
+    right ^= swapMask;
+    left ^= swapMask << 1;
 
     // rotate left 1 bit
     left = (left << 1) | (left >>> 31);
     right = (right << 1) | (right >>> 31);
 
     for (let j = 0; j < iterations; j += 3) {
-      const endloop = looping[j + 1]!;
-      const loopinc = looping[j + 2]!;
+      const endloop = looping[j + 1];
+      const loopinc = looping[j + 2];
 
       // now go through and perform the encryption or decryption
-      for (let i = looping[j]!; i != endloop; i += loopinc) {
-        const right1 = right ^ keys[i]!;
-        const right2 = ((right >>> 4) | (right << 28)) ^ keys[i + 1]!;
+      for (let i = looping[j]; i != endloop; i += loopinc) {
+        const right1 = right ^ keys[i];
+        const right2 = ((right >>> 4) | (right << 28)) ^ keys[i + 1];
 
         // passing these bytes through the S selection functions
-        tmp = left;
+        swapMask = left;
         left = right;
         right =
-          tmp ^
-          (DesAlgorithm.#spfunction2![(right1 >>> 24) & 0x3f]! |
-            DesAlgorithm.#spfunction4![(right1 >>> 16) & 0x3f]! |
-            DesAlgorithm.#spfunction6![(right1 >>> 8) & 0x3f]! |
-            DesAlgorithm.#spfunction8![right1 & 0x3f]! |
-            DesAlgorithm.#spfunction1![(right2 >>> 24) & 0x3f]! |
-            DesAlgorithm.#spfunction3![(right2 >>> 16) & 0x3f]! |
-            DesAlgorithm.#spfunction5![(right2 >>> 8) & 0x3f]! |
-            DesAlgorithm.#spfunction7![right2 & 0x3f]!);
+          swapMask ^
+          (DesAlgorithm.#spfunction2![(right1 >>> 24) & 0x3f] |
+            DesAlgorithm.#spfunction4![(right1 >>> 16) & 0x3f] |
+            DesAlgorithm.#spfunction6![(right1 >>> 8) & 0x3f] |
+            DesAlgorithm.#spfunction8![right1 & 0x3f] |
+            DesAlgorithm.#spfunction1![(right2 >>> 24) & 0x3f] |
+            DesAlgorithm.#spfunction3![(right2 >>> 16) & 0x3f] |
+            DesAlgorithm.#spfunction5![(right2 >>> 8) & 0x3f] |
+            DesAlgorithm.#spfunction7![right2 & 0x3f]);
       }
       // unreverse left and right
-      tmp = left;
+      swapMask = left;
       left = right;
-      right = tmp;
+      right = swapMask;
     }
 
     // rotate right 1 bit
@@ -596,25 +597,25 @@ export class DesAlgorithm {
     right = (right >>> 1) | (right << 31);
 
     // now perform IP-1, which is IP in the opposite direction
-    tmp = ((left >>> 1) ^ right) & 0x55555555;
-    right ^= tmp;
-    left ^= tmp << 1;
+    swapMask = ((left >>> 1) ^ right) & 0x55555555;
+    right ^= swapMask;
+    left ^= swapMask << 1;
 
-    tmp = ((right >>> 8) ^ left) & 0x00ff00ff;
-    left ^= tmp;
-    right ^= tmp << 8;
+    swapMask = ((right >>> 8) ^ left) & 0x00ff00ff;
+    left ^= swapMask;
+    right ^= swapMask << 8;
 
-    tmp = ((right >>> 2) ^ left) & 0x33333333;
-    left ^= tmp;
-    right ^= tmp << 2;
+    swapMask = ((right >>> 2) ^ left) & 0x33333333;
+    left ^= swapMask;
+    right ^= swapMask << 2;
 
-    tmp = ((left >>> 16) ^ right) & 0x0000ffff;
-    right ^= tmp;
-    left ^= tmp << 16;
+    swapMask = ((left >>> 16) ^ right) & 0x0000ffff;
+    right ^= swapMask;
+    left ^= swapMask << 16;
 
-    tmp = ((left >>> 4) ^ right) & 0x0f0f0f0f;
-    right ^= tmp;
-    left ^= tmp << 4;
+    swapMask = ((left >>> 4) ^ right) & 0x0f0f0f0f;
+    right ^= swapMask;
+    left ^= swapMask << 4;
 
     output[0] = left;
     output[1] = right;

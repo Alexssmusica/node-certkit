@@ -1,14 +1,14 @@
 import type { BigInteger } from './BigInteger.js';
 
 export interface BigIntegerRandomSource {
-  nextBytes(x: number[]): void;
+  nextBytes(bytes: number[]): void;
 }
 
 export interface BigIntegerReduction {
-  convert(x: BigInteger): BigInteger;
-  revert(x: BigInteger): BigInteger;
-  mulTo(x: BigInteger, y: BigInteger, r: BigInteger): void;
-  sqrTo(x: BigInteger, r: BigInteger): void;
+  convert(value: BigInteger): BigInteger;
+  revert(value: BigInteger): BigInteger;
+  mulTo(multiplicand: BigInteger, multiplier: BigInteger, result: BigInteger): void;
+  sqrTo(value: BigInteger, result: BigInteger): void;
 }
 
-export type BitwiseWordOp = (x: number, y: number) => number;
+export type BitwiseWordOp = (leftWord: number, rightWord: number) => number;

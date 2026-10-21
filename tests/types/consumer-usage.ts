@@ -51,7 +51,10 @@ function getData(pem: string): CertificateData {
   if (!commonName) {
     throw new Error('commonName not found in certificate subject');
   }
-  const values = commonName.value.toString().split(':');
+  if (typeof commonName.value !== 'string') {
+    throw new Error('commonName value must be a string');
+  }
+  const values = commonName.value.split(':');
   return {
     emissao: certificate.validity.notBefore,
     validade: certificate.validity.notAfter,
@@ -83,6 +86,10 @@ type _Pkcs12Pfx = import('../../src/index.js').Pkcs12Pfx;
 type _Certificate = import('../../src/index.js').X509Certificate;
 type _Asn1 = import('../../src/index.js').Asn1Object;
 type _ByteBuffer = import('../../src/index.js').ByteStringBuffer;
+void (undefined as unknown as _Pkcs12Pfx);
+void (undefined as unknown as _Certificate);
+void (undefined as unknown as _Asn1);
+void (undefined as unknown as _ByteBuffer);
 
 declare const _pemExample: string;
 declare const _cert: import('../../src/index.js').X509Certificate;

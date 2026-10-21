@@ -6,142 +6,145 @@ function nbi(): BigInteger {
 }
 
 export class Classic implements BigIntegerReduction {
-  m: BigInteger;
-  constructor(m: BigInteger) {
-    this.m = m;
+  modulus: BigInteger;
+  constructor(modulus: BigInteger) {
+    this.modulus = modulus;
   }
-  convert(x: BigInteger): BigInteger {
-    if (x.s < 0 || x.compareTo(this.m) >= 0) return x.mod(this.m);
-    else return x;
+  convert(value: BigInteger): BigInteger {
+    if (value.s < 0 || value.compareTo(this.modulus) >= 0) return value.mod(this.modulus);
+    else return value;
   }
-  revert(x: BigInteger): BigInteger {
-    return x;
+  revert(value: BigInteger): BigInteger {
+    return value;
   }
-  reduce(x: BigInteger): void {
-    x.divRemTo(this.m, null, x);
+  reduce(value: BigInteger): void {
+    value.divRemTo(this.modulus, null, value);
   }
-  mulTo(x: BigInteger, y: BigInteger, r: BigInteger): void {
-    x.multiplyTo(y, r);
-    this.reduce(r);
+  mulTo(multiplicand: BigInteger, multiplier: BigInteger, result: BigInteger): void {
+    multiplicand.multiplyTo(multiplier, result);
+    this.reduce(result);
   }
-  sqrTo(x: BigInteger, r: BigInteger): void {
-    x.squareTo(r);
-    this.reduce(r);
+  sqrTo(value: BigInteger, result: BigInteger): void {
+    value.squareTo(result);
+    this.reduce(result);
   }
 }
 
 export class Montgomery implements BigIntegerReduction {
-  m: BigInteger;
-  mp: number;
-  mpl: number;
-  mph: number;
-  um: number;
-  mt2: number;
-  constructor(m: BigInteger) {
-    this.m = m;
-    this.mp = m.invDigit();
-    this.mpl = this.mp & 0x7fff;
-    this.mph = this.mp >> 15;
-    this.um = (1 << (m.DB - 15)) - 1;
-    this.mt2 = 2 * m.t;
+  modulus: BigInteger;
+  montInvDigit: number;
+  montInvLow: number;
+  montInvHigh: number;
+  umMask: number;
+  maxLimbCount: number;
+  constructor(modulus: BigInteger) {
+    this.modulus = modulus;
+    this.montInvDigit = modulus.invDigit();
+    this.montInvLow = this.montInvDigit & 0x7fff;
+    this.montInvHigh = this.montInvDigit >> 15;
+    this.umMask = (1 << (modulus.digitBits - 15)) - 1;
+    this.maxLimbCount = 2 * modulus.t;
   }
-  convert(x: BigInteger): BigInteger {
-    const r = nbi();
-    x.abs().dlShiftTo(this.m.t, r);
-    r.divRemTo(this.m, null, r);
-    if (x.s < 0 && r.compareTo(BigInteger.ZERO) > 0) this.m.subTo(r, r);
-    return r;
+  convert(value: BigInteger): BigInteger {
+    const result = nbi();
+    value.abs().dlShiftTo(this.modulus.t, result);
+    result.divRemTo(this.modulus, null, result);
+    if (value.s < 0 && result.compareTo(BigInteger.ZERO) > 0) this.modulus.subTo(result, result);
+    return result;
   }
-  revert(x: BigInteger): BigInteger {
-    const r = nbi();
-    x.copyTo(r);
-    this.reduce(r);
-    return r;
+  revert(value: BigInteger): BigInteger {
+    const result = nbi();
+    value.copyTo(result);
+    this.reduce(result);
+    return result;
   }
-  reduce(x: BigInteger): void {
-    while (x.t <= this.mt2) x.data[x.t++] = 0;
-    for (let i = 0; i < this.m.t; ++i) {
-      let j = x.data[i]! & 0x7fff;
-      const u0 = (j * this.mpl + (((j * this.mph + (x.data[i]! >> 15) * this.mpl) & this.um) << 15)) & x.DM;
-      j = i + this.m.t;
-      x.data[j]! += this.m.am(0, u0, x, i, 0, this.m.t);
-      while (x.data[j]! >= x.DV) {
-        x.data[j]! -= x.DV;
-        x.data[++j]!++;
+  reduce(value: BigInteger): void {
+    while (value.t <= this.maxLimbCount) value.data[value.t++] = 0;
+    for (let limbIndex = 0; limbIndex < this.modulus.t; ++limbIndex) {
+      let carryWord = value.data[limbIndex] & 0x7fff;
+      const montgomeryFactor =
+        (carryWord * this.montInvLow +
+          (((carryWord * this.montInvHigh + (value.data[limbIndex] >> 15) * this.montInvLow) & this.umMask) << 15)) &
+        value.digitMask;
+      carryWord = limbIndex + this.modulus.t;
+      value.data[carryWord] += this.modulus.multiplyAdd(0, montgomeryFactor, value, limbIndex, 0, this.modulus.t);
+      while (value.data[carryWord] >= value.digitMax) {
+        value.data[carryWord] -= value.digitMax;
+        value.data[++carryWord]++;
       }
     }
-    x.clamp();
-    x.drShiftTo(this.m.t, x);
-    if (x.compareTo(this.m) >= 0) x.subTo(this.m, x);
+    value.clamp();
+    value.drShiftTo(this.modulus.t, value);
+    if (value.compareTo(this.modulus) >= 0) value.subTo(this.modulus, value);
   }
-  sqrTo(x: BigInteger, r: BigInteger): void {
-    x.squareTo(r);
-    this.reduce(r);
+  sqrTo(value: BigInteger, result: BigInteger): void {
+    value.squareTo(result);
+    this.reduce(result);
   }
-  mulTo(x: BigInteger, y: BigInteger, r: BigInteger): void {
-    x.multiplyTo(y, r);
-    this.reduce(r);
+  mulTo(multiplicand: BigInteger, multiplier: BigInteger, result: BigInteger): void {
+    multiplicand.multiplyTo(multiplier, result);
+    this.reduce(result);
   }
 }
 
 export class NullExp implements BigIntegerReduction {
-  convert(x: BigInteger): BigInteger {
-    return x;
+  convert(value: BigInteger): BigInteger {
+    return value;
   }
-  revert(x: BigInteger): BigInteger {
-    return x;
+  revert(value: BigInteger): BigInteger {
+    return value;
   }
-  mulTo(x: BigInteger, y: BigInteger, r: BigInteger): void {
-    x.multiplyTo(y, r);
+  mulTo(multiplicand: BigInteger, multiplier: BigInteger, result: BigInteger): void {
+    multiplicand.multiplyTo(multiplier, result);
   }
-  sqrTo(x: BigInteger, r: BigInteger): void {
-    x.squareTo(r);
+  sqrTo(value: BigInteger, result: BigInteger): void {
+    value.squareTo(result);
   }
 }
 
 export class Barrett implements BigIntegerReduction {
-  r2: BigInteger;
-  q3: BigInteger;
-  mu: BigInteger;
-  m: BigInteger;
-  constructor(m: BigInteger) {
-    this.r2 = nbi();
-    this.q3 = nbi();
-    BigInteger.ONE.dlShiftTo(2 * m.t, this.r2);
-    this.mu = this.r2.divide(m);
-    this.m = m;
+  rSquared: BigInteger;
+  quotientScratch: BigInteger;
+  muFactor: BigInteger;
+  modulus: BigInteger;
+  constructor(modulus: BigInteger) {
+    this.rSquared = nbi();
+    this.quotientScratch = nbi();
+    BigInteger.ONE.dlShiftTo(2 * modulus.t, this.rSquared);
+    this.muFactor = this.rSquared.divide(modulus);
+    this.modulus = modulus;
   }
-  convert(x: BigInteger): BigInteger {
-    if (x.s < 0 || x.t > 2 * this.m.t) return x.mod(this.m);
-    else if (x.compareTo(this.m) < 0) return x;
+  convert(value: BigInteger): BigInteger {
+    if (value.s < 0 || value.t > 2 * this.modulus.t) return value.mod(this.modulus);
+    else if (value.compareTo(this.modulus) < 0) return value;
     else {
-      const r = nbi();
-      x.copyTo(r);
-      this.reduce(r);
-      return r;
+      const result = nbi();
+      value.copyTo(result);
+      this.reduce(result);
+      return result;
     }
   }
-  revert(x: BigInteger): BigInteger {
-    return x;
+  revert(value: BigInteger): BigInteger {
+    return value;
   }
-  reduce(x: BigInteger): void {
-    x.drShiftTo(this.m.t - 1, this.r2);
-    if (x.t > this.m.t + 1) {
-      x.t = this.m.t + 1;
-      x.clamp();
+  reduce(value: BigInteger): void {
+    value.drShiftTo(this.modulus.t - 1, this.rSquared);
+    if (value.t > this.modulus.t + 1) {
+      value.t = this.modulus.t + 1;
+      value.clamp();
     }
-    this.mu.multiplyUpperTo(this.r2, this.m.t + 1, this.q3);
-    this.m.multiplyLowerTo(this.q3, this.m.t + 1, this.r2);
-    while (x.compareTo(this.r2) < 0) x.dAddOffset(1, this.m.t + 1);
-    x.subTo(this.r2, x);
-    while (x.compareTo(this.m) >= 0) x.subTo(this.m, x);
+    this.muFactor.multiplyUpperTo(this.rSquared, this.modulus.t + 1, this.quotientScratch);
+    this.modulus.multiplyLowerTo(this.quotientScratch, this.modulus.t + 1, this.rSquared);
+    while (value.compareTo(this.rSquared) < 0) value.dAddOffset(1, this.modulus.t + 1);
+    value.subTo(this.rSquared, value);
+    while (value.compareTo(this.modulus) >= 0) value.subTo(this.modulus, value);
   }
-  sqrTo(x: BigInteger, r: BigInteger): void {
-    x.squareTo(r);
-    this.reduce(r);
+  sqrTo(value: BigInteger, result: BigInteger): void {
+    value.squareTo(result);
+    this.reduce(result);
   }
-  mulTo(x: BigInteger, y: BigInteger, r: BigInteger): void {
-    x.multiplyTo(y, r);
-    this.reduce(r);
+  mulTo(multiplicand: BigInteger, multiplier: BigInteger, result: BigInteger): void {
+    multiplicand.multiplyTo(multiplier, result);
+    this.reduce(result);
   }
 }

@@ -1,12 +1,11 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import certkit from '../../src/presentation/index.js';
 const CIPHER = certkit.cipher;
-const DES = certkit.des;
 const UTIL = certkit.util;
 describe('des', () => {
   // OpenSSL equivalent:
   // openssl enc -des-ecb -K a1c06b381adf3651 -nosalt
-  it('should des-ecb encrypt: foobar', (ctx) => {
+  it('should des-ecb encrypt: foobar', () => {
     const key = UTIL.createBuffer(UTIL.hexToBytes('a1c06b381adf3651'));
 
     const cipher = CIPHER.createCipher('DES-ECB', key);
@@ -18,7 +17,7 @@ describe('des', () => {
 
   // OpenSSL equivalent:
   // openssl enc -d -des-ecb -K a1c06b381adf3651 -nosalt
-  it('should des-ecb decrypt: b705ffcf3dff06b3', (ctx) => {
+  it('should des-ecb decrypt: b705ffcf3dff06b3', () => {
     const key = UTIL.createBuffer(UTIL.hexToBytes('a1c06b381adf3651'));
 
     const decipher = CIPHER.createDecipher('DES-ECB', key);
@@ -28,7 +27,7 @@ describe('des', () => {
     expect(decipher.output!.getBytes()).toBe('foobar');
   });
 
-  it('should check des-cbc short IV', (ctx) => {
+  it('should check des-cbc short IV', () => {
     const key = UTIL.createBuffer(UTIL.hexToBytes('a1c06b381adf3651'));
     const iv = UTIL.createBuffer(UTIL.hexToBytes('818bcf76efc596'));
 
@@ -44,7 +43,7 @@ describe('des', () => {
 
   // OpenSSL equivalent:
   // openssl enc -des -K a1c06b381adf3651 -iv 818bcf76efc59662 -nosalt
-  it('should des-cbc encrypt: foobar', (ctx) => {
+  it('should des-cbc encrypt: foobar', () => {
     const key = UTIL.createBuffer(UTIL.hexToBytes('a1c06b381adf3651'));
     const iv = UTIL.createBuffer(UTIL.hexToBytes('818bcf76efc59662'));
 
@@ -57,7 +56,7 @@ describe('des', () => {
 
   // OpenSSL equivalent:
   // openssl enc -d -des -K a1c06b381adf3651 -iv 818bcf76efc59662 -nosalt
-  it('should des-cbc decrypt: 3261e5839a990454', (ctx) => {
+  it('should des-cbc decrypt: 3261e5839a990454', () => {
     const key = UTIL.createBuffer(UTIL.hexToBytes('a1c06b381adf3651'));
     const iv = UTIL.createBuffer(UTIL.hexToBytes('818bcf76efc59662'));
 
@@ -69,7 +68,7 @@ describe('des', () => {
   });
 
   // play.golang.org/p/LX_dP0cFuEt
-  it('should des-ctr encrypt: foobar', (ctx) => {
+  it('should des-ctr encrypt: foobar', () => {
     const key = UTIL.createBuffer(UTIL.hexToBytes('a1c06b381adf3651'));
     const iv = UTIL.createBuffer(UTIL.hexToBytes('818bcf76efc59662'));
 
@@ -81,7 +80,7 @@ describe('des', () => {
   });
 
   // play.golang.org/p/6_MQBYzn04c
-  it('should des-ctr decrypt: foobar', (ctx) => {
+  it('should des-ctr decrypt: foobar', () => {
     const key = UTIL.createBuffer(UTIL.hexToBytes('beefdeadbeefdead'));
     const iv = UTIL.createBuffer(UTIL.hexToBytes('deadbeefdeadbeef'));
 
@@ -93,7 +92,7 @@ describe('des', () => {
   });
 
   // play.golang.org/p/i892aR7YsGK
-  it('should des-ctr encrypt: dead parrot', (ctx) => {
+  it('should des-ctr encrypt: dead parrot', () => {
     const key = UTIL.createBuffer(UTIL.hexToBytes('a1c06b381adf3651'));
     const iv = UTIL.createBuffer(UTIL.hexToBytes('818bcf76efc59662'));
 
@@ -105,7 +104,7 @@ describe('des', () => {
   });
 
   // play.golang.org/p/6L0LqPS9ARt
-  it('should des-ctr decrypt: 79f1527c5737f774f85c1a9399755d895ae7', (ctx) => {
+  it('should des-ctr decrypt: 79f1527c5737f774f85c1a9399755d895ae7', () => {
     const key = UTIL.createBuffer(UTIL.hexToBytes('beefdeadbeefdead'));
     const iv = UTIL.createBuffer(UTIL.hexToBytes('deadbeefdeadbeef'));
 
@@ -117,7 +116,7 @@ describe('des', () => {
   });
 
   // play.golang.org/p/WsSx6BXJniU
-  it('should des-ctr encrypt: 69742773206e6f742073696c6c7920656e6f756768', (ctx) => {
+  it('should des-ctr encrypt: 69742773206e6f742073696c6c7920656e6f756768', () => {
     const key = UTIL.createBuffer(UTIL.hexToBytes('a1c06b381adf3651'));
     const iv = UTIL.createBuffer(UTIL.hexToBytes('818bcf76efc59662'));
 
@@ -129,7 +128,7 @@ describe('des', () => {
   });
 
   // play.golang.org/p/y01inAlMCEM
-  it('should des-ctr decrypt: 0a80bd81a4dc1303a62f', (ctx) => {
+  it('should des-ctr decrypt: 0a80bd81a4dc1303a62f', () => {
     const key = UTIL.createBuffer(UTIL.hexToBytes('beefdeadbeefdead'));
     const iv = UTIL.createBuffer(UTIL.hexToBytes('deadbeefdeadbeef'));
 
@@ -142,7 +141,7 @@ describe('des', () => {
 
   // OpenSSL equivalent:
   // openssl enc -des-ede3 -K a1c06b381adf36517e84575552777779da5e3d9f994b05b5 -nosalt
-  it('should 3des-ecb encrypt: foobar', (ctx) => {
+  it('should 3des-ecb encrypt: foobar', () => {
     const key = UTIL.createBuffer(UTIL.hexToBytes('a1c06b381adf36517e84575552777779da5e3d9f994b05b5'));
 
     const cipher = CIPHER.createCipher('3DES-ECB', key);
@@ -154,7 +153,7 @@ describe('des', () => {
 
   // OpenSSL equivalent:
   // openssl enc -d -des-ede3 -K a1c06b381adf36517e84575552777779da5e3d9f994b05b5 -nosalt
-  it('should 3des-ecb decrypt: fce8b1ee8c6440d1', (ctx) => {
+  it('should 3des-ecb decrypt: fce8b1ee8c6440d1', () => {
     const key = UTIL.createBuffer(UTIL.hexToBytes('a1c06b381adf36517e84575552777779da5e3d9f994b05b5'));
 
     const decipher = CIPHER.createDecipher('3DES-ECB', key);

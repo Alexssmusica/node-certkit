@@ -12,7 +12,7 @@ type Sha512State = Sha512StateWord[];
  */
 export class Sha512 {
   static #padding: string | null = null;
-  static #k: Sha512StateWord[] | null = null;
+  static #roundConstants: Sha512StateWord[] | null = null;
   static #states: Record<string, Sha512State> | null = null;
   static #initialized = false;
 
@@ -22,7 +22,7 @@ export class Sha512 {
     }
     Sha512.#padding = String.fromCharCode(128);
     Sha512.#padding += UtilNamespace.fillString(String.fromCharCode(0x00), 128);
-    Sha512.#k = [
+    Sha512.#roundConstants = [
       [0x428a2f98, 0xd728ae22],
       [0x71374491, 0x23ef65cd],
       [0xb5c0fbcf, 0xec4d3b2f],
@@ -151,9 +151,9 @@ export class Sha512 {
 
   readonly #algorithm: Sha512Algorithm;
   readonly #initialState: Sha512State;
-  #h: Sha512State | null = null;
+  #hashStateWords: Sha512State | null = null;
   #input = new ByteStringBuffer();
-  readonly #w: Sha512StateWord[] = Array.from({ length: 80 }, () => [0, 0]);
+  readonly #messageSchedule: Sha512StateWord[] = Array.from({ length: 80 }, () => [0, 0]);
   readonly #digestLength: number;
 
   constructor(algorithm: Sha512Algorithm) {
@@ -190,7 +190,7 @@ export class Sha512 {
       messageLength128: null,
       messageLengthSize: 16,
       start: () => engine.#start(md),
-      update: (msg, encoding) => engine.#update(md, msg, encoding),
+      update: (input, encoding) => engine.#update(md, input, encoding),
       digest: () => engine.#digest(md)
     };
     md.start();
@@ -205,28 +205,28 @@ export class Sha512 {
       md.fullMessageLength.push(0);
     }
     this.#input = new ByteStringBuffer();
-    this.#h = this.#initialState.map((word) => word.slice(0) as Sha512StateWord);
+    this.#hashStateWords = this.#initialState.map((word) => word.slice(0) as Sha512StateWord);
     return md;
   }
 
-  #update(md: Sha512Digest, msg: string, encoding?: string): Sha512Digest {
+  #update(md: Sha512Digest, message: string, encoding?: string): Sha512Digest {
     if (encoding === 'utf8') {
-      msg = encodeUtf8(msg);
+      message = encodeUtf8(message);
     }
 
-    const len = msg.length;
-    md.messageLength += len;
-    const lenParts = [(len / 0x100000000) >>> 0, len >>> 0];
+    const messageByteLength = message.length;
+    md.messageLength += messageByteLength;
+    const lengthCarry = [(messageByteLength / 0x100000000) >>> 0, messageByteLength >>> 0];
     const fullMessageLength = md.fullMessageLength!;
     for (let i = fullMessageLength.length - 1; i >= 0; --i) {
-      fullMessageLength[i] += lenParts[1]!;
-      lenParts[1] = lenParts[0]! + ((fullMessageLength[i]! / 0x100000000) >>> 0);
-      fullMessageLength[i] = fullMessageLength[i]! >>> 0;
-      lenParts[0] = (lenParts[1]! / 0x100000000) >>> 0;
+      fullMessageLength[i] += lengthCarry[1];
+      lengthCarry[1] = lengthCarry[0] + ((fullMessageLength[i] / 0x100000000) >>> 0);
+      fullMessageLength[i] = fullMessageLength[i] >>> 0;
+      lengthCarry[0] = (lengthCarry[1] / 0x100000000) >>> 0;
     }
 
-    this.#input.putBytes(msg);
-    Sha512.#updateState(this.#h!, this.#w, this.#input);
+    this.#input.putBytes(message);
+    Sha512.#updateState(this.#hashStateWords!, this.#messageSchedule, this.#input);
 
     if (this.#input.read > 2048 || this.#input.length() === 0) {
       this.#input.compact();
@@ -239,206 +239,245 @@ export class Sha512 {
     const finalBlock = new ByteStringBuffer();
     finalBlock.putBytes(this.#input.bytes());
 
-    const remaining = md.fullMessageLength![md.fullMessageLength!.length - 1]! + md.messageLengthSize;
+    const remaining = md.fullMessageLength![md.fullMessageLength!.length - 1] + md.messageLengthSize;
 
     const overflow = remaining & (md.blockLength - 1);
     finalBlock.putBytes(Sha512.#padding!.substr(0, md.blockLength - overflow));
 
-    let next: number;
-    let carry: number;
-    let bits = md.fullMessageLength![0]! * 8;
+    let nextLengthBits: number;
+    let carryBits: number;
+    let bits = md.fullMessageLength![0] * 8;
     for (let i = 0; i < md.fullMessageLength!.length - 1; ++i) {
-      next = md.fullMessageLength![i + 1]! * 8;
-      carry = (next / 0x100000000) >>> 0;
-      bits += carry;
+      nextLengthBits = md.fullMessageLength![i + 1] * 8;
+      carryBits = (nextLengthBits / 0x100000000) >>> 0;
+      bits += carryBits;
       finalBlock.putInt32(bits >>> 0);
-      bits = next >>> 0;
+      bits = nextLengthBits >>> 0;
     }
     finalBlock.putInt32(bits);
 
-    const h = this.#h!.map((word) => word.slice(0) as Sha512StateWord);
-    Sha512.#updateState(h, this.#w, finalBlock);
+    const finalHashState = this.#hashStateWords!.map((word) => word.slice(0) as Sha512StateWord);
+    Sha512.#updateState(finalHashState, this.#messageSchedule, finalBlock);
     const digestBuffer = new ByteStringBuffer();
-    let hlen: number;
+    let outputWordPairCount: number;
     if (this.#algorithm === 'SHA-512') {
-      hlen = h.length;
+      outputWordPairCount = finalHashState.length;
     } else if (this.#algorithm === 'SHA-384') {
-      hlen = h.length - 2;
+      outputWordPairCount = finalHashState.length - 2;
     } else {
-      hlen = h.length - 4;
+      outputWordPairCount = finalHashState.length - 4;
     }
-    for (let i = 0; i < hlen; ++i) {
-      digestBuffer.putInt32(h[i]![0]!);
-      if (i !== hlen - 1 || this.#algorithm !== 'SHA-512/224') {
-        digestBuffer.putInt32(h[i]![1]!);
+    for (let i = 0; i < outputWordPairCount; ++i) {
+      digestBuffer.putInt32(finalHashState[i][0]);
+      if (i !== outputWordPairCount - 1 || this.#algorithm !== 'SHA-512/224') {
+        digestBuffer.putInt32(finalHashState[i][1]);
       }
     }
     return digestBuffer;
   }
 
-  static #updateState(s: Sha512State, w: Sha512StateWord[], bytes: ByteStringBuffer): void {
-    const k = Sha512.#k!;
-    let t1Hi: number;
-    let t1Lo: number;
-    let t2Hi: number;
-    let t2Lo: number;
-    let s0Hi: number;
-    let s0Lo: number;
-    let s1Hi: number;
-    let s1Lo: number;
-    let chHi: number;
-    let chLo: number;
-    let majHi: number;
-    let majLo: number;
-    let aHi: number;
-    let aLo: number;
-    let bHi: number;
-    let bLo: number;
-    let cHi: number;
-    let cLo: number;
-    let dHi: number;
-    let dLo: number;
-    let eHi: number;
-    let eLo: number;
-    let fHi: number;
-    let fLo: number;
-    let gHi: number;
-    let gLo: number;
-    let hHi: number;
-    let hLo: number;
-    let i: number;
-    let hi: number;
-    let lo: number;
-    let w2: Sha512StateWord;
-    let w7: Sha512StateWord;
-    let w15: Sha512StateWord;
-    let w16: Sha512StateWord;
-    let len = bytes.length();
-    while (len >= 128) {
-      for (i = 0; i < 16; ++i) {
-        w[i]![0] = bytes.getInt32() >>> 0;
-        w[i]![1] = bytes.getInt32() >>> 0;
+  static #updateState(hashState: Sha512State, messageSchedule: Sha512StateWord[], bytes: ByteStringBuffer): void {
+    const roundConstants = Sha512.#roundConstants!;
+    let roundSum1Hi: number;
+    let roundSum1Lo: number;
+    let roundSum2Hi: number;
+    let roundSum2Lo: number;
+    let sigma0UpperHi: number;
+    let sigma0UpperLo: number;
+    let sigma1UpperHi: number;
+    let sigma1UpperLo: number;
+    let chooseHi: number;
+    let chooseLo: number;
+    let majorityHi: number;
+    let majorityLo: number;
+    let workAHi: number;
+    let workALo: number;
+    let workBHi: number;
+    let workBLo: number;
+    let workCHi: number;
+    let workCLo: number;
+    let workDHi: number;
+    let workDLo: number;
+    let workEHi: number;
+    let workELo: number;
+    let workFHi: number;
+    let workFLo: number;
+    let workGHi: number;
+    let workGLo: number;
+    let workHHi: number;
+    let workHLo: number;
+    let roundIndex: number;
+    let wordHigh: number;
+    let wordLow: number;
+    let scheduleWordMinus2: Sha512StateWord;
+    let scheduleWordMinus7: Sha512StateWord;
+    let scheduleWordMinus15: Sha512StateWord;
+    let scheduleWordMinus16: Sha512StateWord;
+    let remainingBytes = bytes.length();
+    while (remainingBytes >= 128) {
+      for (roundIndex = 0; roundIndex < 16; ++roundIndex) {
+        messageSchedule[roundIndex][0] = bytes.getInt32() >>> 0;
+        messageSchedule[roundIndex][1] = bytes.getInt32() >>> 0;
       }
-      for (; i < 80; ++i) {
-        w2 = w[i - 2]!;
-        hi = w2[0]!;
-        lo = w2[1]!;
+      for (; roundIndex < 80; ++roundIndex) {
+        scheduleWordMinus2 = messageSchedule[roundIndex - 2]!;
+        wordHigh = scheduleWordMinus2[0]!;
+        wordLow = scheduleWordMinus2[1]!;
 
-        t1Hi = (((hi >>> 19) | (lo << 13)) ^ ((lo >>> 29) | (hi << 3)) ^ (hi >>> 6)) >>> 0;
-        t1Lo = (((hi << 13) | (lo >>> 19)) ^ ((lo << 3) | (hi >>> 29)) ^ ((hi << 26) | (lo >>> 6))) >>> 0;
+        roundSum1Hi =
+          (((wordHigh >>> 19) | (wordLow << 13)) ^ ((wordLow >>> 29) | (wordHigh << 3)) ^ (wordHigh >>> 6)) >>> 0;
+        roundSum1Lo =
+          (((wordHigh << 13) | (wordLow >>> 19)) ^
+            ((wordLow << 3) | (wordHigh >>> 29)) ^
+            ((wordHigh << 26) | (wordLow >>> 6))) >>>
+          0;
 
-        w15 = w[i - 15]!;
-        hi = w15[0]!;
-        lo = w15[1]!;
+        scheduleWordMinus15 = messageSchedule[roundIndex - 15]!;
+        wordHigh = scheduleWordMinus15[0]!;
+        wordLow = scheduleWordMinus15[1]!;
 
-        t2Hi = (((hi >>> 1) | (lo << 31)) ^ ((hi >>> 8) | (lo << 24)) ^ (hi >>> 7)) >>> 0;
-        t2Lo = (((hi << 31) | (lo >>> 1)) ^ ((hi << 24) | (lo >>> 8)) ^ ((hi << 25) | (lo >>> 7))) >>> 0;
+        roundSum2Hi =
+          (((wordHigh >>> 1) | (wordLow << 31)) ^ ((wordHigh >>> 8) | (wordLow << 24)) ^ (wordHigh >>> 7)) >>> 0;
+        roundSum2Lo =
+          (((wordHigh << 31) | (wordLow >>> 1)) ^
+            ((wordHigh << 24) | (wordLow >>> 8)) ^
+            ((wordHigh << 25) | (wordLow >>> 7))) >>>
+          0;
 
-        w7 = w[i - 7]!;
-        w16 = w[i - 16]!;
-        lo = t1Lo + w7[1]! + t2Lo + w16[1]!;
-        w[i]![0] = (t1Hi + w7[0]! + t2Hi + w16[0]! + ((lo / 0x100000000) >>> 0)) >>> 0;
-        w[i]![1] = lo >>> 0;
-      }
-
-      aHi = s[0]![0]!;
-      aLo = s[0]![1]!;
-      bHi = s[1]![0]!;
-      bLo = s[1]![1]!;
-      cHi = s[2]![0]!;
-      cLo = s[2]![1]!;
-      dHi = s[3]![0]!;
-      dLo = s[3]![1]!;
-      eHi = s[4]![0]!;
-      eLo = s[4]![1]!;
-      fHi = s[5]![0]!;
-      fLo = s[5]![1]!;
-      gHi = s[6]![0]!;
-      gLo = s[6]![1]!;
-      hHi = s[7]![0]!;
-      hLo = s[7]![1]!;
-
-      for (i = 0; i < 80; ++i) {
-        s1Hi = (((eHi >>> 14) | (eLo << 18)) ^ ((eHi >>> 18) | (eLo << 14)) ^ ((eLo >>> 9) | (eHi << 23))) >>> 0;
-        s1Lo = (((eHi << 18) | (eLo >>> 14)) ^ ((eHi << 14) | (eLo >>> 18)) ^ ((eLo << 23) | (eHi >>> 9))) >>> 0;
-
-        chHi = (gHi ^ (eHi & (fHi ^ gHi))) >>> 0;
-        chLo = (gLo ^ (eLo & (fLo ^ gLo))) >>> 0;
-
-        s0Hi = (((aHi >>> 28) | (aLo << 4)) ^ ((aLo >>> 2) | (aHi << 30)) ^ ((aLo >>> 7) | (aHi << 25))) >>> 0;
-        s0Lo = (((aHi << 4) | (aLo >>> 28)) ^ ((aLo << 30) | (aHi >>> 2)) ^ ((aLo << 25) | (aHi >>> 7))) >>> 0;
-
-        majHi = ((aHi & bHi) | (cHi & (aHi ^ bHi))) >>> 0;
-        majLo = ((aLo & bLo) | (cLo & (aLo ^ bLo))) >>> 0;
-
-        lo = hLo + s1Lo + chLo + k[i]![1]! + w[i]![1]!;
-        t1Hi = (hHi + s1Hi + chHi + k[i]![0]! + w[i]![0]! + ((lo / 0x100000000) >>> 0)) >>> 0;
-        t1Lo = lo >>> 0;
-
-        lo = s0Lo + majLo;
-        t2Hi = (s0Hi + majHi + ((lo / 0x100000000) >>> 0)) >>> 0;
-        t2Lo = lo >>> 0;
-
-        hHi = gHi;
-        hLo = gLo;
-
-        gHi = fHi;
-        gLo = fLo;
-
-        fHi = eHi;
-        fLo = eLo;
-
-        lo = dLo + t1Lo;
-        eHi = (dHi + t1Hi + ((lo / 0x100000000) >>> 0)) >>> 0;
-        eLo = lo >>> 0;
-
-        dHi = cHi;
-        dLo = cLo;
-
-        cHi = bHi;
-        cLo = bLo;
-
-        bHi = aHi;
-        bLo = aLo;
-
-        lo = t1Lo + t2Lo;
-        aHi = (t1Hi + t2Hi + ((lo / 0x100000000) >>> 0)) >>> 0;
-        aLo = lo >>> 0;
+        scheduleWordMinus7 = messageSchedule[roundIndex - 7]!;
+        scheduleWordMinus16 = messageSchedule[roundIndex - 16]!;
+        wordLow = roundSum1Lo + scheduleWordMinus7[1] + roundSum2Lo + scheduleWordMinus16[1];
+        messageSchedule[roundIndex][0] =
+          (roundSum1Hi +
+            scheduleWordMinus7[0] +
+            roundSum2Hi +
+            scheduleWordMinus16[0] +
+            ((wordLow / 0x100000000) >>> 0)) >>>
+          0;
+        messageSchedule[roundIndex][1] = wordLow >>> 0;
       }
 
-      lo = s[0]![1]! + aLo;
-      s[0]![0] = (s[0]![0]! + aHi + ((lo / 0x100000000) >>> 0)) >>> 0;
-      s[0]![1] = lo >>> 0;
+      workAHi = hashState[0][0]!;
+      workALo = hashState[0][1]!;
+      workBHi = hashState[1][0]!;
+      workBLo = hashState[1][1]!;
+      workCHi = hashState[2][0]!;
+      workCLo = hashState[2][1]!;
+      workDHi = hashState[3][0]!;
+      workDLo = hashState[3][1]!;
+      workEHi = hashState[4][0]!;
+      workELo = hashState[4][1]!;
+      workFHi = hashState[5][0]!;
+      workFLo = hashState[5][1]!;
+      workGHi = hashState[6][0]!;
+      workGLo = hashState[6][1]!;
+      workHHi = hashState[7][0]!;
+      workHLo = hashState[7][1]!;
 
-      lo = s[1]![1]! + bLo;
-      s[1]![0] = (s[1]![0]! + bHi + ((lo / 0x100000000) >>> 0)) >>> 0;
-      s[1]![1] = lo >>> 0;
+      for (roundIndex = 0; roundIndex < 80; ++roundIndex) {
+        sigma1UpperHi =
+          (((workEHi >>> 14) | (workELo << 18)) ^
+            ((workEHi >>> 18) | (workELo << 14)) ^
+            ((workELo >>> 9) | (workEHi << 23))) >>>
+          0;
+        sigma1UpperLo =
+          (((workEHi << 18) | (workELo >>> 14)) ^
+            ((workEHi << 14) | (workELo >>> 18)) ^
+            ((workELo << 23) | (workEHi >>> 9))) >>>
+          0;
 
-      lo = s[2]![1]! + cLo;
-      s[2]![0] = (s[2]![0]! + cHi + ((lo / 0x100000000) >>> 0)) >>> 0;
-      s[2]![1] = lo >>> 0;
+        chooseHi = (workGHi ^ (workEHi & (workFHi ^ workGHi))) >>> 0;
+        chooseLo = (workGLo ^ (workELo & (workFLo ^ workGLo))) >>> 0;
 
-      lo = s[3]![1]! + dLo;
-      s[3]![0] = (s[3]![0]! + dHi + ((lo / 0x100000000) >>> 0)) >>> 0;
-      s[3]![1] = lo >>> 0;
+        sigma0UpperHi =
+          (((workAHi >>> 28) | (workALo << 4)) ^
+            ((workALo >>> 2) | (workAHi << 30)) ^
+            ((workALo >>> 7) | (workAHi << 25))) >>>
+          0;
+        sigma0UpperLo =
+          (((workAHi << 4) | (workALo >>> 28)) ^
+            ((workALo << 30) | (workAHi >>> 2)) ^
+            ((workALo << 25) | (workAHi >>> 7))) >>>
+          0;
 
-      lo = s[4]![1]! + eLo;
-      s[4]![0] = (s[4]![0]! + eHi + ((lo / 0x100000000) >>> 0)) >>> 0;
-      s[4]![1] = lo >>> 0;
+        majorityHi = ((workAHi & workBHi) | (workCHi & (workAHi ^ workBHi))) >>> 0;
+        majorityLo = ((workALo & workBLo) | (workCLo & (workALo ^ workBLo))) >>> 0;
 
-      lo = s[5]![1]! + fLo;
-      s[5]![0] = (s[5]![0]! + fHi + ((lo / 0x100000000) >>> 0)) >>> 0;
-      s[5]![1] = lo >>> 0;
+        wordLow = workHLo + sigma1UpperLo + chooseLo + roundConstants[roundIndex][1] + messageSchedule[roundIndex][1];
+        roundSum1Hi =
+          (workHHi +
+            sigma1UpperHi +
+            chooseHi +
+            roundConstants[roundIndex][0] +
+            messageSchedule[roundIndex][0] +
+            ((wordLow / 0x100000000) >>> 0)) >>>
+          0;
+        roundSum1Lo = wordLow >>> 0;
 
-      lo = s[6]![1]! + gLo;
-      s[6]![0] = (s[6]![0]! + gHi + ((lo / 0x100000000) >>> 0)) >>> 0;
-      s[6]![1] = lo >>> 0;
+        wordLow = sigma0UpperLo + majorityLo;
+        roundSum2Hi = (sigma0UpperHi + majorityHi + ((wordLow / 0x100000000) >>> 0)) >>> 0;
+        roundSum2Lo = wordLow >>> 0;
 
-      lo = s[7]![1]! + hLo;
-      s[7]![0] = (s[7]![0]! + hHi + ((lo / 0x100000000) >>> 0)) >>> 0;
-      s[7]![1] = lo >>> 0;
+        workHHi = workGHi;
+        workHLo = workGLo;
 
-      len -= 128;
+        workGHi = workFHi;
+        workGLo = workFLo;
+
+        workFHi = workEHi;
+        workFLo = workELo;
+
+        wordLow = workDLo + roundSum1Lo;
+        workEHi = (workDHi + roundSum1Hi + ((wordLow / 0x100000000) >>> 0)) >>> 0;
+        workELo = wordLow >>> 0;
+
+        workDHi = workCHi;
+        workDLo = workCLo;
+
+        workCHi = workBHi;
+        workCLo = workBLo;
+
+        workBHi = workAHi;
+        workBLo = workALo;
+
+        wordLow = roundSum1Lo + roundSum2Lo;
+        workAHi = (roundSum1Hi + roundSum2Hi + ((wordLow / 0x100000000) >>> 0)) >>> 0;
+        workALo = wordLow >>> 0;
+      }
+
+      wordLow = hashState[0][1] + workALo;
+      hashState[0][0] = (hashState[0][0] + workAHi + ((wordLow / 0x100000000) >>> 0)) >>> 0;
+      hashState[0][1] = wordLow >>> 0;
+
+      wordLow = hashState[1][1] + workBLo;
+      hashState[1][0] = (hashState[1][0] + workBHi + ((wordLow / 0x100000000) >>> 0)) >>> 0;
+      hashState[1][1] = wordLow >>> 0;
+
+      wordLow = hashState[2][1] + workCLo;
+      hashState[2][0] = (hashState[2][0] + workCHi + ((wordLow / 0x100000000) >>> 0)) >>> 0;
+      hashState[2][1] = wordLow >>> 0;
+
+      wordLow = hashState[3][1] + workDLo;
+      hashState[3][0] = (hashState[3][0] + workDHi + ((wordLow / 0x100000000) >>> 0)) >>> 0;
+      hashState[3][1] = wordLow >>> 0;
+
+      wordLow = hashState[4][1] + workELo;
+      hashState[4][0] = (hashState[4][0] + workEHi + ((wordLow / 0x100000000) >>> 0)) >>> 0;
+      hashState[4][1] = wordLow >>> 0;
+
+      wordLow = hashState[5][1] + workFLo;
+      hashState[5][0] = (hashState[5][0] + workFHi + ((wordLow / 0x100000000) >>> 0)) >>> 0;
+      hashState[5][1] = wordLow >>> 0;
+
+      wordLow = hashState[6][1] + workGLo;
+      hashState[6][0] = (hashState[6][0] + workGHi + ((wordLow / 0x100000000) >>> 0)) >>> 0;
+      hashState[6][1] = wordLow >>> 0;
+
+      wordLow = hashState[7][1] + workHLo;
+      hashState[7][0] = (hashState[7][0] + workHHi + ((wordLow / 0x100000000) >>> 0)) >>> 0;
+      hashState[7][1] = wordLow >>> 0;
+
+      remainingBytes -= 128;
     }
   }
 }

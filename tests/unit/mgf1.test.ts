@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import certkit from '../../src/presentation/index.js';
 const MD = certkit.md;
 const MGF = certkit.mgf;
 const UTIL = certkit.util;
 describe('mgf1', () => {
-  it('should digest the empty string', (ctx) => {
+  it('should digest the empty string', () => {
     const seed = UTIL.hexToBytes(
       '032e45326fa859a72ec235acff929b15d1372e30b207255f0611b8f785d764374152e0ac009e509e7ba30cd2f1778e113b64e135cf4e2292c75efe5288edfda4'
     );

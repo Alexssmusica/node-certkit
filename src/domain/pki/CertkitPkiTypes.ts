@@ -41,7 +41,7 @@ import type {
 export type PkiFacadeDeps = {
   asn1: Asn1NamespaceObject;
   oids: Record<string, string>;
-  md: MdRegistry;
+  digestRegistry: MdRegistry;
   util: UtilNamespaceObject;
   pem: ReturnType<typeof PemCodec.createCertkitNamespace>;
   aes: AesNamespaceObject;

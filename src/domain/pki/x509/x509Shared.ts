@@ -25,16 +25,18 @@ export class X509Shared {
     pki.RDNAttributesAsArray = function (rdn: Asn1Object, md?: MessageDigest) {
       const attributes: DnAttribute[] = [];
 
-      let set, attr, dnAttribute: DnAttribute;
+      let rdnSet;
+      let attributeAsn1;
+      let dnAttribute: DnAttribute;
       for (let setIndex = 0; setIndex < (rdn.value as Asn1Object[]).length; ++setIndex) {
-        set = (rdn.value as Asn1Object[])[setIndex]!;
+        rdnSet = (rdn.value as Asn1Object[])[setIndex]!;
 
-        for (let i = 0; i < (set.value as Asn1Object[]).length; ++i) {
+        for (let i = 0; i < (rdnSet.value as Asn1Object[]).length; ++i) {
           dnAttribute = {} as DnAttribute;
-          attr = (set.value as Asn1Object[])[i]!;
-          dnAttribute.type = asn1.derToOid((attr.value as Asn1Object[])[0]!.value as string);
-          dnAttribute.value = (attr.value as Asn1Object[])[1]!.value as string;
-          dnAttribute.valueTagClass = (attr.value as Asn1Object[])[1]!.type;
+          attributeAsn1 = (rdnSet.value as Asn1Object[])[i]!;
+          dnAttribute.type = asn1.derToOid((attributeAsn1.value as Asn1Object[])[0].value as string);
+          dnAttribute.value = (attributeAsn1.value as Asn1Object[])[1].value as string;
+          dnAttribute.valueTagClass = (attributeAsn1.value as Asn1Object[])[1].type;
           if (dnAttribute.type in oids) {
             dnAttribute.name = oids[dnAttribute.type];
             if (dnAttribute.name in validators.shortNames) {
@@ -62,15 +64,15 @@ export class X509Shared {
       const criAttributes: DnAttribute[] = [];
 
       for (let setIndex = 0; setIndex < attributes.length; ++setIndex) {
-        const seq = attributes[setIndex]!;
+        const seq = attributes[setIndex];
 
-        const type = asn1.derToOid((seq.value as Asn1Object[])[0]!.value as string);
-        const values = (seq.value as Asn1Object[])[1]!.value as Asn1Object[];
+        const type = asn1.derToOid((seq.value as Asn1Object[])[0].value as string);
+        const values = (seq.value as Asn1Object[])[1].value as Asn1Object[];
         for (let valueIndex = 0; valueIndex < values.length; ++valueIndex) {
           const dnAttribute = {} as DnAttribute;
           dnAttribute.type = type;
-          dnAttribute.value = values[valueIndex]!.value as string | Asn1Object[];
-          dnAttribute.valueTagClass = values[valueIndex]!.type;
+          dnAttribute.value = values[valueIndex].value as string | Asn1Object[];
+          dnAttribute.valueTagClass = values[valueIndex].type;
           if (dnAttribute.type in oids) {
             dnAttribute.name = oids[dnAttribute.type];
             if (dnAttribute.name in validators.shortNames) {
@@ -81,7 +83,7 @@ export class X509Shared {
             dnAttribute.extensions = [];
             const extValues = dnAttribute.value as Asn1Object[];
             for (let extensionIndex = 0; extensionIndex < extValues.length; ++extensionIndex) {
-              dnAttribute.extensions.push(pki.certificateExtensionFromAsn1(extValues[extensionIndex]!));
+              dnAttribute.extensions.push(pki.certificateExtensionFromAsn1(extValues[extensionIndex]));
             }
           }
           criAttributes.push(dnAttribute);
@@ -125,28 +127,29 @@ export class X509Shared {
     function dnToAsn1(dnEntity: { attributes: DnAttribute[] }) {
       const rdnSequence = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
 
-      let attr, set;
+      let dnAttributeEntry;
+      let attributeSet;
       const attrs = dnEntity.attributes;
       for (let i = 0; i < attrs.length; ++i) {
-        attr = attrs[i];
-        let value = attr.value;
+        dnAttributeEntry = attrs[i];
+        let value = dnAttributeEntry.value;
 
         let valueTagClass = asn1.Type.PRINTABLESTRING;
-        if ('valueTagClass' in attr) {
-          valueTagClass = attr.valueTagClass;
+        if ('valueTagClass' in dnAttributeEntry) {
+          valueTagClass = dnAttributeEntry.valueTagClass;
 
           if (valueTagClass === asn1.Type.UTF8) {
             value = ctx.util.encodeUtf8(value as string);
           }
         }
 
-        set = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SET, true, [
+        attributeSet = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SET, true, [
           asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(attr.type).getBytes()),
+            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(dnAttributeEntry.type).getBytes()),
             asn1.create(asn1.Class.UNIVERSAL, valueTagClass, false, value)
           ])
         ]);
-        (rdnSequence.value as Asn1Object[]).push(set);
+        (rdnSequence.value as Asn1Object[]).push(attributeSet);
       }
 
       return rdnSequence;
@@ -233,7 +236,7 @@ export class X509Shared {
           if (!attr.value && attr.extensions) {
             attr.value = [];
             for (let extensionIndex = 0; extensionIndex < attr.extensions.length; ++extensionIndex) {
-              (attr.value as Asn1Object[]).push(
+              attr.value.push(
                 pki.certificateExtensionToAsn1(fillMissingExtensionFields(attr.extensions[extensionIndex]))
               );
             }
@@ -253,7 +256,7 @@ export class X509Shared {
         {
           asn1,
           oids,
-          md: ctx.md,
+          digestRegistry: ctx.digestRegistry,
           pss: ctx.pss,
           mgf: ctx.mgf
         },

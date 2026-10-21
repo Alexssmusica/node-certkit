@@ -18,7 +18,7 @@ class HmacEngine {
         if (!(name in algorithms)) {
           throw new Error('Unknown hash algorithm "' + md + '"');
         }
-        this.#md = algorithms[name]!.create();
+        this.#md = algorithms[name].create();
       } else {
         this.#md = md;
       }
@@ -31,9 +31,9 @@ class HmacEngine {
       keyBuffer = new ByteStringBuffer(key);
     } else if (isArray(key)) {
       keyBuffer = new ByteStringBuffer();
-      const tmp = key as number[];
-      for (let i = 0; i < tmp.length; ++i) {
-        keyBuffer.putByte(tmp[i]!);
+      const keyBytes = key as number[];
+      for (let i = 0; i < keyBytes.length; ++i) {
+        keyBuffer.putByte(keyBytes[i]);
       }
     } else {
       keyBuffer = key as ByteStringBuffer;
@@ -50,9 +50,9 @@ class HmacEngine {
     const opadding = new ByteStringBuffer();
     keylen = keyBuffer.length();
     for (let i = 0; i < keylen; ++i) {
-      const tmp = keyBuffer.at(i);
-      ipadding.putByte(0x36 ^ tmp);
-      opadding.putByte(0x5c ^ tmp);
+      const keyByte = keyBuffer.at(i);
+      ipadding.putByte(0x36 ^ keyByte);
+      opadding.putByte(0x5c ^ keyByte);
     }
 
     if (keylen < this.#md!.blockLength) {

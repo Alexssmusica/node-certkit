@@ -4,11 +4,11 @@ import { UtilNamespace } from '../util/UtilNamespace.js';
 import type { Sha1Digest } from './DigestTypes.js';
 
 interface Sha1State {
-  h0: number;
-  h1: number;
-  h2: number;
-  h3: number;
-  h4: number;
+  hashWord0: number;
+  hashWord1: number;
+  hashWord2: number;
+  hashWord3: number;
+  hashWord4: number;
 }
 
 /**
@@ -29,7 +29,7 @@ export class Sha1 {
 
   #state: Sha1State | null = null;
   #input = new ByteStringBuffer();
-  readonly #w = new Array<number>(80);
+  readonly #messageSchedule = new Array<number>(80);
 
   static create(): Sha1Digest {
     Sha1.#ensureInit();
@@ -43,7 +43,7 @@ export class Sha1 {
       messageLength64: null,
       messageLengthSize: 8,
       start: () => engine.#start(md),
-      update: (msg, encoding) => engine.#update(md, msg, encoding),
+      update: (input, encoding) => engine.#update(md, input, encoding),
       digest: () => engine.#digest(md)
     };
     md.start();
@@ -59,33 +59,33 @@ export class Sha1 {
     }
     this.#input = new ByteStringBuffer();
     this.#state = {
-      h0: 0x67452301,
-      h1: 0xefcdab89,
-      h2: 0x98badcfe,
-      h3: 0x10325476,
-      h4: 0xc3d2e1f0
+      hashWord0: 0x67452301,
+      hashWord1: 0xefcdab89,
+      hashWord2: 0x98badcfe,
+      hashWord3: 0x10325476,
+      hashWord4: 0xc3d2e1f0
     };
     return md;
   }
 
-  #update(md: Sha1Digest, msg: string, encoding?: string): Sha1Digest {
+  #update(md: Sha1Digest, message: string, encoding?: string): Sha1Digest {
     if (encoding === 'utf8') {
-      msg = encodeUtf8(msg);
+      message = encodeUtf8(message);
     }
 
-    const len = msg.length;
-    md.messageLength += len;
-    const lenParts = [(len / 0x100000000) >>> 0, len >>> 0];
+    const messageByteLength = message.length;
+    md.messageLength += messageByteLength;
+    const lengthCarry = [(messageByteLength / 0x100000000) >>> 0, messageByteLength >>> 0];
     const fullMessageLength = md.fullMessageLength!;
     for (let i = fullMessageLength.length - 1; i >= 0; --i) {
-      fullMessageLength[i] += lenParts[1]!;
-      lenParts[1] = lenParts[0]! + ((fullMessageLength[i]! / 0x100000000) >>> 0);
-      fullMessageLength[i] = fullMessageLength[i]! >>> 0;
-      lenParts[0] = (lenParts[1]! / 0x100000000) >>> 0;
+      fullMessageLength[i] += lengthCarry[1];
+      lengthCarry[1] = lengthCarry[0] + ((fullMessageLength[i] / 0x100000000) >>> 0);
+      fullMessageLength[i] = fullMessageLength[i] >>> 0;
+      lengthCarry[0] = (lengthCarry[1] / 0x100000000) >>> 0;
     }
 
-    this.#input.putBytes(msg);
-    Sha1.#updateState(this.#state!, this.#w, this.#input);
+    this.#input.putBytes(message);
+    Sha1.#updateState(this.#state!, this.#messageSchedule, this.#input);
 
     if (this.#input.read > 2048 || this.#input.length() === 0) {
       this.#input.compact();
@@ -98,136 +98,156 @@ export class Sha1 {
     const finalBlock = new ByteStringBuffer();
     finalBlock.putBytes(this.#input.bytes());
 
-    const remaining = md.fullMessageLength![md.fullMessageLength!.length - 1]! + md.messageLengthSize;
+    const remaining = md.fullMessageLength![md.fullMessageLength!.length - 1] + md.messageLengthSize;
 
     const overflow = remaining & (md.blockLength - 1);
     finalBlock.putBytes(Sha1.#padding!.substr(0, md.blockLength - overflow));
 
-    let next: number;
-    let carry: number;
-    let bits = md.fullMessageLength![0]! * 8;
+    let nextLengthBits: number;
+    let carryBits: number;
+    let bits = md.fullMessageLength![0] * 8;
     for (let i = 0; i < md.fullMessageLength!.length - 1; ++i) {
-      next = md.fullMessageLength![i + 1]! * 8;
-      carry = (next / 0x100000000) >>> 0;
-      bits += carry;
+      nextLengthBits = md.fullMessageLength![i + 1] * 8;
+      carryBits = (nextLengthBits / 0x100000000) >>> 0;
+      bits += carryBits;
       finalBlock.putInt32(bits >>> 0);
-      bits = next >>> 0;
+      bits = nextLengthBits >>> 0;
     }
     finalBlock.putInt32(bits);
 
     const finalState = {
-      h0: this.#state!.h0,
-      h1: this.#state!.h1,
-      h2: this.#state!.h2,
-      h3: this.#state!.h3,
-      h4: this.#state!.h4
+      hashWord0: this.#state!.hashWord0,
+      hashWord1: this.#state!.hashWord1,
+      hashWord2: this.#state!.hashWord2,
+      hashWord3: this.#state!.hashWord3,
+      hashWord4: this.#state!.hashWord4
     };
-    Sha1.#updateState(finalState, this.#w, finalBlock);
+    Sha1.#updateState(finalState, this.#messageSchedule, finalBlock);
     const digestBuffer = new ByteStringBuffer();
-    digestBuffer.putInt32(finalState.h0);
-    digestBuffer.putInt32(finalState.h1);
-    digestBuffer.putInt32(finalState.h2);
-    digestBuffer.putInt32(finalState.h3);
-    digestBuffer.putInt32(finalState.h4);
+    digestBuffer.putInt32(finalState.hashWord0);
+    digestBuffer.putInt32(finalState.hashWord1);
+    digestBuffer.putInt32(finalState.hashWord2);
+    digestBuffer.putInt32(finalState.hashWord3);
+    digestBuffer.putInt32(finalState.hashWord4);
     return digestBuffer;
   }
 
-  static #updateState(s: Sha1State, w: number[], bytes: ByteStringBuffer): void {
-    let t: number;
-    let a: number;
-    let b: number;
-    let c: number;
-    let d: number;
-    let e: number;
-    let f: number;
-    let i: number;
-    let len = bytes.length();
-    while (len >= 64) {
-      a = s.h0;
-      b = s.h1;
-      c = s.h2;
-      d = s.h3;
-      e = s.h4;
+  static #updateState(state: Sha1State, messageSchedule: number[], bytes: ByteStringBuffer): void {
+    let roundTemp: number;
+    let workA: number;
+    let workB: number;
+    let workC: number;
+    let workD: number;
+    let workE: number;
+    let mixFunction: number;
+    let roundIndex: number;
+    let remainingBytes = bytes.length();
+    while (remainingBytes >= 64) {
+      workA = state.hashWord0;
+      workB = state.hashWord1;
+      workC = state.hashWord2;
+      workD = state.hashWord3;
+      workE = state.hashWord4;
 
-      for (i = 0; i < 16; ++i) {
-        t = bytes.getInt32();
-        w[i] = t;
-        f = d ^ (b & (c ^ d));
-        t = ((a << 5) | (a >>> 27)) + f + e + 0x5a827999 + t;
-        e = d;
-        d = c;
-        c = ((b << 30) | (b >>> 2)) >>> 0;
-        b = a;
-        a = t;
+      for (roundIndex = 0; roundIndex < 16; ++roundIndex) {
+        roundTemp = bytes.getInt32();
+        messageSchedule[roundIndex] = roundTemp;
+        mixFunction = workD ^ (workB & (workC ^ workD));
+        roundTemp = ((workA << 5) | (workA >>> 27)) + mixFunction + workE + 0x5a827999 + roundTemp;
+        workE = workD;
+        workD = workC;
+        workC = ((workB << 30) | (workB >>> 2)) >>> 0;
+        workB = workA;
+        workA = roundTemp;
       }
-      for (; i < 20; ++i) {
-        t = w[i - 3]! ^ w[i - 8]! ^ w[i - 14]! ^ w[i - 16]!;
-        t = (t << 1) | (t >>> 31);
-        w[i] = t;
-        f = d ^ (b & (c ^ d));
-        t = ((a << 5) | (a >>> 27)) + f + e + 0x5a827999 + t;
-        e = d;
-        d = c;
-        c = ((b << 30) | (b >>> 2)) >>> 0;
-        b = a;
-        a = t;
+      for (; roundIndex < 20; ++roundIndex) {
+        roundTemp =
+          messageSchedule[roundIndex - 3] ^
+          messageSchedule[roundIndex - 8] ^
+          messageSchedule[roundIndex - 14] ^
+          messageSchedule[roundIndex - 16];
+        roundTemp = (roundTemp << 1) | (roundTemp >>> 31);
+        messageSchedule[roundIndex] = roundTemp;
+        mixFunction = workD ^ (workB & (workC ^ workD));
+        roundTemp = ((workA << 5) | (workA >>> 27)) + mixFunction + workE + 0x5a827999 + roundTemp;
+        workE = workD;
+        workD = workC;
+        workC = ((workB << 30) | (workB >>> 2)) >>> 0;
+        workB = workA;
+        workA = roundTemp;
       }
-      for (; i < 32; ++i) {
-        t = w[i - 3]! ^ w[i - 8]! ^ w[i - 14]! ^ w[i - 16]!;
-        t = (t << 1) | (t >>> 31);
-        w[i] = t;
-        f = b ^ c ^ d;
-        t = ((a << 5) | (a >>> 27)) + f + e + 0x6ed9eba1 + t;
-        e = d;
-        d = c;
-        c = ((b << 30) | (b >>> 2)) >>> 0;
-        b = a;
-        a = t;
+      for (; roundIndex < 32; ++roundIndex) {
+        roundTemp =
+          messageSchedule[roundIndex - 3] ^
+          messageSchedule[roundIndex - 8] ^
+          messageSchedule[roundIndex - 14] ^
+          messageSchedule[roundIndex - 16];
+        roundTemp = (roundTemp << 1) | (roundTemp >>> 31);
+        messageSchedule[roundIndex] = roundTemp;
+        mixFunction = workB ^ workC ^ workD;
+        roundTemp = ((workA << 5) | (workA >>> 27)) + mixFunction + workE + 0x6ed9eba1 + roundTemp;
+        workE = workD;
+        workD = workC;
+        workC = ((workB << 30) | (workB >>> 2)) >>> 0;
+        workB = workA;
+        workA = roundTemp;
       }
-      for (; i < 40; ++i) {
-        t = w[i - 6]! ^ w[i - 16]! ^ w[i - 28]! ^ w[i - 32]!;
-        t = (t << 2) | (t >>> 30);
-        w[i] = t;
-        f = b ^ c ^ d;
-        t = ((a << 5) | (a >>> 27)) + f + e + 0x6ed9eba1 + t;
-        e = d;
-        d = c;
-        c = ((b << 30) | (b >>> 2)) >>> 0;
-        b = a;
-        a = t;
+      for (; roundIndex < 40; ++roundIndex) {
+        roundTemp =
+          messageSchedule[roundIndex - 6] ^
+          messageSchedule[roundIndex - 16] ^
+          messageSchedule[roundIndex - 28] ^
+          messageSchedule[roundIndex - 32];
+        roundTemp = (roundTemp << 2) | (roundTemp >>> 30);
+        messageSchedule[roundIndex] = roundTemp;
+        mixFunction = workB ^ workC ^ workD;
+        roundTemp = ((workA << 5) | (workA >>> 27)) + mixFunction + workE + 0x6ed9eba1 + roundTemp;
+        workE = workD;
+        workD = workC;
+        workC = ((workB << 30) | (workB >>> 2)) >>> 0;
+        workB = workA;
+        workA = roundTemp;
       }
-      for (; i < 60; ++i) {
-        t = w[i - 6]! ^ w[i - 16]! ^ w[i - 28]! ^ w[i - 32]!;
-        t = (t << 2) | (t >>> 30);
-        w[i] = t;
-        f = (b & c) | (d & (b ^ c));
-        t = ((a << 5) | (a >>> 27)) + f + e + 0x8f1bbcdc + t;
-        e = d;
-        d = c;
-        c = ((b << 30) | (b >>> 2)) >>> 0;
-        b = a;
-        a = t;
+      for (; roundIndex < 60; ++roundIndex) {
+        roundTemp =
+          messageSchedule[roundIndex - 6] ^
+          messageSchedule[roundIndex - 16] ^
+          messageSchedule[roundIndex - 28] ^
+          messageSchedule[roundIndex - 32];
+        roundTemp = (roundTemp << 2) | (roundTemp >>> 30);
+        messageSchedule[roundIndex] = roundTemp;
+        mixFunction = (workB & workC) | (workD & (workB ^ workC));
+        roundTemp = ((workA << 5) | (workA >>> 27)) + mixFunction + workE + 0x8f1bbcdc + roundTemp;
+        workE = workD;
+        workD = workC;
+        workC = ((workB << 30) | (workB >>> 2)) >>> 0;
+        workB = workA;
+        workA = roundTemp;
       }
-      for (; i < 80; ++i) {
-        t = w[i - 6]! ^ w[i - 16]! ^ w[i - 28]! ^ w[i - 32]!;
-        t = (t << 2) | (t >>> 30);
-        w[i] = t;
-        f = b ^ c ^ d;
-        t = ((a << 5) | (a >>> 27)) + f + e + 0xca62c1d6 + t;
-        e = d;
-        d = c;
-        c = ((b << 30) | (b >>> 2)) >>> 0;
-        b = a;
-        a = t;
+      for (; roundIndex < 80; ++roundIndex) {
+        roundTemp =
+          messageSchedule[roundIndex - 6] ^
+          messageSchedule[roundIndex - 16] ^
+          messageSchedule[roundIndex - 28] ^
+          messageSchedule[roundIndex - 32];
+        roundTemp = (roundTemp << 2) | (roundTemp >>> 30);
+        messageSchedule[roundIndex] = roundTemp;
+        mixFunction = workB ^ workC ^ workD;
+        roundTemp = ((workA << 5) | (workA >>> 27)) + mixFunction + workE + 0xca62c1d6 + roundTemp;
+        workE = workD;
+        workD = workC;
+        workC = ((workB << 30) | (workB >>> 2)) >>> 0;
+        workB = workA;
+        workA = roundTemp;
       }
 
-      s.h0 = (s.h0 + a) | 0;
-      s.h1 = (s.h1 + b) | 0;
-      s.h2 = (s.h2 + c) | 0;
-      s.h3 = (s.h3 + d) | 0;
-      s.h4 = (s.h4 + e) | 0;
+      state.hashWord0 = (state.hashWord0 + workA) | 0;
+      state.hashWord1 = (state.hashWord1 + workB) | 0;
+      state.hashWord2 = (state.hashWord2 + workC) | 0;
+      state.hashWord3 = (state.hashWord3 + workD) | 0;
+      state.hashWord4 = (state.hashWord4 + workE) | 0;
 
-      len -= 64;
+      remainingBytes -= 64;
     }
   }
 }

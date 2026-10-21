@@ -1,37 +1,37 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import certkit from '../../src/presentation/index.js';
 const MD5 = certkit.md5;
 const UTIL = certkit.util;
 describe('md5', () => {
-  it('should have correct digest length', (ctx) => {
+  it('should have correct digest length', () => {
     const md = MD5.create();
     expect(md.digestLength).toBe(16);
   });
 
-  it('should digest the empty string', (ctx) => {
+  it('should digest the empty string', () => {
     const md = MD5.create();
     expect(md.digest().toHex()).toBe('d41d8cd98f00b204e9800998ecf8427e');
   });
 
-  it('should digest "abc"', (ctx) => {
+  it('should digest "abc"', () => {
     const md = MD5.create();
     md.update('abc');
     expect(md.digest().toHex()).toBe('900150983cd24fb0d6963f7d28e17f72');
   });
 
-  it('should digest "The quick brown fox jumps over the lazy dog"', (ctx) => {
+  it('should digest "The quick brown fox jumps over the lazy dog"', () => {
     const md = MD5.create();
     md.update('The quick brown fox jumps over the lazy dog');
     expect(md.digest().toHex()).toBe('9e107d9d372bb6826bd81d3542a419d6');
   });
 
-  it('should digest "c\'\u00e8"', (ctx) => {
+  it('should digest "c\'\u00e8"', () => {
     const md = MD5.create();
     md.update("c'\u00e8", 'utf8');
     expect(md.digest().toHex()).toBe('8ef7c2941d78fe89f31e614437c9db59');
   });
 
-  it('should digest "THIS IS A MESSAGE"', (ctx) => {
+  it('should digest "THIS IS A MESSAGE"', () => {
     const md = MD5.create();
     md.start();
     md.update('THIS IS ');
@@ -41,7 +41,7 @@ describe('md5', () => {
     expect(md.digest().toHex()).toBe('78eebfd9d42958e3f31244f116ab7bbe');
   });
 
-  it('should digest a long message', (ctx) => {
+  it('should digest a long message', () => {
     const input = UTIL.hexToBytes(
       '0100002903018d32e9c6dc423774c4c39a5a1b78f44cc2cab5f676d39' +
         'f703d29bfa27dfeb870000002002f01000200004603014c2c1e835d39' +
@@ -98,7 +98,7 @@ describe('md5', () => {
     expect(md.digest().toHex()).toBe('d15a2da0e92c3da55dc573f885b6e653');
   });
 
-  it('should digest multiple long messages', (ctx) => {
+  it('should digest multiple long messages', () => {
     // Note: might be too slow on old browsers
     // done multiple times to check hot loop optimizations
     for (let loop = 0; loop < 3; ++loop) {

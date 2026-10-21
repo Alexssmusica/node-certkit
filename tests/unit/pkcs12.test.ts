@@ -1,18 +1,13 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import certkit from '../../src/presentation/index.js';
 import type { EncryptPrivateKeyInfoOptions } from '../../src/domain/pki/CertkitPkiTypes.js';
 import type { Pkcs12CreateOptions } from '../../src/domain/pki/Pkcs12Types.js';
 import type { PemMessage } from '../../src/domain/pki/PemTypes.js';
-import type { RsaPrivateKey } from '../../src/domain/pki/RsaTypes.js';
 const PKCS12 = certkit.pkcs12;
 const ASN1 = certkit.asn1;
 const PEM = certkit.pem;
 const PKI = certkit.pki;
 const UTIL = certkit.util;
-const oldRandomGenerate = certkit.random;
-const p12Der = certkit.util;
-const p12Asn1 = certkit.asn1;
-const p12 = certkit.pkcs12;
 
 type Pkcs12TestData = {
   certificate: string;
@@ -28,7 +23,7 @@ type Pkcs12TestData = {
 type Pkcs12MacKey = { toHex: () => string };
 
 describe('pkcs12', () => {
-  it('should create certificate-only p12', (ctx) => {
+  it('should create certificate-only p12', () => {
     const p12Asn = PKCS12.toPkcs12Asn1(null, _data.certificate, null, {
       useMac: false,
       generateLocalKeyId: false
@@ -40,7 +35,7 @@ describe('pkcs12', () => {
     expect(p12Der).toBe(UTIL.decode64(_data.p12certonly));
   });
 
-  it('should create key-only p12', (ctx) => {
+  it('should create key-only p12', () => {
     const privateKey = PKI.privateKeyFromPem(_data.privateKey);
     const p12Asn = PKCS12.toPkcs12Asn1(privateKey, null, null, {
       useMac: false,
@@ -53,7 +48,7 @@ describe('pkcs12', () => {
     expect(p12Der).toBe(UTIL.decode64(_data.p12keyonly));
   });
 
-  it('should create encrypted-key-only p12', (ctx) => {
+  it('should create encrypted-key-only p12', () => {
     /* Note we need to mock the PRNG, since the PKCS#12 file uses encryption
         which otherwise would differ each time due to the randomized IV. */
     const oldRandomGenerate = certkit.random.generate;
@@ -78,7 +73,7 @@ describe('pkcs12', () => {
     expect(p12Der).toBe(UTIL.decode64(_data.p12enckeyonly));
   });
 
-  it('should import certificate-only p12', (ctx) => {
+  it('should import certificate-only p12', () => {
     const p12Der = UTIL.decode64(_data.p12certonly);
     const p12Asn1 = ASN1.fromDer(p12Der);
     const p12 = PKCS12.pkcs12FromAsn1(p12Asn1);
@@ -96,7 +91,7 @@ describe('pkcs12', () => {
     expect(p12.safeContents[0].safeBags[0].cert!.serialNumber).toBe('00d4541c40d835e2f3');
   });
 
-  it('should import key-only p12', (ctx) => {
+  it('should import key-only p12', () => {
     const p12Der = UTIL.decode64(_data.p12keyonly);
     const p12Asn1 = ASN1.fromDer(p12Der);
     const p12 = PKCS12.pkcs12FromAsn1(p12Asn1);
@@ -116,7 +111,7 @@ describe('pkcs12', () => {
     expect(p12.safeContents[0].safeBags[0].key!.q).toEqual(expected.q);
   });
 
-  it('should import encrypted-key-only p12', (ctx) => {
+  it('should import encrypted-key-only p12', () => {
     const p12Der = UTIL.decode64(_data.p12enckeyonly);
     const p12Asn1 = ASN1.fromDer(p12Der);
     const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, 'nopass');
@@ -137,7 +132,7 @@ describe('pkcs12', () => {
     expect(p12.safeContents[0].safeBags[0].key!.q).toEqual(expected.q);
   });
 
-  it('should import an encrypted-key-only p12', (ctx) => {
+  it('should import an encrypted-key-only p12', () => {
     const p12Der = UTIL.decode64(_data.p12enckeyonly);
     const p12Asn1 = ASN1.fromDer(p12Der);
     const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, 'nopass');
@@ -158,7 +153,7 @@ describe('pkcs12', () => {
     expect(p12.safeContents[0].safeBags[0].key!.q).toEqual(expected.q);
   });
 
-  it('should import an encrypted p12 with keys and certificates', (ctx) => {
+  it('should import an encrypted p12 with keys and certificates', () => {
     const p12Der = UTIL.decode64(_data.p12encmixed);
     const p12Asn1 = ASN1.fromDer(p12Der);
     const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
@@ -219,7 +214,7 @@ describe('pkcs12', () => {
     expect(p12.safeContents[1].safeBags[5].attributes.friendlyName![0]).toBe('CN=ElsterRootCA,OU=RootCA,O=Elster,C=DE');
   });
 
-  it('should get bags by friendly name', (ctx) => {
+  it('should get bags by friendly name', () => {
     const p12Der = UTIL.decode64(_data.p12encmixed);
     const p12Asn1 = ASN1.fromDer(p12Der);
     const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
@@ -229,7 +224,7 @@ describe('pkcs12', () => {
     expect(bags.friendlyName![0].attributes.friendlyName![0]).toBe('signaturekey');
   });
 
-  it('should get cert bags by friendly name', (ctx) => {
+  it('should get cert bags by friendly name', () => {
     const p12Der = UTIL.decode64(_data.p12encmixed);
     const p12Asn1 = ASN1.fromDer(p12Der);
     const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
@@ -242,7 +237,7 @@ describe('pkcs12', () => {
     expect(bags.friendlyName![0].attributes.friendlyName![0]).toBe('CN=1002753325,2.5.4.5=#130b3130303237353333323543');
   });
 
-  it('should get all cert bags', (ctx) => {
+  it('should get all cert bags', () => {
     const p12Der = UTIL.decode64(_data.p12encmixed);
     const p12Asn1 = ASN1.fromDer(p12Der);
     const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
@@ -256,7 +251,7 @@ describe('pkcs12', () => {
     }
   });
 
-  it('should get bags by local key ID', (ctx) => {
+  it('should get bags by local key ID', () => {
     const p12Der = UTIL.decode64(_data.p12encmixed);
     const p12Asn1 = ASN1.fromDer(p12Der);
     const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
@@ -267,7 +262,7 @@ describe('pkcs12', () => {
     expect(bags.localKeyId![1].attributes.localKeyId![0]).toBe('Time 1311855238863');
   });
 
-  it('should get cert bags by local key ID', (ctx) => {
+  it('should get cert bags by local key ID', () => {
     const p12Der = UTIL.decode64(_data.p12encmixed);
     const p12Asn1 = ASN1.fromDer(p12Der);
     const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123456');
@@ -281,14 +276,14 @@ describe('pkcs12', () => {
     expect(bags.localKeyId![0].type).toBe(PKI.oids.certBag);
   });
 
-  it('should generate a PKCS#12 mac key', (ctx) => {
+  it('should generate a PKCS#12 mac key', () => {
     const salt = UTIL.createBuffer(UTIL.hexToBytes('A15D6AA8F8DAFC352F9EE1C192F09966EB85D17B'));
     const expected = '03e46727268575c6ebd6bff828d0d09b0c914201263ca543';
     const key = PKCS12.generateKey('123456', salt, 1, 1024, 24) as Pkcs12MacKey;
     expect(key.toHex()).toBe(expected);
   });
 
-  it('should load a PKCS#12 with an ECDSA key in a certificate (unsupported key format)', (ctx) => {
+  it('should load a PKCS#12 with an ECDSA key in a certificate (unsupported key format)', () => {
     const p12Der = UTIL.decode64(_data.p12ecdsa);
     const p12Asn1 = ASN1.fromDer(p12Der);
     const p12 = PKCS12.pkcs12FromAsn1(p12Asn1, '123321');
@@ -311,7 +306,7 @@ describe('pkcs12', () => {
     const pem = PEM.encode(msg);
     expect(pem).toBe(_data.p12ecdsaCert);
   });
-  it('Issue #1127 optional macData is okay rfc5280#section-4.1.1.2', (ctx) => {
+  it('Issue #1127 optional macData is okay rfc5280#section-4.1.1.2', () => {
     const b64Pfx =
       'MIIKYAIBAzCCChwGCSqGSIb3DQEHAaCCCg0EggoJMIIKBTCCBhYGCS' +
       'qGSIb3DQEHAaCCBgcEggYDMIIF/zCCBfsGCyqGSIb3DQEMCgECoIIE' +

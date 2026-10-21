@@ -13,14 +13,14 @@ import {
 import { ensureAesTables } from './AesTables.js';
 
 type InitializeOptions = {
-  key: string | number[] | ByteStringBuffer | unknown;
+  key: string | number[] | ByteStringBuffer;
   decrypt?: boolean;
 };
 
 let cipherApi: CipherApi<AesAlgorithm['mode']>;
 
 /** Number of 32-bit words in the AES state column (FIPS 197, Nb = 4). */
-const Nb = 4;
+const stateColumnWordCount = 4;
 
 /**
  * Advanced Encryption Standard (AES) implementation.
@@ -232,7 +232,7 @@ export class AesAlgorithm {
     afterFinish?: (output: ByteStringBuffer, options: Record<string, unknown>) => boolean;
   };
 
-  #w: number[] | null = null;
+  #keySchedule: number[] | null = null;
   #init = false;
 
   constructor(name: string, mode: ModeConstructor<AesAlgorithm['mode']>) {
@@ -242,10 +242,10 @@ export class AesAlgorithm {
       blockSize: 16,
       cipher: {
         encrypt: (inBlock: number[], outBlock: number[]) => {
-          AesAlgorithm.#updateBlock(this.#w!, inBlock, outBlock, false);
+          AesAlgorithm.#updateBlock(this.#keySchedule!, inBlock, outBlock, false);
         },
         decrypt: (inBlock: number[], outBlock: number[]) => {
-          AesAlgorithm.#updateBlock(this.#w!, inBlock, outBlock, true);
+          AesAlgorithm.#updateBlock(this.#keySchedule!, inBlock, outBlock, true);
         }
       } satisfies BlockCipherApi
     });
@@ -264,8 +264,8 @@ export class AesAlgorithm {
       return;
     }
 
-    let key: string | number[] | ByteStringBuffer | unknown = options.key;
-    let tmp: number[] | ByteStringBuffer;
+    let key: string | number[] | ByteStringBuffer = options.key;
+    let keyScratch: number[] | ByteStringBuffer;
 
     /* Note: The key may be a string of bytes, an array of bytes, a byte
       buffer, or an array of 32-bit integers. If the key is in bytes, then
@@ -275,29 +275,29 @@ export class AesAlgorithm {
     if (typeof key === 'string' && (key.length === 16 || key.length === 24 || key.length === 32)) {
       key = UtilNamespace.createBuffer(key);
     } else if (isArray(key) && (key.length === 16 || key.length === 24 || key.length === 32)) {
-      tmp = key as number[];
+      keyScratch = key;
       key = UtilNamespace.createBuffer();
-      for (let i = 0; i < tmp.length; ++i) {
-        (key as ByteStringBuffer).putByte(tmp[i]!);
+      for (let i = 0; i < keyScratch.length; ++i) {
+        key.putByte(keyScratch[i]);
       }
     }
 
     let keyWords: number[];
     if (!isArray(key)) {
-      tmp = key as ByteStringBuffer;
+      keyScratch = key as ByteStringBuffer;
       keyWords = [];
 
-      const len = tmp.length();
-      if (len === 16 || len === 24 || len === 32) {
-        const wordCount = len >>> 2;
+      const keyByteLength = keyScratch.length();
+      if (keyByteLength === 16 || keyByteLength === 24 || keyByteLength === 32) {
+        const wordCount = keyByteLength >>> 2;
         for (let i = 0; i < wordCount; ++i) {
-          keyWords.push(tmp.getInt32());
+          keyWords.push(keyScratch.getInt32());
         }
       } else {
         keyWords = [];
       }
     } else {
-      keyWords = key as number[];
+      keyWords = key;
     }
 
     if (!isArray(keyWords) || !(keyWords.length === 4 || keyWords.length === 6 || keyWords.length === 8)) {
@@ -307,7 +307,7 @@ export class AesAlgorithm {
     const modeName = this.mode.name;
     const encryptOp = ['CFB', 'OFB', 'CTR', 'GCM'].indexOf(modeName!) !== -1;
 
-    this.#w = AesAlgorithm.#expandKey(keyWords, !!(options.decrypt && !encryptOp));
+    this.#keySchedule = AesAlgorithm.#expandKey(keyWords, !!(options.decrypt && !encryptOp));
     this.#init = true;
   }
 
@@ -315,7 +315,7 @@ export class AesAlgorithm {
     const { sbox, rcon, imix } = ensureAesTables();
 
     // copy the key's words to initialize the key schedule
-    let w = key.slice(0);
+    let keySchedule = key.slice(0);
 
     /* RotWord() will rotate a word, moving the first byte to the last
     byte's position (shifting the other bytes left).
@@ -328,31 +328,31 @@ export class AesAlgorithm {
    */
 
     // go through the rounds expanding the key
-    let temp,
-      iNk = 1;
-    const Nk = w.length;
-    const Nr1 = Nk + 6 + 1;
-    let end = Nb * Nr1;
-    for (let i = Nk; i < end; ++i) {
-      temp = w[i - 1];
-      if (i % Nk === 0) {
-        // temp = SubWord(RotWord(temp)) ^ Rcon[i / Nk]
-        temp =
-          (sbox[(temp >>> 16) & 255] << 24) ^
-          (sbox[(temp >>> 8) & 255] << 16) ^
-          (sbox[temp & 255] << 8) ^
-          sbox[temp >>> 24] ^
-          (rcon[iNk] << 24);
-        iNk++;
-      } else if (Nk > 6 && i % Nk === 4) {
-        // temp = SubWord(temp)
-        temp =
-          (sbox[temp >>> 24] << 24) ^
-          (sbox[(temp >>> 16) & 255] << 16) ^
-          (sbox[(temp >>> 8) & 255] << 8) ^
-          sbox[temp & 255];
+    let scheduleWord: number;
+    let rconIndex = 1;
+    const keyWordCount = keySchedule.length;
+    const roundCountPlusOne = keyWordCount + 6 + 1;
+    let scheduleLength = stateColumnWordCount * roundCountPlusOne;
+    for (let scheduleIndex = keyWordCount; scheduleIndex < scheduleLength; ++scheduleIndex) {
+      scheduleWord = keySchedule[scheduleIndex - 1];
+      if (scheduleIndex % keyWordCount === 0) {
+        // scheduleWord = SubWord(RotWord(scheduleWord)) ^ Rcon[i / Nk]
+        scheduleWord =
+          (sbox[(scheduleWord >>> 16) & 255] << 24) ^
+          (sbox[(scheduleWord >>> 8) & 255] << 16) ^
+          (sbox[scheduleWord & 255] << 8) ^
+          sbox[scheduleWord >>> 24] ^
+          (rcon[rconIndex] << 24);
+        rconIndex++;
+      } else if (keyWordCount > 6 && scheduleIndex % keyWordCount === 4) {
+        // scheduleWord = SubWord(scheduleWord)
+        scheduleWord =
+          (sbox[scheduleWord >>> 24] << 24) ^
+          (sbox[(scheduleWord >>> 16) & 255] << 16) ^
+          (sbox[(scheduleWord >>> 8) & 255] << 8) ^
+          sbox[scheduleWord & 255];
       }
-      w[i] = w[i - Nk] ^ temp;
+      keySchedule[scheduleIndex] = keySchedule[scheduleIndex - keyWordCount] ^ scheduleWord;
     }
 
     /* When we are updating a cipher block we always use the code path for
@@ -403,41 +403,48 @@ export class AesAlgorithm {
      described above.
   */
     if (decrypt) {
-      let tmp;
-      const m0 = imix[0];
-      const m1 = imix[1];
-      const m2 = imix[2];
-      const m3 = imix[3];
-      const wnew = w.slice(0);
-      end = w.length;
-      for (let i = 0, wi = end - Nb; i < end; i += Nb, wi -= Nb) {
+      let roundKeyWord: number;
+      const inverseMixTable0 = imix[0];
+      const inverseMixTable1 = imix[1];
+      const inverseMixTable2 = imix[2];
+      const inverseMixTable3 = imix[3];
+      const decryptedKeySchedule = keySchedule.slice(0);
+      scheduleLength = keySchedule.length;
+      for (
+        let scheduleOffset = 0, reversedKeyOffset = scheduleLength - stateColumnWordCount;
+        scheduleOffset < scheduleLength;
+        scheduleOffset += stateColumnWordCount, reversedKeyOffset -= stateColumnWordCount
+      ) {
         // do not sub the first or last round key (round keys are Nb
         // words) as no column mixing is performed before they are added,
         // but do change the key order
-        if (i === 0 || i === end - Nb) {
-          wnew[i] = w[wi];
-          wnew[i + 1] = w[wi + 3];
-          wnew[i + 2] = w[wi + 2];
-          wnew[i + 3] = w[wi + 1];
+        if (scheduleOffset === 0 || scheduleOffset === scheduleLength - stateColumnWordCount) {
+          decryptedKeySchedule[scheduleOffset] = keySchedule[reversedKeyOffset];
+          decryptedKeySchedule[scheduleOffset + 1] = keySchedule[reversedKeyOffset + 3];
+          decryptedKeySchedule[scheduleOffset + 2] = keySchedule[reversedKeyOffset + 2];
+          decryptedKeySchedule[scheduleOffset + 3] = keySchedule[reversedKeyOffset + 1];
         } else {
           // substitute each round key byte because the inverse-mix
           // table will inverse-substitute it (effectively cancel the
           // substitution because round key bytes aren't sub'd in
           // decryption mode) and swap indexes 3 and 1
-          for (let n = 0; n < Nb; ++n) {
-            tmp = w[wi + n];
-            wnew[i + (3 & -n)] =
-              m0[sbox[tmp >>> 24]] ^ m1[sbox[(tmp >>> 16) & 255]] ^ m2[sbox[(tmp >>> 8) & 255]] ^ m3[sbox[tmp & 255]];
+          for (let columnIndex = 0; columnIndex < stateColumnWordCount; ++columnIndex) {
+            roundKeyWord = keySchedule[reversedKeyOffset + columnIndex];
+            decryptedKeySchedule[scheduleOffset + (3 & -columnIndex)] =
+              inverseMixTable0[sbox[roundKeyWord >>> 24]] ^
+              inverseMixTable1[sbox[(roundKeyWord >>> 16) & 255]] ^
+              inverseMixTable2[sbox[(roundKeyWord >>> 8) & 255]] ^
+              inverseMixTable3[sbox[roundKeyWord & 255]];
           }
         }
       }
-      w = wnew;
+      keySchedule = decryptedKeySchedule;
     }
 
-    return w;
+    return keySchedule;
   }
 
-  static #updateBlock(w: number[], input: number[], output: number[], decrypt: boolean): void {
+  static #updateBlock(keySchedule: number[], input: number[], output: number[], decrypt: boolean): void {
     const { sbox, isbox, mix, imix } = ensureAesTables();
 
     /*
@@ -478,27 +485,37 @@ export class AesAlgorithm {
 
     // Encrypt: AddRoundKey(state, w[0, Nb-1])
     // Decrypt: AddRoundKey(state, w[Nr*Nb, (Nr+1)*Nb-1])
-    const Nr = w.length / 4 - 1;
-    let m0, m1, m2, m3, sub;
+    const roundCount = keySchedule.length / 4 - 1;
+    let mixTable0: number[];
+    let mixTable1: number[];
+    let mixTable2: number[];
+    let mixTable3: number[];
+    let substitutionTable: number[];
     if (decrypt) {
-      m0 = imix[0];
-      m1 = imix[1];
-      m2 = imix[2];
-      m3 = imix[3];
-      sub = isbox;
+      mixTable0 = imix[0];
+      mixTable1 = imix[1];
+      mixTable2 = imix[2];
+      mixTable3 = imix[3];
+      substitutionTable = isbox;
     } else {
-      m0 = mix[0];
-      m1 = mix[1];
-      m2 = mix[2];
-      m3 = mix[3];
-      sub = sbox;
+      mixTable0 = mix[0];
+      mixTable1 = mix[1];
+      mixTable2 = mix[2];
+      mixTable3 = mix[3];
+      substitutionTable = sbox;
     }
-    let a, b, c, d, a2, b2, c2;
-    a = input[0] ^ w[0];
-    b = input[decrypt ? 3 : 1] ^ w[1];
-    c = input[2] ^ w[2];
-    d = input[decrypt ? 1 : 3] ^ w[3];
-    let i = 3;
+    let column0: number;
+    let column1: number;
+    let column2: number;
+    let column3: number;
+    let mixedColumn0: number;
+    let mixedColumn1: number;
+    let mixedColumn2: number;
+    column0 = input[0] ^ keySchedule[0];
+    column1 = input[decrypt ? 3 : 1] ^ keySchedule[1];
+    column2 = input[2] ^ keySchedule[2];
+    column3 = input[decrypt ? 1 : 3] ^ keySchedule[3];
+    let keyScheduleIndex = 3;
 
     /* In order to share code we follow the encryption algorithm when both
     encrypting and decrypting. To account for the changes required in the
@@ -506,7 +523,7 @@ export class AesAlgorithm {
     and use a modified key schedule to account for the difference in the
     order of transformations applied when performing rounds. We also get
     key rounds in reverse order (relative to encryption). */
-    for (let round = 1; round < Nr; ++round) {
+    for (let round = 1; round < roundCount; ++round) {
       /* As described above, we'll be using table lookups to perform the
       column mixing. Each column is stored as a word in the state (the
       array 'input' has one column as a word at each index). In order to
@@ -622,13 +639,33 @@ export class AesAlgorithm {
       having to do it on each iteration, we swapped the 2nd and 4th rows
       in the decryption key schedule. We also have to do the swap above
       when we first pull in the input and when we set the final output. */
-      a2 = m0[a >>> 24] ^ m1[(b >>> 16) & 255] ^ m2[(c >>> 8) & 255] ^ m3[d & 255] ^ w[++i];
-      b2 = m0[b >>> 24] ^ m1[(c >>> 16) & 255] ^ m2[(d >>> 8) & 255] ^ m3[a & 255] ^ w[++i];
-      c2 = m0[c >>> 24] ^ m1[(d >>> 16) & 255] ^ m2[(a >>> 8) & 255] ^ m3[b & 255] ^ w[++i];
-      d = m0[d >>> 24] ^ m1[(a >>> 16) & 255] ^ m2[(b >>> 8) & 255] ^ m3[c & 255] ^ w[++i];
-      a = a2;
-      b = b2;
-      c = c2;
+      mixedColumn0 =
+        mixTable0[column0 >>> 24] ^
+        mixTable1[(column1 >>> 16) & 255] ^
+        mixTable2[(column2 >>> 8) & 255] ^
+        mixTable3[column3 & 255] ^
+        keySchedule[++keyScheduleIndex];
+      mixedColumn1 =
+        mixTable0[column1 >>> 24] ^
+        mixTable1[(column2 >>> 16) & 255] ^
+        mixTable2[(column3 >>> 8) & 255] ^
+        mixTable3[column0 & 255] ^
+        keySchedule[++keyScheduleIndex];
+      mixedColumn2 =
+        mixTable0[column2 >>> 24] ^
+        mixTable1[(column3 >>> 16) & 255] ^
+        mixTable2[(column0 >>> 8) & 255] ^
+        mixTable3[column1 & 255] ^
+        keySchedule[++keyScheduleIndex];
+      column3 =
+        mixTable0[column3 >>> 24] ^
+        mixTable1[(column0 >>> 16) & 255] ^
+        mixTable2[(column1 >>> 8) & 255] ^
+        mixTable3[column2 & 255] ^
+        keySchedule[++keyScheduleIndex];
+      column0 = mixedColumn0;
+      column1 = mixedColumn1;
+      column2 = mixedColumn2;
     }
 
     /*
@@ -644,13 +681,29 @@ export class AesAlgorithm {
    */
     // Note: rows are shifted inline
     output[0] =
-      (sub[a >>> 24] << 24) ^ (sub[(b >>> 16) & 255] << 16) ^ (sub[(c >>> 8) & 255] << 8) ^ sub[d & 255] ^ w[++i];
+      (substitutionTable[column0 >>> 24] << 24) ^
+      (substitutionTable[(column1 >>> 16) & 255] << 16) ^
+      (substitutionTable[(column2 >>> 8) & 255] << 8) ^
+      substitutionTable[column3 & 255] ^
+      keySchedule[++keyScheduleIndex];
     output[decrypt ? 3 : 1] =
-      (sub[b >>> 24] << 24) ^ (sub[(c >>> 16) & 255] << 16) ^ (sub[(d >>> 8) & 255] << 8) ^ sub[a & 255] ^ w[++i];
+      (substitutionTable[column1 >>> 24] << 24) ^
+      (substitutionTable[(column2 >>> 16) & 255] << 16) ^
+      (substitutionTable[(column3 >>> 8) & 255] << 8) ^
+      substitutionTable[column0 & 255] ^
+      keySchedule[++keyScheduleIndex];
     output[2] =
-      (sub[c >>> 24] << 24) ^ (sub[(d >>> 16) & 255] << 16) ^ (sub[(a >>> 8) & 255] << 8) ^ sub[b & 255] ^ w[++i];
+      (substitutionTable[column2 >>> 24] << 24) ^
+      (substitutionTable[(column3 >>> 16) & 255] << 16) ^
+      (substitutionTable[(column0 >>> 8) & 255] << 8) ^
+      substitutionTable[column1 & 255] ^
+      keySchedule[++keyScheduleIndex];
     output[decrypt ? 1 : 3] =
-      (sub[d >>> 24] << 24) ^ (sub[(a >>> 16) & 255] << 16) ^ (sub[(b >>> 8) & 255] << 8) ^ sub[c & 255] ^ w[++i];
+      (substitutionTable[column3 >>> 24] << 24) ^
+      (substitutionTable[(column0 >>> 16) & 255] << 16) ^
+      (substitutionTable[(column1 >>> 8) & 255] << 8) ^
+      substitutionTable[column2 & 255] ^
+      keySchedule[keyScheduleIndex + 1];
   }
 
   static registerAlgorithms(cipher: CipherApi<AesAlgorithm['mode']>): void {
@@ -671,8 +724,8 @@ export class AesAlgorithm {
       createDecryptionCipher,
       Algorithm: AesAlgorithm,
       _expandKey: (key: number[], decrypt: boolean) => AesAlgorithm.#expandKey(key, decrypt),
-      _updateBlock: (w: number[], input: number[], output: number[], decrypt: boolean) =>
-        AesAlgorithm.#updateBlock(w, input, output, decrypt)
+      _updateBlock: (keySchedule: number[], input: number[], output: number[], decrypt: boolean) =>
+        AesAlgorithm.#updateBlock(keySchedule, input, output, decrypt)
     } as AesNamespaceObject;
   }
 }

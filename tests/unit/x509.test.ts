@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import certkit from '../../src/presentation/index.js';
 import type { DnAttributeInput, PrivateKey, PublicKey, X509Extension } from '../../src/domain/pki/x509/X509Types.js';
 const ASN1 = certkit.asn1;
@@ -272,47 +272,47 @@ const _pem_past_2050 = {
 };
 
 describe('x509', () => {
-  it('should convert SHA-1 based certificate to/from PEM', (ctx) => {
+  it('should convert SHA-1 based certificate to/from PEM', () => {
     const certificate = PKI.certificateFromPem(_pem.certificate);
     expect(PKI.certificateToPem(certificate)).toBe(_pem.certificate);
   });
 
-  it('should convert SHA-256 based certificate to/from PEM', (ctx) => {
+  it('should convert SHA-256 based certificate to/from PEM', () => {
     const certificate = PKI.certificateFromPem(_pem_sha256.certificate);
     expect(PKI.certificateToPem(certificate)).toBe(_pem_sha256.certificate);
   });
 
-  it('should convert certificate not before < 2050 < not after to/from PEM', (ctx) => {
+  it('should convert certificate not before < 2050 < not after to/from PEM', () => {
     const certificate = PKI.certificateFromPem(_pem_past_2050.certificate);
     expect(PKI.certificateToPem(certificate)).toBe(_pem_past_2050.certificate);
   });
 
-  it('should convert SHA-512 based certificate to/from PEM', (ctx) => {
+  it('should convert SHA-512 based certificate to/from PEM', () => {
     const certificate = PKI.certificateFromPem(_pem_sha512.certificate);
     expect(PKI.certificateToPem(certificate)).toBe(_pem_sha512.certificate);
   });
 
-  it('should verify SHA-1 based self-signed certificate', (ctx) => {
+  it('should verify SHA-1 based self-signed certificate', () => {
     const certificate = PKI.certificateFromPem(_pem.certificate);
     expect(certificate.verify(certificate)).toBeTruthy();
   });
 
-  it('should verify SHA-256 based self-signed certificate', (ctx) => {
+  it('should verify SHA-256 based self-signed certificate', () => {
     const certificate = PKI.certificateFromPem(_pem_sha256.certificate);
     expect(certificate.verify(certificate)).toBeTruthy();
   });
 
-  it('should verify SHA-512 based self-signed certificate', (ctx) => {
+  it('should verify SHA-512 based self-signed certificate', () => {
     const certificate = PKI.certificateFromPem(_pem_sha512.certificate);
     expect(certificate.verify(certificate)).toBeTruthy();
   });
 
-  it('should verify not before < 2050 < not after self-signed certificate', (ctx) => {
+  it('should verify not before < 2050 < not after self-signed certificate', () => {
     const certificate = PKI.certificateFromPem(_pem_past_2050.certificate);
     expect(certificate.verify(certificate)).toBeTruthy();
   });
 
-  it('should generate a certificate with authorityKeyIdentifier extension', (ctx) => {
+  it('should generate a certificate with authorityKeyIdentifier extension', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -382,14 +382,14 @@ describe('x509', () => {
     // verify certificate chain
     const caStore = PKI.createCaStore();
     caStore.addCertificate(cert);
-    PKI.verifyCertificateChain(caStore, [cert], (vfd, depth, chain) => {
+    PKI.verifyCertificateChain(caStore, [cert], (vfd) => {
       expect(vfd).toBe(true);
       expect(cert.verifySubjectKeyIdentifier()).toBeTruthy();
       return true;
     });
   });
 
-  it('should generate a certificate with cRLDistributionPoints extension', (ctx) => {
+  it('should generate a certificate with cRLDistributionPoints extension', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -460,14 +460,14 @@ describe('x509', () => {
     // verify certificate chain
     const caStore = PKI.createCaStore();
     caStore.addCertificate(cert);
-    PKI.verifyCertificateChain(caStore, [cert], (vfd, depth, chain) => {
+    PKI.verifyCertificateChain(caStore, [cert], (vfd) => {
       expect(vfd).toBe(true);
       expect(cert.verifySubjectKeyIdentifier()).toBeTruthy();
       return true;
     });
   });
 
-  it('should generate a certificate with nsComment extension', (ctx) => {
+  it('should generate a certificate with nsComment extension', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -523,20 +523,20 @@ describe('x509', () => {
     expect(index !== -1).toBeTruthy();
     const ext = cert.extensions[index];
     expect(ext).toBeDefined();
-    expect(ext!.value).toBeDefined();
-    expect(ASN1.fromDer(ext!.value as string).value).toBe(dummyTestStr);
+    expect(ext.value).toBeDefined();
+    expect(ASN1.fromDer(ext.value as string).value).toBe(dummyTestStr);
 
     // verify certificate chain
     const caStore = PKI.createCaStore();
     caStore.addCertificate(cert);
-    PKI.verifyCertificateChain(caStore, [cert], (vfd, depth, chain) => {
+    PKI.verifyCertificateChain(caStore, [cert], (vfd) => {
       expect(vfd).toBe(true);
       expect(cert.verifySubjectKeyIdentifier()).toBeTruthy();
       return true;
     });
   });
 
-  it('should generate a certificate with postalCode attribute', (ctx) => {
+  it('should generate a certificate with postalCode attribute', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -589,7 +589,7 @@ describe('x509', () => {
     expect(attribute.value).toBe('24060');
   });
 
-  it('should generate a certificate with businessCategory attribute', (ctx) => {
+  it('should generate a certificate with businessCategory attribute', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -642,7 +642,7 @@ describe('x509', () => {
     expect(attribute.value).toBe('Test Organization');
   });
 
-  it('should generate a certificate with streetAddress attribute', (ctx) => {
+  it('should generate a certificate with streetAddress attribute', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -695,7 +695,7 @@ describe('x509', () => {
     expect(attribute.value).toBe('Test Avenue');
   });
 
-  it('should generate a certificate with pseudonym attribute', (ctx) => {
+  it('should generate a certificate with pseudonym attribute', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -748,7 +748,7 @@ describe('x509', () => {
     expect(attribute.value).toBe('Satoshi Nakamato');
   });
 
-  it('should generate a certificate with jurisdictionOfIncorporationStateOrProvinceName attribute', (ctx) => {
+  it('should generate a certificate with jurisdictionOfIncorporationStateOrProvinceName attribute', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -801,7 +801,7 @@ describe('x509', () => {
     expect(attribute.value).toBe('Delaware');
   });
 
-  it('should generate a certificate with jurisdictionOfIncorporationCountryName attribute', (ctx) => {
+  it('should generate a certificate with jurisdictionOfIncorporationCountryName attribute', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -854,7 +854,7 @@ describe('x509', () => {
     expect(attribute.value).toBe('US');
   });
 
-  it('should generate and verify a self-signed certificate', (ctx) => {
+  it('should generate and verify a self-signed certificate', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -900,14 +900,14 @@ describe('x509', () => {
     // verify certificate chain
     const caStore = PKI.createCaStore();
     caStore.addCertificate(cert);
-    PKI.verifyCertificateChain(caStore, [cert], (vfd, depth, chain) => {
+    PKI.verifyCertificateChain(caStore, [cert], (vfd) => {
       expect(vfd).toBe(true);
       expect(cert.verifySubjectKeyIdentifier()).toBeTruthy();
       return true;
     });
   });
 
-  it('should generate a self-signed certificate after 2050', (ctx) => {
+  it('should generate a self-signed certificate after 2050', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -957,7 +957,7 @@ describe('x509', () => {
     expect(cert.validity.notAfter.toString()).toBe(notAfter.toString());
   });
 
-  it('should generate and fail to verify a self-signed certificate that is not in the CA store', (ctx) => {
+  it('should generate and fail to verify a self-signed certificate that is not in the CA store', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -1002,13 +1002,13 @@ describe('x509', () => {
 
     // verify certificate chain
     const caStore = PKI.createCaStore();
-    PKI.verifyCertificateChain(caStore, [cert], (vfd, depth, chain) => {
+    PKI.verifyCertificateChain(caStore, [cert], (vfd) => {
       expect(vfd).toBe(PKI.certificateError.unknown_ca);
       return true;
     });
   });
 
-  it('should verify certificate chain ending with intermediate certificate from CA store', (ctx) => {
+  it('should verify certificate chain ending with intermediate certificate from CA store', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -1114,13 +1114,13 @@ describe('x509', () => {
     const caStore = PKI.createCaStore();
     caStore.addCertificate(intermediateCert);
     const chain = [entityCert, intermediateCert];
-    PKI.verifyCertificateChain(caStore, chain, (vfd, depth, chain) => {
+    PKI.verifyCertificateChain(caStore, chain, (vfd) => {
       expect(vfd).toBe(true);
       return true;
     });
   });
 
-  it('should fail to verify certificate chain ending with non-CA intermediate certificate from CA store', (ctx) => {
+  it('should fail to verify certificate chain ending with non-CA intermediate certificate from CA store', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -1226,7 +1226,7 @@ describe('x509', () => {
     const caStore = PKI.createCaStore();
     caStore.addCertificate(intermediateCert);
     const chain = [entityCert, intermediateCert];
-    PKI.verifyCertificateChain(caStore, chain, (vfd, depth, chain) => {
+    PKI.verifyCertificateChain(caStore, chain, (vfd, depth) => {
       if (depth === 0) {
         expect(vfd).toBe(true);
       } else {
@@ -1236,7 +1236,7 @@ describe('x509', () => {
     });
   });
 
-  it('should verify based on a custom specified validity date', (ctx) => {
+  it('should verify based on a custom specified validity date', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -1291,7 +1291,7 @@ describe('x509', () => {
     let verifyDate = new Date();
     PKI.verifyCertificateChain(caStore, [cert], {
       validityCheckDate: verifyDate,
-      verify: function (vfd, depth, chain) {
+      verify: function (vfd) {
         expect(vfd).toBe(true);
         return true;
       }
@@ -1301,7 +1301,7 @@ describe('x509', () => {
     verifyDate.setFullYear(verifyDate.getFullYear() + 2);
     PKI.verifyCertificateChain(caStore, [cert], {
       validityCheckDate: verifyDate,
-      verify: function (vfd, depth, chain) {
+      verify: function (vfd) {
         expect(vfd).toBe('certkit.pki.CertificateExpired');
         return true;
       }
@@ -1311,14 +1311,14 @@ describe('x509', () => {
     verifyDate.setFullYear(verifyDate.getFullYear() - 1);
     PKI.verifyCertificateChain(caStore, [cert], {
       validityCheckDate: verifyDate,
-      verify: function (vfd, depth, chain) {
+      verify: function (vfd) {
         expect(vfd).toBe('certkit.pki.CertificateExpired');
         return true;
       }
     });
   });
 
-  it('should not verify the validity period if null is passed as validityCheckDate', (ctx) => {
+  it('should not verify the validity period if null is passed as validityCheckDate', () => {
     const keys = {
       privateKey: PKI.privateKeyFromPem(_pem.privateKey),
       publicKey: PKI.publicKeyFromPem(_pem.publicKey)
@@ -1376,7 +1376,7 @@ describe('x509', () => {
     caStore.addCertificate(cert);
 
     PKI.verifyCertificateChain(caStore, [cert], {
-      verify: function (vfd, depth, chain) {
+      verify: function (vfd) {
         expect(vfd).toBe('certkit.pki.CertificateExpired');
         return true;
       }
@@ -1384,14 +1384,14 @@ describe('x509', () => {
 
     PKI.verifyCertificateChain(caStore, [cert], {
       validityCheckDate: null,
-      verify: function (vfd, depth, chain) {
+      verify: function (vfd) {
         expect(vfd).toBe(true);
         return true;
       }
     });
   });
 
-  it('should verify certificate with sha1WithRSAEncryption signature', (ctx) => {
+  it('should verify certificate with sha1WithRSAEncryption signature', () => {
     const certPem =
       '-----BEGIN CERTIFICATE-----\r\n' +
       'MIIDZDCCAs2gAwIBAgIKQ8fjjgAAAABh3jANBgkqhkiG9w0BAQUFADBGMQswCQYD\r\n' +
@@ -1437,7 +1437,7 @@ describe('x509', () => {
     expect(issuer.verify(cert)).toBeTruthy();
   });
 
-  it('should calculate a certificate subject and issuer hash', (ctx) => {
+  it('should calculate a certificate subject and issuer hash', () => {
     const certPem =
       '-----BEGIN CERTIFICATE-----\r\n' +
       'MIIDZDCCAs2gAwIBAgIKQ8fjjgAAAABh3jANBgkqhkiG9w0BAQUFADBGMQswCQYD\r\n' +
@@ -1485,7 +1485,7 @@ describe('x509', () => {
     expect(cert.issuer.hash).toBe('d43b6713ab1a8679f0b70e169e9df889ed387a4b');
   });
 
-  it('should verify certificate with sha1WithRSASignature signature', (ctx) => {
+  it('should verify certificate with sha1WithRSASignature signature', () => {
     const certPem =
       '-----BEGIN CERTIFICATE-----\r\n' +
       'MIIBwjCCAS+gAwIBAgIQj2d4hVEz0L1DYFVhA9CxCzAJBgUrDgMCHQUAMA8xDTAL\r\n' +
@@ -1505,7 +1505,7 @@ describe('x509', () => {
     expect(cert.md!.algorithm).toBe('sha1');
   });
 
-  it('should verify certificate with sha256WithRSAEncryption signature', (ctx) => {
+  it('should verify certificate with sha256WithRSAEncryption signature', () => {
     const certPem =
       '-----BEGIN CERTIFICATE-----\r\n' +
       'MIIDuzCCAqOgAwIBAgIEO5vZjDANBgkqhkiG9w0BAQsFADBGMQswCQYDVQQGEwJE\r\n' +
@@ -1560,7 +1560,7 @@ describe('x509', () => {
     expect(issuer.verify(cert)).toBeTruthy();
   });
 
-  it('should import certificate with sha256 RSASSA-PSS signature', (ctx) => {
+  it('should import certificate with sha256 RSASSA-PSS signature', () => {
     const certPem =
       '-----BEGIN CERTIFICATE-----\r\n' +
       'MIIERzCCAvugAwIBAgIEO50CcjBBBgkqhkiG9w0BAQowNKAPMA0GCWCGSAFlAwQC\r\n' +
@@ -1601,7 +1601,7 @@ describe('x509', () => {
     expect(siginfoParams.mgf.hash.algorithmOid).toBe(PKI.oids['sha256']);
   });
 
-  it('should export certificate with sha256 RSASSA-PSS signature', (ctx) => {
+  it('should export certificate with sha256 RSASSA-PSS signature', () => {
     const certPem =
       '-----BEGIN CERTIFICATE-----\r\n' +
       'MIIERzCCAvugAwIBAgIEO50CcjBBBgkqhkiG9w0BAQowNKAPMA0GCWCGSAFlAwQC\r\n' +
@@ -1632,7 +1632,7 @@ describe('x509', () => {
     expect(PKI.certificateToPem(cert)).toBe(certPem);
   });
 
-  it('should verify certificate with sha256 RSASSA-PSS signature', (ctx) => {
+  it('should verify certificate with sha256 RSASSA-PSS signature', () => {
     const certPem =
       '-----BEGIN CERTIFICATE-----\r\n' +
       'MIIERzCCAvugAwIBAgIEO50CcjBBBgkqhkiG9w0BAQowNKAPMA0GCWCGSAFlAwQC\r\n' +
@@ -1691,7 +1691,7 @@ describe('x509', () => {
     expect(issuer.verify(cert)).toBeTruthy();
   });
 
-  it('should parse certificate with ASN.1 signature data', (ctx) => {
+  it('should parse certificate with ASN.1 signature data', () => {
     // signature has bytes that could look like ASN.1 data
     // TODO: add more similar tests with possible ASN.1 data in BIT
     // .. STRINGS that are just data.
@@ -1728,7 +1728,7 @@ describe('x509', () => {
     expect(certPem).toBe(outPem);
   });
 
-  it('should require basicConstraints on non-leaf certificates', (ctx) => {
+  it('should require basicConstraints on non-leaf certificates', () => {
     // see https://github.com/digitalbazaar/forge/security/advisories/GHSA-2328-f5f3-gj25
     function generateKeyPair() {
       return PKI.rsa.generateKeyPair(2048, 0x10001);
@@ -1738,7 +1738,7 @@ describe('x509', () => {
     // cA=true)
     const rootKeys = generateKeyPair();
     const rootCert = PKI.createCertificate();
-    rootCert.publicKey = rootKeys.publicKey as unknown as PublicKey;
+    rootCert.publicKey = rootKeys.publicKey;
     rootCert.serialNumber = '01';
     rootCert.validity.notBefore = new Date();
     rootCert.validity.notAfter = new Date();
@@ -1761,7 +1761,7 @@ describe('x509', () => {
     // certificates
     const leafKeys = generateKeyPair();
     const leafCert = PKI.createCertificate();
-    leafCert.publicKey = leafKeys.publicKey as unknown as PublicKey;
+    leafCert.publicKey = leafKeys.publicKey;
     leafCert.serialNumber = '02';
     leafCert.validity.notBefore = new Date();
     leafCert.validity.notAfter = new Date();
@@ -1780,7 +1780,7 @@ describe('x509', () => {
     // This simulates an attacker using a non-CA cert to forge certificates
     const victimKeys = generateKeyPair();
     const victimCert = PKI.createCertificate();
-    victimCert.publicKey = victimKeys.publicKey as unknown as PublicKey;
+    victimCert.publicKey = victimKeys.publicKey;
     victimCert.serialNumber = '03';
     victimCert.validity.notBefore = new Date();
     victimCert.validity.notAfter = new Date();
@@ -1813,19 +1813,19 @@ describe('x509', () => {
 // TODO: add sha-512 and sha-256 fingerprint tests
 
 describe('public key fingerprints', () => {
-  it('should get a SHA-1 RSAPublicKey fingerprint', (ctx) => {
+  it('should get a SHA-1 RSAPublicKey fingerprint', () => {
     const publicKey = PKI.publicKeyFromPem(_pem.publicKey);
     const fp = PKI.getPublicKeyFingerprint(publicKey, { type: 'RSAPublicKey' });
     expect((fp as DigestFingerprint).toHex()).toBe('f57563e0c75d6e9b03fafdb2fd72349f23030300');
   });
 
-  it('should get a SHA-1 SubjectPublicKeyInfo fingerprint', (ctx) => {
+  it('should get a SHA-1 SubjectPublicKeyInfo fingerprint', () => {
     const publicKey = PKI.publicKeyFromPem(_pem.publicKey);
     const fp = PKI.getPublicKeyFingerprint(publicKey, { type: 'SubjectPublicKeyInfo' });
     expect((fp as DigestFingerprint).toHex()).toBe('984724bc548bbc2c8acbac044bd8d518abd26dd8');
   });
 
-  it('should get a hex SHA-1 RSAPublicKey fingerprint', (ctx) => {
+  it('should get a hex SHA-1 RSAPublicKey fingerprint', () => {
     const publicKey = PKI.publicKeyFromPem(_pem.publicKey);
     const fp = PKI.getPublicKeyFingerprint(publicKey, { type: 'RSAPublicKey', encoding: 'hex' });
     expect(fp).toBe('f57563e0c75d6e9b03fafdb2fd72349f23030300');
@@ -1847,19 +1847,19 @@ describe('public key fingerprints', () => {
     expect(fp).toBe('98:47:24:bc:54:8b:bc:2c:8a:cb:ac:04:4b:d8:d5:18:ab:d2:6d:d8');
   });
 
-  it('should get an MD5 RSAPublicKey fingerprint', (ctx) => {
+  it('should get an MD5 RSAPublicKey fingerprint', () => {
     const publicKey = PKI.publicKeyFromPem(_pem.publicKey);
     const fp = PKI.getPublicKeyFingerprint(publicKey, { md: MD.md5.create(), type: 'RSAPublicKey' });
     expect((fp as DigestFingerprint).toHex()).toBe('c7da180cc48d31a071d31a78bc43d9d7');
   });
 
-  it('should get an MD5 SubjectPublicKeyInfo fingerprint', (ctx) => {
+  it('should get an MD5 SubjectPublicKeyInfo fingerprint', () => {
     const publicKey = PKI.publicKeyFromPem(_pem.publicKey);
     const fp = PKI.getPublicKeyFingerprint(publicKey, { md: MD.md5.create(), type: 'SubjectPublicKeyInfo' });
     expect((fp as DigestFingerprint).toHex()).toBe('e5c5ba577fe24fb8a678d8d58f539cd7');
   });
 
-  it('should get a hex MD5 RSAPublicKey fingerprint', (ctx) => {
+  it('should get a hex MD5 RSAPublicKey fingerprint', () => {
     const publicKey = PKI.publicKeyFromPem(_pem.publicKey);
     const fp = PKI.getPublicKeyFingerprint(publicKey, { md: MD.md5.create(), type: 'RSAPublicKey', encoding: 'hex' });
     expect(fp).toBe('c7da180cc48d31a071d31a78bc43d9d7');
@@ -1889,7 +1889,7 @@ describe('public key fingerprints', () => {
 });
 
 describe('CA store', () => {
-  it('should add a certificate object to a store', (ctx) => {
+  it('should add a certificate object to a store', () => {
     const cert = PKI.certificateFromPem(_pem.certificate);
     const caStore = PKI.createCaStore();
     caStore.addCertificate(cert);
@@ -1897,14 +1897,14 @@ describe('CA store', () => {
     expect(caStore.listAllCertificates().length).toBe(1);
   });
 
-  it('should add a PEM certificate to a store', (ctx) => {
+  it('should add a PEM certificate to a store', () => {
     const caStore = PKI.createCaStore();
     caStore.addCertificate(_pem.certificate);
     expect(caStore.hasCertificate(_pem.certificate)).toBeTruthy();
     expect(caStore.listAllCertificates().length).toBe(1);
   });
 
-  it('should add two certificate objects to a store', (ctx) => {
+  it('should add two certificate objects to a store', () => {
     const cert1 = PKI.certificateFromPem(_pem.certificate);
     const cert2 = PKI.certificateFromPem(_pem_sha256.certificate);
     const caStore = PKI.createCaStore();
@@ -1915,7 +1915,7 @@ describe('CA store', () => {
     expect(caStore.listAllCertificates().length).toBe(2);
   });
 
-  it('should add two PEM certificates to a store', (ctx) => {
+  it('should add two PEM certificates to a store', () => {
     const cert1 = _pem.certificate;
     const cert2 = _pem_sha256.certificate;
     const caStore = PKI.createCaStore();
@@ -1926,7 +1926,7 @@ describe('CA store', () => {
     expect(caStore.listAllCertificates().length).toBe(2);
   });
 
-  it('should remove a certificate object from a store', (ctx) => {
+  it('should remove a certificate object from a store', () => {
     const cert1 = PKI.certificateFromPem(_pem.certificate);
     const cert2 = PKI.certificateFromPem(_pem_sha256.certificate);
     const caStore = PKI.createCaStore();
@@ -1940,7 +1940,7 @@ describe('CA store', () => {
     expect(caStore.listAllCertificates().length).toBe(1);
   });
 
-  it('should remove a PEM certificate from a store', (ctx) => {
+  it('should remove a PEM certificate from a store', () => {
     const cert1 = _pem.certificate;
     const cert2 = _pem_sha256.certificate;
     const caStore = PKI.createCaStore();
@@ -1954,7 +1954,7 @@ describe('CA store', () => {
     expect(caStore.listAllCertificates().length).toBe(1);
   });
 
-  it('should remove a certificate object from a store with two remaining', (ctx) => {
+  it('should remove a certificate object from a store with two remaining', () => {
     const cert1 = PKI.certificateFromPem(_pem.certificate);
     const cert2 = PKI.certificateFromPem(_pem_sha256.certificate);
     const cert3 = PKI.certificateFromPem(_pem_sha512.certificate);
@@ -1971,7 +1971,7 @@ describe('CA store', () => {
     expect(caStore.listAllCertificates().length).toBe(2);
   });
 
-  it('should remove a PEM certificate from a store with two remaining', (ctx) => {
+  it('should remove a PEM certificate from a store with two remaining', () => {
     const cert1 = _pem.certificate;
     const cert2 = _pem_sha256.certificate;
     const cert3 = _pem_sha512.certificate;
@@ -1988,7 +1988,7 @@ describe('CA store', () => {
     expect(caStore.listAllCertificates().length).toBe(2);
   });
 
-  it('should add two certificate objects with the same subject to a store', (ctx) => {
+  it('should add two certificate objects with the same subject to a store', () => {
     const cert1 = PKI.certificateFromPem(_pem_same_subject[0]);
     const cert2 = PKI.certificateFromPem(_pem_same_subject[1]);
     const caStore = PKI.createCaStore();
@@ -1999,7 +1999,7 @@ describe('CA store', () => {
     expect(caStore.listAllCertificates().length).toBe(2);
   });
 
-  it('should add two PEM certificates with the same subject to a store', (ctx) => {
+  it('should add two PEM certificates with the same subject to a store', () => {
     const cert1 = _pem_same_subject[0];
     const cert2 = _pem_same_subject[1];
     const caStore = PKI.createCaStore();
@@ -2010,7 +2010,7 @@ describe('CA store', () => {
     expect(caStore.listAllCertificates().length).toBe(2);
   });
 
-  it('should remove a certificate object with the same subject from a store', (ctx) => {
+  it('should remove a certificate object with the same subject from a store', () => {
     const cert1 = PKI.certificateFromPem(_pem_same_subject[0]);
     const cert2 = PKI.certificateFromPem(_pem_same_subject[1]);
     const caStore = PKI.createCaStore();
@@ -2022,7 +2022,7 @@ describe('CA store', () => {
     expect(caStore.listAllCertificates().length).toBe(1);
   });
 
-  it('should remove a PEM certificate with the same subject from a store', (ctx) => {
+  it('should remove a PEM certificate with the same subject from a store', () => {
     const cert1 = _pem_same_subject[0];
     const cert2 = _pem_same_subject[1];
     const caStore = PKI.createCaStore();
@@ -2034,7 +2034,7 @@ describe('CA store', () => {
     expect(caStore.listAllCertificates().length).toBe(1);
   });
 
-  it('should remove a certificate object from a store with the same subject with two remaining', (ctx) => {
+  it('should remove a certificate object from a store with the same subject with two remaining', () => {
     const cert1 = PKI.certificateFromPem(_pem_same_subject[0]);
     const cert2 = PKI.certificateFromPem(_pem_same_subject[1]);
     const cert3 = PKI.certificateFromPem(_pem_sha512.certificate);
@@ -2049,7 +2049,7 @@ describe('CA store', () => {
     expect(caStore.listAllCertificates().length).toBe(2);
   });
 
-  it('should remove a PEM certificate from a store with the same subject with two remaining', (ctx) => {
+  it('should remove a PEM certificate from a store with the same subject with two remaining', () => {
     const cert1 = _pem_same_subject[0];
     const cert2 = _pem_same_subject[1];
     const cert3 = _pem_sha512.certificate;
@@ -2064,7 +2064,7 @@ describe('CA store', () => {
     expect(caStore.listAllCertificates().length).toBe(2);
   });
 
-  it('should fail to remove a PEM certificate from a store', (ctx) => {
+  it('should fail to remove a PEM certificate from a store', () => {
     const cert1 = _pem.certificate;
     const cert2 = _pem_sha256.certificate;
     const cert3 = _pem_sha512.certificate;
@@ -2115,8 +2115,8 @@ function createCertificate(options: {
   notAfter?: Date;
   extensions?: X509Extension[];
 }) {
-  const publicKey = options.publicKey as PublicKey;
-  const signingKey = options.signingKey as PrivateKey;
+  const publicKey = options.publicKey;
+  const signingKey = options.signingKey;
   const subject = options.subject;
   const issuer = options.issuer;
   const isCA = options.isCA;

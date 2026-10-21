@@ -52,7 +52,10 @@ function getData(pem: string): CertificateData {
   if (!commonName) {
     throw new Error('commonName not found in certificate subject');
   }
-  const values = commonName.value.toString().split(':');
+  if (typeof commonName.value !== 'string') {
+    throw new Error('commonName value must be a string');
+  }
+  const values = commonName.value.split(':');
   return {
     emissao: certificate.validity.notBefore,
     validade: certificate.validity.notAfter,

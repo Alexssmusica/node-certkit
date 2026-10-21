@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import certkit from '../src/presentation/index.js';
 import fs from 'node:fs';
 import path from 'node:path';
 const snapshotPath = path.join(import.meta.dirname, 'api-surface.snapshot.json');
-const expected = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
+const expected = JSON.parse(fs.readFileSync(snapshotPath, 'utf8')) as Snapshot;
 
 const MAX_DEPTH = 12;
 const seen = new WeakSet<object>();
@@ -75,7 +75,7 @@ function diffSnapshots(a: Snapshot, b: Snapshot) {
 }
 
 describe('API surface snapshot', () => {
-  it('matches the committed snapshot', (ctx) => {
+  it('matches the committed snapshot', () => {
     const actual: Snapshot = {};
     walk(certkit, 'certkit', 0, actual);
     const diff = diffSnapshots(expected, actual);

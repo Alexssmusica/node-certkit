@@ -65,15 +65,15 @@ export class CertificationRequest {
 
       if (computeHash) {
         csr.md = createSignatureDigest({
-          signatureOid: csr.signatureOid!,
+          signatureOid: csr.signatureOid,
           type: 'certification request'
         });
 
-        const bytes = asn1.toDer(csr.certificationRequestInfo!);
+        const bytes = asn1.toDer(csr.certificationRequestInfo);
         csr.md.update(bytes.getBytes());
       }
 
-      const smd = ctx.md.sha1.create();
+      const smd = ctx.digestRegistry.sha1.create();
       csr.subject.getField = function (sn: string | AttributeLookup) {
         return getAttribute(csr.subject, sn);
       };
@@ -139,7 +139,7 @@ export class CertificationRequest {
       };
 
       csr.sign = function (key: PrivateKey, md?: MessageDigest) {
-        csr.md = md || ctx.md.sha1.create();
+        csr.md = md || ctx.digestRegistry.sha1.create();
         const algorithmOid = oids[csr.md.algorithm + 'WithRSAEncryption'];
         if (!algorithmOid) {
           const error = new Error(
@@ -151,7 +151,7 @@ export class CertificationRequest {
         csr.signatureOid = csr.siginfo.algorithmOid = algorithmOid;
 
         csr.certificationRequestInfo = pki.getCertificationRequestInfo(csr);
-        const bytes = asn1.toDer(csr.certificationRequestInfo!);
+        const bytes = asn1.toDer(csr.certificationRequestInfo);
 
         csr.md.update(bytes.getBytes());
         csr.signature = key.sign(csr.md);
@@ -175,7 +175,7 @@ export class CertificationRequest {
         if (md !== null) {
           signatureValid = verifySignature({
             certificate: csr,
-            md: md,
+            messageDigest: md,
             signature: csr.signature
           });
         }
