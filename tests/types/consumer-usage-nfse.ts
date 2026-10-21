@@ -1,8 +1,8 @@
 /**
  * Type-level regression test for NFSe certificate load flow.
- * Validates named import { certkit } for both runtime API and namespace types.
+ * Validates named import { certkit } for runtime API and named type exports.
  */
-import { certkit, type Pkcs12Pfx } from '../../src/index.js';
+import { certkit, type Pkcs12Pfx, type RsaPrivateKey, type X509Certificate } from '../../src/index.js';
 
 type CertificateNFSeData = {
   p12Buffer: Buffer;
@@ -10,9 +10,9 @@ type CertificateNFSeData = {
 };
 
 function getPrivateKeyNFSe(
-  privateKey: certkit.pki.rsa.PrivateKey,
-  certificate: certkit.pki.Certificate,
-  caCertificates: certkit.pki.Certificate[]
+  privateKey: RsaPrivateKey,
+  certificate: X509Certificate,
+  caCertificates: X509Certificate[]
 ): CertificateNFSeData {
   const tempPassword = Math.random().toString(36).substring(2);
   const p12Asn1 = certkit.pkcs12.toPkcs12Asn1(privateKey, [certificate, ...caCertificates], tempPassword, {
@@ -24,9 +24,9 @@ function getPrivateKeyNFSe(
 }
 
 export function loadCertificateNFSe(p12: Pkcs12Pfx): CertificateNFSeData {
-  let privateKey: certkit.pki.rsa.PrivateKey | null = null;
-  let certificate: certkit.pki.Certificate | null = null;
-  const caCertificates: certkit.pki.Certificate[] = [];
+  let privateKey: RsaPrivateKey | null = null;
+  let certificate: X509Certificate | null = null;
+  const caCertificates: X509Certificate[] = [];
 
   for (const safeContent of p12.safeContents) {
     for (const bag of safeContent.safeBags) {

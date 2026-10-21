@@ -12,7 +12,7 @@ import { UtilNamespace } from './UtilNamespace.js';
 
 type BaseNModule = {
   encode: (
-    input: Uint8Array | { length(): number; at(i: number): number },
+    input: Uint8Array | { length(): number; at(index: number): number },
     alphabet: string,
     maxline?: number
   ) => string;

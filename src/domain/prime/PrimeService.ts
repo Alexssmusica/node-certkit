@@ -107,8 +107,8 @@ export class PrimeService {
     const rng: BigIntegerRandomSource = {
       nextBytes(byteArray: number[]): void {
         const randomBytes = prng.getBytesSync(byteArray.length);
-        for (let i = 0; i < byteArray.length; ++i) {
-          byteArray[i] = randomBytes.charCodeAt(i);
+        for (let index = 0; index < byteArray.length; ++index) {
+          byteArray[index] = randomBytes.charCodeAt(index);
         }
       }
     };

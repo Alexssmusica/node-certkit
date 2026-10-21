@@ -101,11 +101,4 @@ void certkit.pki.certificateToPem(_cert);
 void certkit.pem.decode(_pemExample);
 void certkit.pkcs1.encode_rsa_oaep({ n: { bitLength: () => 2048 } }, 'message');
 
-// Namespace type syntax via named import (forge-style).
-import { certkit as certkitTypes } from '../../src/index.js';
-type _NamespacePkcs12Pfx = certkitTypes.pkcs12.Pkcs12Pfx;
-type _NamespaceCertificate = certkitTypes.pki.Certificate;
-void (undefined as unknown as _NamespacePkcs12Pfx);
-void (undefined as unknown as _NamespaceCertificate);
-
 export {};

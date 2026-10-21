@@ -74,21 +74,21 @@ export class Rc2Cipher {
 
   static startEncrypting(
     key: string | ByteStringBuffer,
-    iv?: string | ByteStringBuffer | null,
+    initializationVector?: string | ByteStringBuffer | null,
     output?: ByteStringBuffer | null
   ): Rc2CipherObject {
     const cipher = Rc2Cipher.createEncryptionCipher(key, 128);
-    cipher.start(iv, output);
+    cipher.start(initializationVector, output);
     return cipher;
   }
 
   static startDecrypting(
     key: string | ByteStringBuffer,
-    iv?: string | ByteStringBuffer | null,
+    initializationVector?: string | ByteStringBuffer | null,
     output?: ByteStringBuffer | null
   ): Rc2CipherObject {
     const cipher = Rc2Cipher.createDecryptionCipher(key, 128);
-    cipher.start(iv, output);
+    cipher.start(initializationVector, output);
     return cipher;
   }
 
@@ -197,10 +197,13 @@ export class Rc2Cipher {
     };
 
     const cipher: Rc2CipherObject = {
-      start(iv?: string | ByteStringBuffer | null, output?: ByteStringBuffer | null) {
+      start(initializationVector?: string | ByteStringBuffer | null, output?: ByteStringBuffer | null) {
         let ivBuffer: ByteStringBuffer | null = null;
-        if (iv) {
-          ivBuffer = typeof iv === 'string' ? new ByteStringBuffer(iv) : iv;
+        if (initializationVector) {
+          ivBuffer =
+            typeof initializationVector === 'string'
+              ? new ByteStringBuffer(initializationVector)
+              : initializationVector;
         }
 
         _finish = false;

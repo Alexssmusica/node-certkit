@@ -4,11 +4,11 @@ export class Base64Codec {
   static encodeString(input: string, maxline?: number): string {
     let line = '';
     let output = '';
-    let i = 0;
-    while (i < input.length) {
-      const chr1 = input.charCodeAt(i++);
-      const chr2 = input.charCodeAt(i++);
-      const chr3 = input.charCodeAt(i++);
+    let index = 0;
+    while (index < input.length) {
+      const chr1 = input.charCodeAt(index++);
+      const chr2 = input.charCodeAt(index++);
+      const chr3 = input.charCodeAt(index++);
 
       line += BASE64.charAt(chr1 >> 2);
       line += BASE64.charAt(((chr1 & 3) << 4) | (chr2 >> 4));
@@ -32,13 +32,13 @@ export class Base64Codec {
     input = input.replace(/[^A-Za-z0-9+/=]/g, '');
 
     const chunks: string[] = [];
-    let i = 0;
+    let index = 0;
 
-    while (i < input.length) {
-      const enc1 = BASE64_IDX[input.charCodeAt(i++) - 43];
-      const enc2 = BASE64_IDX[input.charCodeAt(i++) - 43];
-      const enc3 = BASE64_IDX[input.charCodeAt(i++) - 43];
-      const enc4 = BASE64_IDX[input.charCodeAt(i++) - 43];
+    while (index < input.length) {
+      const enc1 = BASE64_IDX[input.charCodeAt(index++) - 43];
+      const enc2 = BASE64_IDX[input.charCodeAt(index++) - 43];
+      const enc3 = BASE64_IDX[input.charCodeAt(index++) - 43];
+      const enc4 = BASE64_IDX[input.charCodeAt(index++) - 43];
 
       chunks.push(String.fromCharCode((enc1 << 2) | (enc2 >> 4)));
       if (enc3 !== 64) {
@@ -55,11 +55,11 @@ export class Base64Codec {
   static encode(input: Uint8Array, maxline?: number): string {
     let line = '';
     let output = '';
-    let i = 0;
-    while (i < input.byteLength) {
-      const chr1 = input[i++];
-      const chr2 = input[i++];
-      const chr3 = input[i++];
+    let index = 0;
+    while (index < input.byteLength) {
+      const chr1 = input[index++];
+      const chr2 = input[index++];
+      const chr3 = input[index++];
 
       line += BASE64.charAt(chr1 >> 2);
       line += BASE64.charAt(((chr1 & 3) << 4) | (chr2 >> 4));
@@ -90,24 +90,24 @@ export class Base64Codec {
     input = input.replace(/[^A-Za-z0-9+/=]/g, '');
 
     const off = offset || 0;
-    let i = 0;
-    let j = off;
+    let index = 0;
+    let innerIndex = off;
 
-    while (i < input.length) {
-      const enc1 = BASE64_IDX[input.charCodeAt(i++) - 43];
-      const enc2 = BASE64_IDX[input.charCodeAt(i++) - 43];
-      const enc3 = BASE64_IDX[input.charCodeAt(i++) - 43];
-      const enc4 = BASE64_IDX[input.charCodeAt(i++) - 43];
+    while (index < input.length) {
+      const enc1 = BASE64_IDX[input.charCodeAt(index++) - 43];
+      const enc2 = BASE64_IDX[input.charCodeAt(index++) - 43];
+      const enc3 = BASE64_IDX[input.charCodeAt(index++) - 43];
+      const enc4 = BASE64_IDX[input.charCodeAt(index++) - 43];
 
-      out[j++] = (enc1 << 2) | (enc2 >> 4);
+      out[innerIndex++] = (enc1 << 2) | (enc2 >> 4);
       if (enc3 !== 64) {
-        out[j++] = ((enc2 & 15) << 4) | (enc3 >> 2);
+        out[innerIndex++] = ((enc2 & 15) << 4) | (enc3 >> 2);
         if (enc4 !== 64) {
-          out[j++] = ((enc3 & 3) << 6) | enc4;
+          out[innerIndex++] = ((enc3 & 3) << 6) | enc4;
         }
       }
     }
 
-    return output ? j - off : out.subarray(0, j);
+    return output ? innerIndex - off : out.subarray(0, innerIndex);
   }
 }

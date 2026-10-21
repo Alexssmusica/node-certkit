@@ -106,8 +106,8 @@ export function opAndNot(leftWord: number, rightWord: number): number {
 export function bnGetPrng(): BigIntegerRandomSource {
   return {
     nextBytes(bytes: number[]): void {
-      for (let i = 0; i < bytes.length; ++i) {
-        bytes[i] = Math.floor(Math.random() * 0x0100);
+      for (let index = 0; index < bytes.length; ++index) {
+        bytes[index] = Math.floor(Math.random() * 0x0100);
       }
     }
   };

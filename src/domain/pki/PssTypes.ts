@@ -14,6 +14,6 @@ export type PssCreateOptions = {
 };
 
 export type PssObject = {
-  encode: (md: MessageDigest, modBits: number) => string;
+  encode: (messageDigest: MessageDigest, modBits: number) => string;
   verify: (mHash: string, em: string, modBits: number) => boolean;
 };

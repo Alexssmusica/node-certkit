@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint';
 export default defineConfig(
   {
     ignores: [
-      'eslint.config.mjs',
+      'eslint.config.js',
       'node_modules',
       'lib',
       'dist',
@@ -39,14 +39,15 @@ export default defineConfig(
       'no-var': 'error',
       'prefer-const': 'error',
       'id-length': [
-        'warn',
+        'error',
         {
           min: 3,
           properties: 'never'
         }
       ],
+      'id-denylist': ['error', 'rval', 'tmp', 'obj', 'msg', 'res', 'ret', 'cap', 's2', 'b2'],
       '@typescript-eslint/naming-convention': [
-        'warn',
+        'error',
         {
           selector: 'variableLike',
           format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
@@ -64,7 +65,7 @@ export default defineConfig(
         }
       ],
       'no-shadow': 'off',
-      '@typescript-eslint/no-shadow': 'warn'
+      '@typescript-eslint/no-shadow': 'error'
     }
   },
   {

@@ -9,7 +9,7 @@
 .releaserc.json
 release.js
 publish.js
-eslint.config.mjs
+eslint.config.js
 vitest.config.mts
 tsconfig.json
 tsconfig.build.json

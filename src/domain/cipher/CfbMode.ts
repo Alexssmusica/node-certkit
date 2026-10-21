@@ -44,9 +44,9 @@ export class CfbMode {
     this.cipher.encrypt(this._inBlock!, this._outBlock);
 
     if (this._partialBytes === 0 && inputLength >= this.blockSize) {
-      for (let i = 0; i < this._ints; ++i) {
-        this._inBlock![i] = input.getInt32() ^ this._outBlock[i];
-        output.putInt32(this._inBlock![i]);
+      for (let index = 0; index < this._ints; ++index) {
+        this._inBlock![index] = input.getInt32() ^ this._outBlock[index];
+        output.putInt32(this._inBlock![index]);
       }
       return;
     }
@@ -57,16 +57,16 @@ export class CfbMode {
     }
 
     this._partialOutput.clear();
-    for (let i = 0; i < this._ints; ++i) {
-      this._partialBlock[i] = input.getInt32() ^ this._outBlock[i];
-      this._partialOutput.putInt32(this._partialBlock[i]);
+    for (let index = 0; index < this._ints; ++index) {
+      this._partialBlock[index] = input.getInt32() ^ this._outBlock[index];
+      this._partialOutput.putInt32(this._partialBlock[index]);
     }
 
     if (partialBytes > 0) {
       input.read -= this.blockSize;
     } else {
-      for (let i = 0; i < this._ints; ++i) {
-        this._inBlock![i] = this._partialBlock[i]!;
+      for (let index = 0; index < this._ints; ++index) {
+        this._inBlock![index] = this._partialBlock[index]!;
       }
     }
 
@@ -93,9 +93,9 @@ export class CfbMode {
     this.cipher.encrypt(this._inBlock!, this._outBlock);
 
     if (this._partialBytes === 0 && inputLength >= this.blockSize) {
-      for (let i = 0; i < this._ints; ++i) {
-        this._inBlock![i] = input.getInt32();
-        output.putInt32(this._inBlock![i] ^ this._outBlock[i]);
+      for (let index = 0; index < this._ints; ++index) {
+        this._inBlock![index] = input.getInt32();
+        output.putInt32(this._inBlock![index] ^ this._outBlock[index]);
       }
       return;
     }
@@ -106,16 +106,16 @@ export class CfbMode {
     }
 
     this._partialOutput.clear();
-    for (let i = 0; i < this._ints; ++i) {
-      this._partialBlock[i] = input.getInt32();
-      this._partialOutput.putInt32(this._partialBlock[i] ^ this._outBlock[i]);
+    for (let index = 0; index < this._ints; ++index) {
+      this._partialBlock[index] = input.getInt32();
+      this._partialOutput.putInt32(this._partialBlock[index] ^ this._outBlock[index]);
     }
 
     if (partialBytes > 0) {
       input.read -= this.blockSize;
     } else {
-      for (let i = 0; i < this._ints; ++i) {
-        this._inBlock![i] = this._partialBlock[i]!;
+      for (let index = 0; index < this._ints; ++index) {
+        this._inBlock![index] = this._partialBlock[index]!;
       }
     }
 

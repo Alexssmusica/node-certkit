@@ -231,9 +231,9 @@ export class Asn1Codec {
     // remove undefined values
     if (isArray(value)) {
       const filteredChildren = [];
-      for (let i = 0; i < value.length; ++i) {
-        if (value[i] !== undefined) {
-          filteredChildren.push(value[i]);
+      for (let index = 0; index < value.length; ++index) {
+        if (value[index] !== undefined) {
+          filteredChildren.push(value[index]);
         }
       }
       value = filteredChildren;
@@ -272,8 +272,8 @@ export class Asn1Codec {
 
     if (isArray(asn1Object)) {
       const copied: Asn1Value[] = [];
-      for (let i = 0; i < asn1Object.length; ++i) {
-        copied.push(Asn1Codec.copy(asn1Object[i], options, depth + 1));
+      for (let index = 0; index < asn1Object.length; ++index) {
+        copied.push(Asn1Codec.copy(asn1Object[index], options, depth + 1));
       }
       return copied as Asn1Object[];
     }
@@ -317,8 +317,8 @@ export class Asn1Codec {
       if (obj1.length !== obj2.length) {
         return false;
       }
-      for (let i = 0; i < obj1.length; ++i) {
-        if (!Asn1Codec.equals(obj1[i], obj2[i])) {
+      for (let index = 0; index < obj1.length; ++index) {
+        if (!Asn1Codec.equals(obj1[index], obj2[index])) {
           return false;
         }
       }
@@ -472,17 +472,17 @@ export class Asn1Codec {
 
       // add all of the child DER bytes together
       const children = asn1Object.value as Asn1Object[];
-      for (let i = 0; i < children.length; ++i) {
-        if (children[i] !== undefined) {
-          value.putBuffer(Asn1Codec.toDer(children[i], depth + 1));
+      for (let index = 0; index < children.length; ++index) {
+        if (children[index] !== undefined) {
+          value.putBuffer(Asn1Codec.toDer(children[index], depth + 1));
         }
       }
     } else {
       const primitive = asn1Object.value as string;
       // use Asn1Codec.value directly
       if (asn1Object.type === Asn1Codec.Type.BMPSTRING) {
-        for (let i = 0; i < primitive.length; ++i) {
-          value.putInt16(primitive.charCodeAt(i));
+        for (let index = 0; index < primitive.length; ++index) {
+          value.putInt16(primitive.charCodeAt(index));
         }
       } else {
         // ensure integer is minimally-encoded
@@ -529,8 +529,8 @@ export class Asn1Codec {
 
       // concatenate length bytes in reverse since they were generated
       // little endian and we need big endian
-      for (let i = lenBytes.length - 1; i >= 0; --i) {
-        bytes.putByte(lenBytes.charCodeAt(i));
+      for (let index = lenBytes.length - 1; index >= 0; --index) {
+        bytes.putByte(lenBytes.charCodeAt(index));
       }
     }
 
@@ -557,12 +557,12 @@ export class Asn1Codec {
     // other bytes are each value in base 128 with 8th bit set except for
     // the last byte for each value
     let last, valueBytes, value, encodedByte;
-    for (let i = 2; i < values.length; ++i) {
+    for (let index = 2; index < values.length; ++index) {
       // produce value bytes in reverse because we don't know how many
       // bytes it will take to store the value
       last = true;
       valueBytes = [];
-      value = parseInt(values[i], 10);
+      value = parseInt(values[index], 10);
       // TODO: Change bitwise logic to allow larger values.
       if (value > 0xffffffff) {
         throw new Error('OID value too large; max is 32-bits.');
@@ -834,11 +834,11 @@ export class Asn1Codec {
     format.push('' + date.getUTCSeconds());
 
     // ensure 2 digits are used for each format entry
-    for (let i = 0; i < format.length; ++i) {
-      if (format[i].length < 2) {
+    for (let index = 0; index < format.length; ++index) {
+      if (format[index].length < 2) {
         formattedTime += '0';
       }
-      formattedTime += format[i];
+      formattedTime += format[index];
     }
     formattedTime += 'Z';
 
@@ -870,11 +870,11 @@ export class Asn1Codec {
     format.push('' + date.getUTCSeconds());
 
     // ensure 2 digits are used for each format entry
-    for (let i = 0; i < format.length; ++i) {
-      if (format[i].length < 2) {
+    for (let index = 0; index < format.length; ++index) {
+      if (format[index].length < 2) {
         formattedTime += '0';
       }
-      formattedTime += format[i];
+      formattedTime += format[index];
     }
     formattedTime += 'Z';
 
@@ -978,13 +978,13 @@ export class Asn1Codec {
 
         // handle sub values
         if (validator.value && isArray(validator.value)) {
-          let j = 0;
-          for (let i = 0; isValid && i < validator.value.length; ++i) {
-            const schemaItem = validator.value[i];
+          let innerIndex = 0;
+          for (let index = 0; isValid && index < validator.value.length; ++index) {
+            const schemaItem = validator.value[index];
             isValid = !!schemaItem.optional;
 
             // current child in the object
-            const objChild = (asn1Object.value as Asn1Object[])[j];
+            const objChild = (asn1Object.value as Asn1Object[])[innerIndex];
 
             // if there is no child left to match
             if (!objChild) {
@@ -1044,7 +1044,7 @@ export class Asn1Codec {
             const childValid = Asn1Codec.validate(objChild, schemaItem, capture, errors, depth + 1);
             if (childValid) {
               // consume this child
-              ++j;
+              ++innerIndex;
               isValid = true;
             } else if (schemaItem.optional) {
               // validation failed but element is optional => skip schema item (don't consume child)

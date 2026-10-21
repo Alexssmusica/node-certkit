@@ -86,12 +86,12 @@ export class FortunaRandom {
       return random;
     }
 
-    for (let i = 0; i < RANDOM_CONTEXT_METHODS.length; ++i) {
-      const key = RANDOM_CONTEXT_METHODS[i];
+    for (let index = 0; index < RANDOM_CONTEXT_METHODS.length; ++index) {
+      const key = RANDOM_CONTEXT_METHODS[index];
       (target as Record<string, unknown>)[key] = (ctx as Record<string, unknown>)[key];
     }
-    for (let i = 0; i < RANDOM_CONTEXT_PROPERTIES.length; ++i) {
-      const key = RANDOM_CONTEXT_PROPERTIES[i];
+    for (let index = 0; index < RANDOM_CONTEXT_PROPERTIES.length; ++index) {
+      const key = RANDOM_CONTEXT_PROPERTIES[index];
       (target as Record<string, unknown>)[key] = (ctx as Record<string, unknown>)[key];
     }
 

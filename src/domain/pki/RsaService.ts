@@ -145,14 +145,14 @@ export class RsaService {
     return this.#pemKeyCodec;
   }
 
-  #emsaPkcs1v15encode(md: { algorithm: string; digest(): ByteStringBuffer }): string {
+  #emsaPkcs1v15encode(messageDigest: { algorithm: string; digest(): ByteStringBuffer }): string {
     const asn1 = this.#asn1;
     let oid: string;
-    if (md.algorithm in this.#oids) {
-      oid = this.#oids[md.algorithm]!;
+    if (messageDigest.algorithm in this.#oids) {
+      oid = this.#oids[messageDigest.algorithm]!;
     } else {
       const error = new Error('Unknown message digest algorithm.') as Error & { algorithm?: string };
-      error.algorithm = md.algorithm;
+      error.algorithm = messageDigest.algorithm;
       throw error;
     }
     const oidBytes = asn1.oidToDer(oid).getBytes();
@@ -162,7 +162,12 @@ export class RsaService {
       this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OID, false, oidBytes)
     );
     (digestAlgorithm.value as Asn1Object[]).push(this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, ''));
-    const digest = this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, md.digest().getBytes());
+    const digest = this.#createAsn1(
+      asn1.Class.UNIVERSAL,
+      asn1.Type.OCTETSTRING,
+      false,
+      messageDigest.digest().getBytes()
+    );
     (digestInfo.value as Asn1Object[]).push(digestAlgorithm);
     (digestInfo.value as Asn1Object[]).push(digest);
     return asn1.toDer(digestInfo).getBytes();
@@ -225,15 +230,15 @@ export class RsaService {
     let padNum = keyOctetLength - 3 - message.length;
     if (blockType === 0x00 || blockType === 0x01) {
       const padByte = blockType === 0x00 ? 0x00 : 0xff;
-      for (let i = 0; i < padNum; ++i) {
+      for (let index = 0; index < padNum; ++index) {
         encodingBlock.putByte(padByte);
       }
     } else {
       while (padNum > 0) {
         let numZeros = 0;
         const padBytes = this.#random.getBytes(padNum);
-        for (let i = 0; i < padNum; ++i) {
-          const padByte = padBytes.charCodeAt(i);
+        for (let index = 0; index < padNum; ++index) {
+          const padByte = padBytes.charCodeAt(index);
           if (padByte === 0) {
             ++numZeros;
           } else {
@@ -272,7 +277,7 @@ export class RsaService {
     let padNum = 0;
     if (blockType === 0x00) {
       padNum = keyOctetLength - 3 - (messageLength as number);
-      for (let i = 0; i < padNum; ++i) {
+      for (let index = 0; index < padNum; ++index) {
         if (encodingBlock.getByte() !== 0x00) {
           throw new Error('Encryption block is invalid.');
         }
@@ -373,9 +378,9 @@ export class RsaService {
     return encodingBlock.getBytes();
   }
 
-  setPublicKey(n: BigInteger, e: BigInteger): RsaPublicKey {
+  setPublicKey(modulus: BigInteger, publicExponent: BigInteger): RsaPublicKey {
     const service = this;
-    const key = { n, e } as RsaPublicKey;
+    const key = { n: modulus, e: publicExponent } as RsaPublicKey;
 
     key.encrypt = function (data, scheme, schemeOptions) {
       if (typeof scheme === 'string') {
@@ -506,17 +511,26 @@ export class RsaService {
   }
 
   setPrivateKey(
-    n: BigInteger,
-    e: BigInteger,
-    d: BigInteger,
-    p: BigInteger,
-    q: BigInteger,
-    dP: BigInteger,
-    dQ: BigInteger,
+    modulus: BigInteger,
+    publicExponent: BigInteger,
+    privateExponent: BigInteger,
+    primeP: BigInteger,
+    primeQ: BigInteger,
+    crtExponentP: BigInteger,
+    crtExponentQ: BigInteger,
     qInv: BigInteger
   ): RsaPrivateKey {
     const service = this;
-    const key = { n, e, d, p, q, dP, dQ, qInv } as RsaPrivateKey;
+    const key = {
+      n: modulus,
+      e: publicExponent,
+      d: privateExponent,
+      p: primeP,
+      q: primeQ,
+      dP: crtExponentP,
+      dQ: crtExponentQ,
+      qInv
+    } as RsaPrivateKey;
 
     key.decrypt = function (data, scheme, schemeOptions) {
       if (typeof scheme === 'string') {
@@ -557,27 +571,27 @@ export class RsaService {
       return schemeObj.decode(decrypted, key, false);
     };
 
-    key.sign = function (md, scheme) {
+    key.sign = function (messageDigest, scheme) {
       let blockType: boolean | number = false;
       if (typeof scheme === 'string') {
         scheme = scheme.toUpperCase();
       }
 
-      let schemeObj: { encode: (md: unknown, modBits?: number) => string };
+      let schemeObj: { encode: (messageDigest: unknown, modBits?: number) => string };
       if (scheme === undefined || scheme === 'RSASSA-PKCS1-V1_5') {
         schemeObj = {
-          encode: (messageDigest) =>
-            service.#emsaPkcs1v15encode(messageDigest as { algorithm: string; digest(): ByteStringBuffer })
+          encode: (digestHandle) =>
+            service.#emsaPkcs1v15encode(digestHandle as { algorithm: string; digest(): ByteStringBuffer })
         };
         blockType = 0x01;
       } else if (scheme === 'NONE' || scheme === 'NULL' || scheme === null) {
-        schemeObj = { encode: () => md as string };
+        schemeObj = { encode: () => messageDigest as string };
         blockType = 0x01;
       } else {
         schemeObj = scheme as typeof schemeObj;
       }
 
-      const encodedDigestInfo = schemeObj.encode(md, key.n.bitLength());
+      const encodedDigestInfo = schemeObj.encode(messageDigest, key.n.bitLength());
       return service.encrypt(encodedDigestInfo, key, blockType);
     };
 
@@ -586,7 +600,7 @@ export class RsaService {
 
   createKeyPairGenerationState(
     bits?: number | string,
-    e?: number,
+    exponent?: number,
     options?: Record<string, unknown>
   ): KeyPairGenerationState {
     if (typeof bits === 'string') {
@@ -599,8 +613,8 @@ export class RsaService {
     const rng: BigIntegerRandomSource = {
       nextBytes(byteArray: number[]): void {
         const randomBytes = prng.getBytesSync(byteArray.length);
-        for (let i = 0; i < byteArray.length; ++i) {
-          byteArray[i] = randomBytes.charCodeAt(i);
+        for (let index = 0; index < byteArray.length; ++index) {
+          byteArray[index] = randomBytes.charCodeAt(index);
         }
       }
     };
@@ -612,7 +626,7 @@ export class RsaService {
         state: 0,
         bits,
         rng,
-        eInt: e || 65537,
+        eInt: exponent || 65537,
         e: new BigInteger(null),
         p: null,
         q: null,
@@ -714,16 +728,16 @@ export class RsaService {
           state.state = 0;
         }
       } else if (state.state === 5) {
-        const d = (state.e as BigInteger).modInverse(state.phi as BigInteger);
+        const privateExponent = (state.e as BigInteger).modInverse(state.phi as BigInteger);
         state.keys = {
           privateKey: this.setPrivateKey(
             state.n as BigInteger,
             state.e as BigInteger,
-            d,
+            privateExponent,
             state.p as BigInteger,
             state.q as BigInteger,
-            d.mod(state.p1 as BigInteger),
-            d.mod(state.q1 as BigInteger),
+            privateExponent.mod(state.p1 as BigInteger),
+            privateExponent.mod(state.q1 as BigInteger),
             (state.q as BigInteger).modInverse(state.p as BigInteger)
           ),
           publicKey: this.setPublicKey(state.n as BigInteger, state.e as BigInteger)
@@ -738,7 +752,7 @@ export class RsaService {
     return state.keys !== null;
   }
 
-  generateKeyPair(bits?: unknown, e?: unknown, options?: unknown, callback?: unknown): RsaKeyPair | void {
+  generateKeyPair(bits?: unknown, exponent?: unknown, options?: unknown, callback?: unknown): RsaKeyPair | void {
     if (arguments.length === 1) {
       if (typeof bits === 'object') {
         options = bits;
@@ -749,29 +763,29 @@ export class RsaService {
       }
     } else if (arguments.length === 2) {
       if (typeof bits === 'number') {
-        if (typeof e === 'function') {
-          callback = e;
-          e = undefined;
-        } else if (typeof e !== 'number') {
-          options = e;
-          e = undefined;
+        if (typeof exponent === 'function') {
+          callback = exponent;
+          exponent = undefined;
+        } else if (typeof exponent !== 'number') {
+          options = exponent;
+          exponent = undefined;
         }
       } else {
         options = bits;
-        callback = e;
+        callback = exponent;
         bits = undefined;
-        e = undefined;
+        exponent = undefined;
       }
     } else if (arguments.length === 3) {
-      if (typeof e === 'number') {
+      if (typeof exponent === 'number') {
         if (typeof options === 'function') {
           callback = options;
           options = undefined;
         }
       } else {
         callback = options;
-        options = e;
-        e = undefined;
+        options = exponent;
+        exponent = undefined;
       }
     }
 
@@ -779,8 +793,8 @@ export class RsaService {
     if (bits === undefined) {
       bits = opts.bits || 2048;
     }
-    if (e === undefined) {
-      e = opts.e || 0x10001;
+    if (exponent === undefined) {
+      exponent = opts.e || 0x10001;
     }
 
     const pemCodec = this.#getPemKeyCodec();
@@ -791,7 +805,7 @@ export class RsaService {
       !opts.prng &&
       (bits as number) >= 256 &&
       (bits as number) <= 16384 &&
-      (e === 0x10001 || e === 3)
+      (exponent === 0x10001 || exponent === 3)
     ) {
       if (callback) {
         if (nativeCrypto && typeof nativeCrypto.generateKeyPair === 'function') {
@@ -799,7 +813,7 @@ export class RsaService {
             'rsa',
             {
               modulusLength: bits as number,
-              publicExponent: e,
+              publicExponent: exponent,
               publicKeyEncoding: { type: 'spki', format: 'pem' },
               privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
             },
@@ -818,7 +832,7 @@ export class RsaService {
         if (nativeCrypto && typeof nativeCrypto.generateKeyPairSync === 'function') {
           const keypair = nativeCrypto.generateKeyPairSync('rsa', {
             modulusLength: bits as number,
-            publicExponent: e,
+            publicExponent: exponent,
             publicKeyEncoding: { type: 'spki', format: 'pem' },
             privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
           });
@@ -830,7 +844,7 @@ export class RsaService {
       }
     }
 
-    const state = this.createKeyPairGenerationState(bits as number, e as number, opts);
+    const state = this.createKeyPairGenerationState(bits as number, exponent as number, opts);
     if (!callback) {
       this.stepKeyPairGenerationState(state, 0);
       return state.keys as RsaKeyPair;
@@ -931,16 +945,16 @@ export class RsaService {
         return;
       }
 
-      const d = (state.e as BigInteger).modInverse(state.phi as BigInteger);
+      const privateExponent = (state.e as BigInteger).modInverse(state.phi as BigInteger);
       callback(null, {
         privateKey: service.setPrivateKey(
           state.n as BigInteger,
           state.e as BigInteger,
-          d,
+          privateExponent,
           state.p as BigInteger,
           state.q as BigInteger,
-          d.mod(state.p1 as BigInteger),
-          d.mod(state.q1 as BigInteger),
+          privateExponent.mod(state.p1 as BigInteger),
+          privateExponent.mod(state.q1 as BigInteger),
           (state.q as BigInteger).modInverse(state.p as BigInteger)
         ),
         publicKey: service.setPublicKey(state.n as BigInteger, state.e as BigInteger)

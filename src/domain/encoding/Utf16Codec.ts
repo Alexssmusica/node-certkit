@@ -8,13 +8,13 @@ export class Utf16Codec {
     }
     const view = new Uint16Array(out.buffer);
     const off = offset || 0;
-    let j = off;
-    let k = off;
-    for (let i = 0; i < str.length; ++i) {
-      view[k++] = str.charCodeAt(i);
-      j += 2;
+    let innerIndex = off;
+    let limbIndex = off;
+    for (let index = 0; index < str.length; ++index) {
+      view[limbIndex++] = str.charCodeAt(index);
+      innerIndex += 2;
     }
-    return output ? j - off : out;
+    return output ? innerIndex - off : out;
   }
 
   static decode(bytes: Uint8Array): string {
@@ -30,11 +30,11 @@ export class Utf8TextCodec {
       out = new Uint8Array(encoded.length);
     }
     const off = offset || 0;
-    let j = off;
-    for (let i = 0; i < encoded.length; ++i) {
-      out[j++] = encoded.charCodeAt(i);
+    let innerIndex = off;
+    for (let index = 0; index < encoded.length; ++index) {
+      out[innerIndex++] = encoded.charCodeAt(index);
     }
-    return output ? j - off : out;
+    return output ? innerIndex - off : out;
   }
 
   static decode(bytes: Uint8Array): string {

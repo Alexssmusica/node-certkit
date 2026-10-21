@@ -5,12 +5,12 @@ export class OidRegistry {
   static createCertkitNamespace(): Record<string, string> {
     const oids: Record<string, string> = {};
 
-    const inBoth = (id: string, name: string) => {
-      oids[id] = name;
-      oids[name] = id;
+    const inBoth = (objectId: string, name: string) => {
+      oids[objectId] = name;
+      oids[name] = objectId;
     };
-    const idToName = (id: string, name: string) => {
-      oids[id] = name;
+    const idToName = (objectId: string, name: string) => {
+      oids[objectId] = name;
     };
 
     inBoth('1.2.840.113549.1.1.1', 'rsaEncryption');

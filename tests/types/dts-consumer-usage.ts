@@ -2,7 +2,12 @@
  * Validates the published declaration file (lib/index.d.ts) as consumers see it.
  * Run after `npm run build` via `npm run test:dts`.
  */
-import { certkit, type Pkcs12Pfx } from '../../lib/index.js';
+import {
+  certkit,
+  type Pkcs12Pfx,
+  type RsaPrivateKey,
+  type X509Certificate
+} from '../../lib/index.js';
 
 type CertificateData = {
   emissao: Date;
@@ -57,9 +62,9 @@ function loadFromBuffer(bufferB64: string, password: string): { pem: string; key
 }
 
 function getPrivateKeyNFSe(
-  privateKey: certkit.pki.rsa.PrivateKey,
-  certificate: certkit.pki.Certificate,
-  caCertificates: certkit.pki.Certificate[]
+  privateKey: RsaPrivateKey,
+  certificate: X509Certificate,
+  caCertificates: X509Certificate[]
 ): CertificateNFSeData {
   const tempPassword = Math.random().toString(36).substring(2);
   const p12Asn1 = certkit.pkcs12.toPkcs12Asn1(privateKey, [certificate, ...caCertificates], tempPassword, {
@@ -71,9 +76,9 @@ function getPrivateKeyNFSe(
 }
 
 function loadCertificateNFSe(p12: Pkcs12Pfx): CertificateNFSeData {
-  let privateKey: certkit.pki.rsa.PrivateKey | null = null;
-  let certificate: certkit.pki.Certificate | null = null;
-  const caCertificates: certkit.pki.Certificate[] = [];
+  let privateKey: RsaPrivateKey | null = null;
+  let certificate: X509Certificate | null = null;
+  const caCertificates: X509Certificate[] = [];
 
   for (const safeContent of p12.safeContents) {
     for (const bag of safeContent.safeBags) {

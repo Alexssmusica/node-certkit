@@ -12,7 +12,7 @@ import type { UtilNamespaceObject } from './UtilTypes.js';
 
 type BaseNModule = {
   encode: (
-    input: Uint8Array | { length(): number; at(i: number): number },
+    input: Uint8Array | { length(): number; at(index: number): number },
     alphabet: string,
     maxline?: number
   ) => string;
@@ -76,12 +76,12 @@ export class UtilNamespace {
     return UtilNamespace.createBuffer(bytes).toHex();
   }
 
-  static int32ToBytes(i: number): string {
+  static int32ToBytes(index: number): string {
     return (
-      String.fromCharCode((i >> 24) & 0xff) +
-      String.fromCharCode((i >> 16) & 0xff) +
-      String.fromCharCode((i >> 8) & 0xff) +
-      String.fromCharCode(i & 0xff)
+      String.fromCharCode((index >> 24) & 0xff) +
+      String.fromCharCode((index >> 16) & 0xff) +
+      String.fromCharCode((index >> 8) & 0xff) +
+      String.fromCharCode(index & 0xff)
     );
   }
 
@@ -192,8 +192,8 @@ export class UtilNamespace {
       return null;
     }
     const buffer = UtilNamespace.createBuffer();
-    for (let i = 0; i < parts.length; ++i) {
-      const num = parseInt(parts[i], 10);
+    for (let index = 0; index < parts.length; ++index) {
+      const num = parseInt(parts[index], 10);
       if (isNaN(num)) {
         return null;
       }
@@ -212,13 +212,13 @@ export class UtilNamespace {
     });
     let zeros = (8 - segments.length + blanks) * 2;
     const buffer = UtilNamespace.createBuffer();
-    for (let i = 0; i < 8; ++i) {
-      if (!segments[i] || segments[i].length === 0) {
+    for (let index = 0; index < 8; ++index) {
+      if (!segments[index] || segments[index].length === 0) {
         buffer.fillWithByte(0, zeros);
         zeros = 0;
         continue;
       }
-      const bytes = UtilNamespace.hexToBytes(segments[i]);
+      const bytes = UtilNamespace.hexToBytes(segments[index]);
       if (bytes.length < 2) {
         buffer.putByte(0);
       }
@@ -242,8 +242,8 @@ export class UtilNamespace {
       return null;
     }
     const octets: number[] = [];
-    for (let i = 0; i < bytes.length; ++i) {
-      octets.push(bytes.charCodeAt(i));
+    for (let index = 0; index < bytes.length; ++index) {
+      octets.push(bytes.charCodeAt(index));
     }
     return octets.join('.');
   }
@@ -255,8 +255,8 @@ export class UtilNamespace {
     const hextets: string[] = [];
     const zeroGroups: { start: number; end: number }[] = [];
     let zeroMaxGroup = 0;
-    for (let i = 0; i < bytes.length; i += 2) {
-      let hex = UtilNamespace.bytesToHex(bytes[i] + bytes[i + 1]);
+    for (let index = 0; index < bytes.length; index += 2) {
+      let hex = UtilNamespace.bytesToHex(bytes[index] + bytes[index + 1]);
       while (hex[0] === '0' && hex !== '0') {
         hex = hex.substr(1);
       }
@@ -339,7 +339,7 @@ export function createUtilNamespace(baseN: BaseNModule): UtilNamespaceObject {
 
   utilNamespace.binary = {
     raw: {
-      encode: function (bytes: Uint8Array | { length(): number; at(i: number): number }) {
+      encode: function (bytes: Uint8Array | { length(): number; at(index: number): number }) {
         return RawCodec.encode(bytes as Uint8Array);
       },
       decode: function (bytes: Uint8Array, output?: Uint8Array, offset?: number) {
@@ -355,7 +355,7 @@ export function createUtilNamespace(baseN: BaseNModule): UtilNamespaceObject {
       }
     },
     base64: {
-      encode: function (input: Uint8Array | { length(): number; at(i: number): number }, maxline?: number) {
+      encode: function (input: Uint8Array | { length(): number; at(index: number): number }, maxline?: number) {
         return Base64Codec.encode(input as Uint8Array, maxline);
       },
       decode: function (input: string, output?: Uint8Array, offset?: number) {
@@ -363,7 +363,7 @@ export function createUtilNamespace(baseN: BaseNModule): UtilNamespaceObject {
       }
     },
     base58: {
-      encode: function (input: Uint8Array | { length(): number; at(i: number): number }, maxline?: number) {
+      encode: function (input: Uint8Array | { length(): number; at(index: number): number }, maxline?: number) {
         return Base58Codec.encode(input, maxline);
       },
       decode: function (input: string, maxline?: number) {
@@ -372,7 +372,7 @@ export function createUtilNamespace(baseN: BaseNModule): UtilNamespaceObject {
     },
     baseN: {
       encode: function (
-        input: Uint8Array | { length(): number; at(i: number): number },
+        input: Uint8Array | { length(): number; at(index: number): number },
         alphabet: string,
         maxline?: number
       ) {

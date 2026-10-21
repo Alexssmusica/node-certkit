@@ -48,7 +48,7 @@ export class Sha256 {
   static create(): Sha256Digest {
     Sha256.#ensureInit();
     const engine = new Sha256();
-    const md: Sha256Digest = {
+    const messageDigest: Sha256Digest = {
       algorithm: 'sha256',
       blockLength: 64,
       digestLength: 32,
@@ -56,20 +56,20 @@ export class Sha256 {
       fullMessageLength: null,
       messageLength64: null,
       messageLengthSize: 8,
-      start: () => engine.#start(md),
-      update: (input, encoding) => engine.#update(md, input, encoding),
-      digest: () => engine.#digest(md)
+      start: () => engine.#start(messageDigest),
+      update: (input, encoding) => engine.#update(messageDigest, input, encoding),
+      digest: () => engine.#digest(messageDigest)
     };
-    md.start();
-    return md;
+    messageDigest.start();
+    return messageDigest;
   }
 
-  #start(md: Sha256Digest): Sha256Digest {
-    md.messageLength = 0;
-    md.fullMessageLength = md.messageLength64 = [];
-    const int32s = md.messageLengthSize / 4;
-    for (let i = 0; i < int32s; ++i) {
-      md.fullMessageLength.push(0);
+  #start(messageDigest: Sha256Digest): Sha256Digest {
+    messageDigest.messageLength = 0;
+    messageDigest.fullMessageLength = messageDigest.messageLength64 = [];
+    const int32s = messageDigest.messageLengthSize / 4;
+    for (let index = 0; index < int32s; ++index) {
+      messageDigest.fullMessageLength.push(0);
     }
     this.#input = new ByteStringBuffer();
     this.#state = {
@@ -82,22 +82,22 @@ export class Sha256 {
       hashWord6: 0x1f83d9ab,
       hashWord7: 0x5be0cd19
     };
-    return md;
+    return messageDigest;
   }
 
-  #update(md: Sha256Digest, message: string, encoding?: string): Sha256Digest {
+  #update(messageDigest: Sha256Digest, message: string, encoding?: string): Sha256Digest {
     if (encoding === 'utf8') {
       message = encodeUtf8(message);
     }
 
     const messageByteLength = message.length;
-    md.messageLength += messageByteLength;
+    messageDigest.messageLength += messageByteLength;
     const lengthCarry = [(messageByteLength / 0x100000000) >>> 0, messageByteLength >>> 0];
-    const fullMessageLength = md.fullMessageLength!;
-    for (let i = fullMessageLength.length - 1; i >= 0; --i) {
-      fullMessageLength[i] += lengthCarry[1];
-      lengthCarry[1] = lengthCarry[0] + ((fullMessageLength[i] / 0x100000000) >>> 0);
-      fullMessageLength[i] = fullMessageLength[i] >>> 0;
+    const fullMessageLength = messageDigest.fullMessageLength!;
+    for (let index = fullMessageLength.length - 1; index >= 0; --index) {
+      fullMessageLength[index] += lengthCarry[1];
+      lengthCarry[1] = lengthCarry[0] + ((fullMessageLength[index] / 0x100000000) >>> 0);
+      fullMessageLength[index] = fullMessageLength[index] >>> 0;
       lengthCarry[0] = (lengthCarry[1] / 0x100000000) >>> 0;
     }
 
@@ -108,23 +108,24 @@ export class Sha256 {
       this.#input.compact();
     }
 
-    return md;
+    return messageDigest;
   }
 
-  #digest(md: Sha256Digest): ByteStringBuffer {
+  #digest(messageDigest: Sha256Digest): ByteStringBuffer {
     const finalBlock = new ByteStringBuffer();
     finalBlock.putBytes(this.#input.bytes());
 
-    const remaining = md.fullMessageLength![md.fullMessageLength!.length - 1] + md.messageLengthSize;
+    const remaining =
+      messageDigest.fullMessageLength![messageDigest.fullMessageLength!.length - 1] + messageDigest.messageLengthSize;
 
-    const overflow = remaining & (md.blockLength - 1);
-    finalBlock.putBytes(Sha256.#padding!.substr(0, md.blockLength - overflow));
+    const overflow = remaining & (messageDigest.blockLength - 1);
+    finalBlock.putBytes(Sha256.#padding!.substr(0, messageDigest.blockLength - overflow));
 
     let nextLengthBits: number;
     let carryBits: number;
-    let bits = md.fullMessageLength![0] * 8;
-    for (let i = 0; i < md.fullMessageLength!.length - 1; ++i) {
-      nextLengthBits = md.fullMessageLength![i + 1] * 8;
+    let bits = messageDigest.fullMessageLength![0] * 8;
+    for (let index = 0; index < messageDigest.fullMessageLength!.length - 1; ++index) {
+      nextLengthBits = messageDigest.fullMessageLength![index + 1] * 8;
       carryBits = (nextLengthBits / 0x100000000) >>> 0;
       bits += carryBits;
       finalBlock.putInt32(bits >>> 0);

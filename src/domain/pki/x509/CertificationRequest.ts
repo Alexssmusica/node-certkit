@@ -74,8 +74,8 @@ export class CertificationRequest {
       }
 
       const smd = ctx.digestRegistry.sha1.create();
-      csr.subject.getField = function (sn: string | AttributeLookup) {
-        return getAttribute(csr.subject, sn);
+      csr.subject.getField = function (serialNumber: string | AttributeLookup) {
+        return getAttribute(csr.subject, serialNumber);
       };
       csr.subject.addField = function (attr: DnAttributeInput) {
         fillMissingFields([attr]);
@@ -86,8 +86,8 @@ export class CertificationRequest {
 
       csr.publicKey = pki.publicKeyFromAsn1(capture.subjectPublicKeyInfo as Asn1Object);
 
-      csr.getAttribute = function (sn: string | AttributeLookup) {
-        return getAttribute(csr, sn);
+      csr.getAttribute = function (serialNumber: string | AttributeLookup) {
+        return getAttribute(csr, serialNumber);
       };
       csr.addAttribute = function (attr: DnAttributeInput) {
         fillMissingFields([attr]);
@@ -106,8 +106,8 @@ export class CertificationRequest {
       csr.siginfo = { algorithmOid: null };
 
       csr.subject = {} as X509CertificationRequest['subject'];
-      csr.subject.getField = function (sn: string | AttributeLookup) {
-        return getAttribute(csr.subject, sn);
+      csr.subject.getField = function (serialNumber: string | AttributeLookup) {
+        return getAttribute(csr.subject, serialNumber);
       };
       csr.subject.addField = function (attr: DnAttributeInput) {
         fillMissingFields([attr]);
@@ -118,8 +118,8 @@ export class CertificationRequest {
 
       csr.publicKey = null;
       csr.attributes = [];
-      csr.getAttribute = function (sn: string | AttributeLookup) {
-        return getAttribute(csr, sn);
+      csr.getAttribute = function (serialNumber: string | AttributeLookup) {
+        return getAttribute(csr, serialNumber);
       };
       csr.addAttribute = function (attr: DnAttributeInput) {
         fillMissingFields([attr]);
@@ -138,8 +138,8 @@ export class CertificationRequest {
         csr.attributes = attrs as DnAttribute[];
       };
 
-      csr.sign = function (key: PrivateKey, md?: MessageDigest) {
-        csr.md = md || ctx.digestRegistry.sha1.create();
+      csr.sign = function (key: PrivateKey, messageDigest?: MessageDigest) {
+        csr.md = messageDigest || ctx.digestRegistry.sha1.create();
         const algorithmOid = oids[csr.md.algorithm + 'WithRSAEncryption'];
         if (!algorithmOid) {
           const error = new Error(
@@ -160,22 +160,22 @@ export class CertificationRequest {
       csr.verify = function () {
         let signatureValid = false;
 
-        let md = csr.md;
-        if (md === null) {
-          md = createSignatureDigest({
+        let messageDigest = csr.md;
+        if (messageDigest === null) {
+          messageDigest = createSignatureDigest({
             signatureOid: csr.signatureOid!,
             type: 'certification request'
           });
 
           const cri = csr.certificationRequestInfo || pki.getCertificationRequestInfo(csr);
           const bytes = asn1.toDer(cri);
-          md.update(bytes.getBytes());
+          messageDigest.update(bytes.getBytes());
         }
 
-        if (md !== null) {
+        if (messageDigest !== null) {
           signatureValid = verifySignature({
             certificate: csr,
-            messageDigest: md,
+            messageDigest: messageDigest,
             signature: csr.signature
           });
         }

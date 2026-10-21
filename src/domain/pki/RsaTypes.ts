@@ -21,7 +21,7 @@ export type RsaPublicKey = RsaKeyMaterial & {
 export type RsaPrivateKey = RsaKeyMaterial & {
   d: BigInteger;
   decrypt: (data: string, scheme?: unknown, schemeOptions?: unknown) => string;
-  sign: (md: unknown, scheme?: unknown) => string;
+  sign: (messageDigest: unknown, scheme?: unknown) => string;
 };
 
 export type RsaKeyPair = {

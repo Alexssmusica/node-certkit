@@ -131,13 +131,13 @@ export class PbeService {
 
         // get PRF message digest
         const prfAlgorithm = 'hmacWith' + options.prfAlgorithm.toUpperCase();
-        const md = prfAlgorithmToMessageDigest(prfAlgorithm);
+        const messageDigest = prfAlgorithmToMessageDigest(prfAlgorithm);
 
         // encrypt private key using pbe SHA-1 and AES/DES
-        const dk = deps.pkcs5.pbkdf2!(password, salt, count, dkLen, md);
-        const iv = deps.random.getBytesSync(ivLen);
-        const cipher = createEncryptionCipher(dk) as PbeDecryptCipher;
-        cipher.start(iv);
+        const derivedKey = deps.pkcs5.pbkdf2!(password, salt, count, dkLen, messageDigest);
+        const initializationVector = deps.random.getBytesSync(ivLen);
+        const cipher = createEncryptionCipher(derivedKey) as PbeDecryptCipher;
+        cipher.start(initializationVector);
         cipher.update(asn1.toDer(asn1Object));
         cipher.finish();
         encryptedData = cipher.output!.getBytes();
@@ -158,7 +158,7 @@ export class PbeService {
             asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
               asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(encryptionOid).getBytes()),
               // iv
-              asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, iv)
+              asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, initializationVector)
             ])
           ])
         ]);
@@ -167,10 +167,10 @@ export class PbeService {
         dkLen = 24;
 
         const saltBytes = new deps.util.ByteBuffer(salt);
-        const dk = pbe.generatePkcs12Key!(password, saltBytes, 1, count, dkLen);
-        const iv = pbe.generatePkcs12Key!(password, saltBytes, 2, count, dkLen);
-        const cipher = deps.des.createEncryptionCipher(dk) as PbeDecryptCipher;
-        cipher.start(iv);
+        const derivedKey = pbe.generatePkcs12Key!(password, saltBytes, 1, count, dkLen);
+        const initializationVector = pbe.generatePkcs12Key!(password, saltBytes, 2, count, dkLen);
+        const cipher = deps.des.createEncryptionCipher(derivedKey) as PbeDecryptCipher;
+        cipher.start(initializationVector);
         cipher.update(asn1.toDer(asn1Object));
         cipher.finish();
         encryptedData = cipher.output!.getBytes();
@@ -334,38 +334,38 @@ export class PbeService {
 
       // legacy non-PKCS#8
       let algorithm;
-      let iv;
+      let initializationVector;
       let dkLen;
       let cipherFn;
       switch (options.algorithm) {
         case 'aes128':
           algorithm = 'AES-128-CBC';
           dkLen = 16;
-          iv = deps.random.getBytesSync(16);
+          initializationVector = deps.random.getBytesSync(16);
           cipherFn = deps.aes.createEncryptionCipher;
           break;
         case 'aes192':
           algorithm = 'AES-192-CBC';
           dkLen = 24;
-          iv = deps.random.getBytesSync(16);
+          initializationVector = deps.random.getBytesSync(16);
           cipherFn = deps.aes.createEncryptionCipher;
           break;
         case 'aes256':
           algorithm = 'AES-256-CBC';
           dkLen = 32;
-          iv = deps.random.getBytesSync(16);
+          initializationVector = deps.random.getBytesSync(16);
           cipherFn = deps.aes.createEncryptionCipher;
           break;
         case '3des':
           algorithm = 'DES-EDE3-CBC';
           dkLen = 24;
-          iv = deps.random.getBytesSync(8);
+          initializationVector = deps.random.getBytesSync(8);
           cipherFn = deps.des.createEncryptionCipher;
           break;
         case 'des':
           algorithm = 'DES-CBC';
           dkLen = 8;
-          iv = deps.random.getBytesSync(8);
+          initializationVector = deps.random.getBytesSync(8);
           cipherFn = deps.des.createEncryptionCipher;
           break;
         default: {
@@ -378,9 +378,9 @@ export class PbeService {
       }
 
       // encrypt private key using OpenSSL legacy key derivation
-      const dk = pbe.opensslDeriveBytes!(password, iv.substr(0, 8), dkLen);
-      const cipher = cipherFn(dk) as PbeDecryptCipher;
-      cipher.start(iv);
+      const derivedKey = pbe.opensslDeriveBytes!(password, initializationVector.substr(0, 8), dkLen);
+      const cipher = cipherFn(derivedKey) as PbeDecryptCipher;
+      cipher.start(initializationVector);
       cipher.update(asn1.toDer(pki.privateKeyToAsn1!(rsaKey)));
       cipher.finish();
 
@@ -393,7 +393,7 @@ export class PbeService {
         contentDomain: null,
         dekInfo: {
           algorithm: algorithm,
-          parameters: deps.util.bytesToHex(iv).toUpperCase()
+          parameters: deps.util.bytesToHex(initializationVector).toUpperCase()
         },
         headers: [],
         body: cipher.output!.getBytes()
@@ -482,10 +482,10 @@ export class PbeService {
         }
 
         // use OpenSSL legacy key derivation
-        const iv = deps.util.hexToBytes(pemMessage.dekInfo!.parameters!);
-        const dk = pbe.opensslDeriveBytes!(password, iv.substr(0, 8), dkLen);
-        const cipher = cipherFn(dk) as PbeDecryptCipher;
-        cipher.start(iv);
+        const initializationVector = deps.util.hexToBytes(pemMessage.dekInfo!.parameters!);
+        const derivedKey = pbe.opensslDeriveBytes!(password, initializationVector.substr(0, 8), dkLen);
+        const cipher = cipherFn(derivedKey) as PbeDecryptCipher;
+        cipher.start(initializationVector);
         cipher.update(deps.util.createBuffer(pemMessage.body));
         if (cipher.finish()) {
           body = cipher.output!.getBytes();
@@ -518,22 +518,22 @@ export class PbeService {
      * @param password the password to derive the key material from, null or
      *          undefined for none.
      * @param salt the salt, as a ByteBuffer, to use.
-     * @param id the PKCS#12 ID byte (1 = key material, 2 = IV, 3 = MAC).
+     * @param objectId the PKCS#12 ID byte (1 = key material, 2 = IV, 3 = MAC).
      * @param iter the iteration count.
-     * @param n the number of bytes to derive from the password.
-     * @param md the message digest to use, defaults to SHA-1.
+     * @param limbCount the number of bytes to derive from the password.
+     * @param messageDigest the message digest to use, defaults to SHA-1.
      *
      * @return a ByteBuffer with the bytes derived from the password.
      */
     pbe.generatePkcs12Key = function (
       password: string | null | undefined,
       salt: ByteStringBuffer,
-      id: number,
+      objectId: number,
       iter: number,
-      n: number,
-      md?: BlockDigest
+      limbCount: number,
+      messageDigest?: BlockDigest
     ) {
-      let digest = md as PbeMessageDigest | undefined;
+      let digest = messageDigest as PbeMessageDigest | undefined;
 
       if (typeof digest === 'undefined' || digest === null) {
         if (!('sha1' in deps.digestRegistry)) {
@@ -562,7 +562,7 @@ export class PbeService {
       /* 1. Construct a string, D (the "diversifier"), by concatenating
         v copies of ID. */
       const diversifier = new deps.util.ByteBuffer();
-      diversifier.fillWithByte(id, hashBlockLength);
+      diversifier.fillWithByte(objectId, hashBlockLength);
 
       /* 2. Concatenate copies of the salt together to create a string S of length
         v * ceil(s / v) bytes (the final copy of the salt may be truncated
@@ -589,10 +589,10 @@ export class PbeService {
       saltPasswordBuffer.putBuffer(passwordString);
 
       /* 5. Set c=ceil(n / u). */
-      const iterationBlocks = Math.ceil(n / hashOutputLength);
+      const iterationBlocks = Math.ceil(limbCount / hashOutputLength);
 
       /* 6. For i=1, 2, ..., c, do the following: */
-      for (let i = 1; i <= iterationBlocks; i++) {
+      for (let index = 1; index <= iterationBlocks; index++) {
         /* a) Set Ai=H^r(D||I). (l.e. the rth hash of D||I, H(H(H(...H(D||I)))) */
         let buf = new deps.util.ByteBuffer();
         buf.putBytes(diversifier.bytes());
@@ -613,9 +613,9 @@ export class PbeService {
         /* c) Treating I as a concatenation I0, I1, ..., Ik-1 of v-byte blocks,
           where k=ceil(s / v) + ceil(p / v), modify I by setting
           Ij=(Ij+B+1) mod 2v for each j.  */
-        const k = Math.ceil(saltLengthBytes / hashBlockLength) + Math.ceil(passwordLength / hashBlockLength);
+        const limbIndex = Math.ceil(saltLengthBytes / hashBlockLength) + Math.ceil(passwordLength / hashBlockLength);
         const Inew = new deps.util.ByteBuffer();
-        for (let blockIndex = 0; blockIndex < k; blockIndex++) {
+        for (let blockIndex = 0; blockIndex < limbIndex; blockIndex++) {
           const chunk = new deps.util.ByteBuffer(saltPasswordBuffer.getBytes(hashBlockLength));
           let carryAcc = 0x1ff;
           for (let byteIndex = expandedHashBlock.length() - 1; byteIndex >= 0; byteIndex--) {
@@ -631,7 +631,7 @@ export class PbeService {
         result.putBuffer(buf);
       }
 
-      result.truncate(result.length() - n);
+      result.truncate(result.length() - limbCount);
       return result;
     };
 
@@ -751,13 +751,13 @@ export class PbeService {
       }
 
       // get PRF message digest
-      const md = prfOidToMessageDigest(capture.prfOid as string | undefined);
+      const messageDigest = prfOidToMessageDigest(capture.prfOid as string | undefined);
 
       // decrypt private key using pbe with chosen PRF and AES/DES
-      const dk = deps.pkcs5.pbkdf2!(password, salt, count, dkLen, md);
-      const iv = capture.encIv as string;
-      const cipher = cipherFn(dk) as PbeDecryptCipher;
-      cipher.start(iv);
+      const derivedKey = deps.pkcs5.pbkdf2!(password, salt, count, dkLen, messageDigest);
+      const initializationVector = capture.encIv as string;
+      const cipher = cipherFn(derivedKey) as PbeDecryptCipher;
+      cipher.start(initializationVector);
 
       return cipher;
     };
@@ -804,9 +804,9 @@ export class PbeService {
         case oids['pbewithSHAAnd40BitRC2-CBC']:
           dkLen = 5;
           derivedIvLength = 8;
-          startDecryptionCipher = function (key: ByteStringBuffer, iv: ByteStringBuffer) {
+          startDecryptionCipher = function (key: ByteStringBuffer, initializationVector: ByteStringBuffer) {
             const cipher = deps.rc2.createDecryptionCipher(key, 40);
-            cipher.start(iv, null);
+            cipher.start(initializationVector, null);
             return cipher as PbeDecryptCipher;
           };
           break;
@@ -819,12 +819,12 @@ export class PbeService {
       }
 
       // get PRF message digest
-      const md = prfOidToMessageDigest(capture.prfOid as string | undefined);
-      const key = pbe.generatePkcs12Key!(password, salt, 1, count, dkLen, md);
-      md.start();
-      const iv = pbe.generatePkcs12Key!(password, salt, 2, count, derivedIvLength, md);
+      const messageDigest = prfOidToMessageDigest(capture.prfOid as string | undefined);
+      const key = pbe.generatePkcs12Key!(password, salt, 1, count, dkLen, messageDigest);
+      messageDigest.start();
+      const initializationVector = pbe.generatePkcs12Key!(password, salt, 2, count, derivedIvLength, messageDigest);
 
-      return startDecryptionCipher(key, iv, null) as PbeDecryptCipher;
+      return startDecryptionCipher(key, initializationVector, null) as PbeDecryptCipher;
     };
 
     /**
@@ -842,9 +842,9 @@ export class PbeService {
       password: string,
       salt: ByteStringBuffer | string | null,
       dkLen: number,
-      md?: BlockDigest
+      messageDigest?: BlockDigest
     ) {
-      let digest = md as PbeMessageDigest | undefined;
+      let digest = messageDigest as PbeMessageDigest | undefined;
       if (typeof digest === 'undefined' || digest === null) {
         if (!('md5' in deps.digestRegistry)) {
           throw new Error('"md5" hash algorithm unavailable.');
@@ -857,14 +857,14 @@ export class PbeService {
       }
       const saltString = typeof saltValue === 'string' ? saltValue : saltValue.getBytes();
       const digests = [hash(digest, password + saltString)];
-      for (let length = 16, i = 1; length < dkLen; ++i, length += 16) {
-        digests.push(hash(digest, digests[i - 1] + password + saltString));
+      for (let length = 16, index = 1; length < dkLen; ++index, length += 16) {
+        digests.push(hash(digest, digests[index - 1] + password + saltString));
       }
       return digests.join('').substr(0, dkLen);
     };
 
-    function hash(md: BlockDigest, bytes: string) {
-      return md.start().update(bytes).digest().getBytes();
+    function hash(messageDigest: BlockDigest, bytes: string) {
+      return messageDigest.start().update(bytes).digest().getBytes();
     }
 
     function prfOidToMessageDigest(prfOid?: string): PbeMessageDigest {

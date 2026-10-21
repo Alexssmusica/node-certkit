@@ -11,11 +11,11 @@ export class RawCodec {
       out = new Uint8Array((str as string).length);
     }
     const off = offset || 0;
-    let j = off;
+    let innerIndex = off;
     const rawString = str as string;
-    for (let i = 0; i < rawString.length; ++i) {
-      out[j++] = rawString.charCodeAt(i);
+    for (let index = 0; index < rawString.length; ++index) {
+      out[innerIndex++] = rawString.charCodeAt(index);
     }
-    return output ? j - off : out;
+    return output ? innerIndex - off : out;
   }
 }

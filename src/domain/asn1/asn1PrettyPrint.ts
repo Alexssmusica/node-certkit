@@ -34,7 +34,7 @@ export function prettyPrintAsn1(asn1Object: Asn1Object, level?: number, indentat
 
   // create indent
   let indent = '';
-  for (let i = 0; i < indentLevel * indentSize; ++i) {
+  for (let index = 0; index < indentLevel * indentSize; ++index) {
     indent += ' ';
   }
 
@@ -135,11 +135,11 @@ export function prettyPrintAsn1(asn1Object: Asn1Object, level?: number, indentat
     let subvalues = 0;
     let sub = '';
     const children = asn1Object.value as Asn1Object[];
-    for (let i = 0; i < children.length; ++i) {
-      if (children[i] !== undefined) {
+    for (let index = 0; index < children.length; ++index) {
+      if (children[index] !== undefined) {
         subvalues += 1;
-        sub += prettyPrintAsn1(children[i], indentLevel + 1, indentSize);
-        if (i + 1 < children.length) {
+        sub += prettyPrintAsn1(children[index], indentLevel + 1, indentSize);
+        if (index + 1 < children.length) {
           sub += ',';
         }
       }

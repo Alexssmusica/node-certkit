@@ -7,20 +7,20 @@ import type { BlockDigest, DigestAlgorithmRegistry, HmacContext } from './Digest
  */
 class HmacEngine {
   #key: ByteStringBuffer | null = null;
-  #md: BlockDigest | null = null;
+  #messageDigest: BlockDigest | null = null;
   #ipadding: string | null = null;
   #opadding: string | null = null;
 
-  start(md: string | BlockDigest | null, key: unknown, algorithms: DigestAlgorithmRegistry): void {
-    if (md !== null) {
-      if (typeof md === 'string') {
-        const name = md.toLowerCase();
+  start(messageDigest: string | BlockDigest | null, key: unknown, algorithms: DigestAlgorithmRegistry): void {
+    if (messageDigest !== null) {
+      if (typeof messageDigest === 'string') {
+        const name = messageDigest.toLowerCase();
         if (!(name in algorithms)) {
-          throw new Error('Unknown hash algorithm "' + md + '"');
+          throw new Error('Unknown hash algorithm "' + messageDigest + '"');
         }
-        this.#md = algorithms[name].create();
+        this.#messageDigest = algorithms[name].create();
       } else {
-        this.#md = md;
+        this.#messageDigest = messageDigest;
       }
     }
 
@@ -32,32 +32,32 @@ class HmacEngine {
     } else if (isArray(key)) {
       keyBuffer = new ByteStringBuffer();
       const keyBytes = key as number[];
-      for (let i = 0; i < keyBytes.length; ++i) {
-        keyBuffer.putByte(keyBytes[i]);
+      for (let index = 0; index < keyBytes.length; ++index) {
+        keyBuffer.putByte(keyBytes[index]);
       }
     } else {
       keyBuffer = key as ByteStringBuffer;
     }
 
     let keylen = keyBuffer.length();
-    if (keylen > this.#md!.blockLength) {
-      this.#md!.start();
-      this.#md!.update(keyBuffer.bytes());
-      keyBuffer = this.#md!.digest();
+    if (keylen > this.#messageDigest!.blockLength) {
+      this.#messageDigest!.start();
+      this.#messageDigest!.update(keyBuffer.bytes());
+      keyBuffer = this.#messageDigest!.digest();
     }
 
     const ipadding = new ByteStringBuffer();
     const opadding = new ByteStringBuffer();
     keylen = keyBuffer.length();
-    for (let i = 0; i < keylen; ++i) {
-      const keyByte = keyBuffer.at(i);
+    for (let index = 0; index < keylen; ++index) {
+      const keyByte = keyBuffer.at(index);
       ipadding.putByte(0x36 ^ keyByte);
       opadding.putByte(0x5c ^ keyByte);
     }
 
-    if (keylen < this.#md!.blockLength) {
-      const pad = this.#md!.blockLength - keylen;
-      for (let i = 0; i < pad; ++i) {
+    if (keylen < this.#messageDigest!.blockLength) {
+      const pad = this.#messageDigest!.blockLength - keylen;
+      for (let index = 0; index < pad; ++index) {
         ipadding.putByte(0x36);
         opadding.putByte(0x5c);
       }
@@ -66,20 +66,20 @@ class HmacEngine {
     this.#ipadding = ipadding.bytes();
     this.#opadding = opadding.bytes();
 
-    this.#md!.start();
-    this.#md!.update(this.#ipadding);
+    this.#messageDigest!.start();
+    this.#messageDigest!.update(this.#ipadding);
   }
 
   update(bytes: string): void {
-    this.#md!.update(bytes);
+    this.#messageDigest!.update(bytes);
   }
 
   getMac(): ByteStringBuffer {
-    const inner = this.#md!.digest().bytes();
-    this.#md!.start();
-    this.#md!.update(this.#opadding!);
-    this.#md!.update(inner);
-    return this.#md!.digest();
+    const inner = this.#messageDigest!.digest().bytes();
+    this.#messageDigest!.start();
+    this.#messageDigest!.update(this.#opadding!);
+    this.#messageDigest!.update(inner);
+    return this.#messageDigest!.digest();
   }
 }
 
@@ -87,7 +87,7 @@ export class Hmac {
   static create(algorithms: DigestAlgorithmRegistry): HmacContext {
     const engine = new HmacEngine();
     const ctx: HmacContext = {
-      start: (md, key) => engine.start(md, key, algorithms),
+      start: (messageDigest, key) => engine.start(messageDigest, key, algorithms),
       update: (bytes) => engine.update(bytes),
       getMac: () => engine.getMac(),
       digest: () => engine.getMac()

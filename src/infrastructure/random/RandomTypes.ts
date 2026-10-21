@@ -2,7 +2,7 @@ import type { PrngContext } from '../prng/PrngTypes.js';
 
 export type AesPrngBackend = {
   _expandKey: (key: number[], decrypt: boolean) => number[];
-  _updateBlock: (w: number[], seed: number[], output: number[], decrypt: boolean) => void;
+  _updateBlock: (word: number[], seed: number[], output: number[], decrypt: boolean) => void;
 };
 
 export type Sha256DigestFactory = {

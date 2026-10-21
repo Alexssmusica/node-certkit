@@ -23,10 +23,10 @@ export class Fortuna {
       collectInt: () => {}
     };
 
-    const md = plugin.md;
+    const messageDigest = plugin.md;
     const pools: MessageDigestInstance[] = new Array<MessageDigestInstance>(32);
-    for (let i = 0; i < 32; ++i) {
-      pools[i] = md.create();
+    for (let index = 0; index < 32; ++index) {
+      pools[index] = messageDigest.create();
     }
     ctx.pools = pools;
     ctx.pool = 0;
@@ -142,10 +142,10 @@ export class Fortuna {
       mdInstance.update(ctx.keyBytes);
 
       let _2powK = 1;
-      for (let k = 0; k < 32; ++k) {
+      for (let limbIndex = 0; limbIndex < 32; ++limbIndex) {
         if (ctx.reseeds % _2powK === 0) {
-          mdInstance.update(ctx.pools[k].digest().getBytes());
-          ctx.pools[k].start();
+          mdInstance.update(ctx.pools[limbIndex].digest().getBytes());
+          ctx.pools[limbIndex].start();
         }
         _2powK = _2powK << 1;
       }
@@ -181,8 +181,8 @@ export class Fortuna {
           const entropy = new Uint32Array(Math.floor(count));
           try {
             getRandomValues(entropy);
-            for (let i = 0; i < entropy.length; ++i) {
-              seedBuffer.putInt32(entropy[i]);
+            for (let index = 0; index < entropy.length; ++index) {
+              seedBuffer.putInt32(entropy[index]);
             }
           } catch (caughtError) {
             const QuotaExceededErrorCtor = (
@@ -229,16 +229,16 @@ export class Fortuna {
 
     ctx.collect = function (bytes: string) {
       const count = bytes.length;
-      for (let i = 0; i < count; ++i) {
-        ctx.pools[ctx.pool].update(bytes.charAt(i));
+      for (let index = 0; index < count; ++index) {
+        ctx.pools[ctx.pool].update(bytes.charAt(index));
         ctx.pool = ctx.pool === 31 ? 0 : ctx.pool + 1;
       }
     };
 
-    ctx.collectInt = function (i: number, bitCount: number) {
+    ctx.collectInt = function (index: number, bitCount: number) {
       let bytes = '';
       for (let bitOffset = 0; bitOffset < bitCount; bitOffset += 8) {
-        bytes += String.fromCharCode((i >> bitOffset) & 0xff);
+        bytes += String.fromCharCode((index >> bitOffset) & 0xff);
       }
       ctx.collect(bytes);
     };

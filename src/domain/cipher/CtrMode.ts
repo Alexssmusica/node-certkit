@@ -42,8 +42,8 @@ export class CtrMode {
     this.cipher.encrypt(this._inBlock!, this._outBlock);
 
     if (this._partialBytes === 0 && inputLength >= this.blockSize) {
-      for (let i = 0; i < this._ints; ++i) {
-        output.putInt32(input.getInt32() ^ this._outBlock[i]);
+      for (let index = 0; index < this._ints; ++index) {
+        output.putInt32(input.getInt32() ^ this._outBlock[index]);
       }
     } else {
       let partialBytes = (this.blockSize - inputLength) % this.blockSize;
@@ -52,8 +52,8 @@ export class CtrMode {
       }
 
       this._partialOutput.clear();
-      for (let i = 0; i < this._ints; ++i) {
-        this._partialOutput.putInt32(input.getInt32() ^ this._outBlock[i]);
+      for (let index = 0; index < this._ints; ++index) {
+        this._partialOutput.putInt32(input.getInt32() ^ this._outBlock[index]);
       }
 
       if (partialBytes > 0) {

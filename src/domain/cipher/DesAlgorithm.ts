@@ -62,21 +62,26 @@ let cipherApi: CipherApi<DesAlgorithm['mode']>;
  * byte buffers.
  *
  * @param key the symmetric key to use (64 or 192 bits).
- * @param iv the initialization vector to use.
+ * @param initializationVector the initialization vector to use.
  * @param output the buffer to write to, null to create one.
  * @param mode the cipher mode to use (default: 'CBC' if IV is
  *          given, 'ECB' if null).
  *
  * @return the cipher.
  */
-function startEncrypting(key: DesCipherKey, iv: DesCipherKey | null, output: ByteStringBuffer | null, mode?: string) {
+function startEncrypting(
+  key: DesCipherKey,
+  initializationVector: DesCipherKey | null,
+  output: ByteStringBuffer | null,
+  mode?: string
+) {
   const cipher = _createCipher({
     key: key,
     output: output,
     decrypt: false,
-    mode: mode || (iv === null ? 'ECB' : 'CBC')
+    mode: mode || (initializationVector === null ? 'ECB' : 'CBC')
   });
-  cipher.start(iv);
+  cipher.start(initializationVector);
   return cipher;
 }
 
@@ -116,21 +121,26 @@ function createEncryptionCipher(key: DesCipherKey, mode?: string) {
  * byte buffers.
  *
  * @param key the symmetric key to use (64 or 192 bits).
- * @param iv the initialization vector to use.
+ * @param initializationVector the initialization vector to use.
  * @param output the buffer to write to, null to create one.
  * @param mode the cipher mode to use (default: 'CBC' if IV is
  *          given, 'ECB' if null).
  *
  * @return the cipher.
  */
-function startDecrypting(key: DesCipherKey, iv: DesCipherKey | null, output: ByteStringBuffer | null, mode?: string) {
+function startDecrypting(
+  key: DesCipherKey,
+  initializationVector: DesCipherKey | null,
+  output: ByteStringBuffer | null,
+  mode?: string
+) {
   const cipher = _createCipher({
     key: key,
     output: output,
     decrypt: true,
-    mode: mode || (iv === null ? 'ECB' : 'CBC')
+    mode: mode || (initializationVector === null ? 'ECB' : 'CBC')
   });
-  cipher.start(iv);
+  cipher.start(initializationVector);
   return cipher;
 }
 
@@ -191,7 +201,7 @@ function _createCipher(options?: CreateCipherOptions) {
 
   // backwards compatible start API
   const start = cipher.start;
-  cipher.start = function (iv, startOptions) {
+  cipher.start = function (initializationVector, startOptions) {
     // backwards compatibility: support second arg as output buffer
     let output = null;
     let resolvedOptions = startOptions;
@@ -201,7 +211,7 @@ function _createCipher(options?: CreateCipherOptions) {
     }
     resolvedOptions = resolvedOptions || {};
     (resolvedOptions as Record<string, unknown>).output = output;
-    (resolvedOptions as Record<string, unknown>).iv = iv;
+    (resolvedOptions as Record<string, unknown>).iv = initializationVector;
     start.call(cipher, resolvedOptions);
   };
 
@@ -439,7 +449,7 @@ export class DesAlgorithm {
 
     let keySlotIndex = 0;
     let swapMask: number;
-    for (let j = 0; j < iterations; j++) {
+    for (let innerIndex = 0; innerIndex < iterations; innerIndex++) {
       let left = key.getInt32();
       let right = key.getInt32();
 
@@ -479,9 +489,9 @@ export class DesAlgorithm {
       right = swapMask;
 
       // now go through and perform these shifts on the left and right keys
-      for (let i = 0; i < shifts.length; ++i) {
+      for (let index = 0; index < shifts.length; ++index) {
         //shift the keys either one or two bits to the left
-        if (shifts[i]) {
+        if (shifts[index]) {
           left = (left << 2) | (left >>> 26);
           right = (right << 2) | (right >>> 26);
         } else {
@@ -563,14 +573,14 @@ export class DesAlgorithm {
     left = (left << 1) | (left >>> 31);
     right = (right << 1) | (right >>> 31);
 
-    for (let j = 0; j < iterations; j += 3) {
-      const endloop = looping[j + 1];
-      const loopinc = looping[j + 2];
+    for (let innerIndex = 0; innerIndex < iterations; innerIndex += 3) {
+      const endloop = looping[innerIndex + 1];
+      const loopinc = looping[innerIndex + 2];
 
       // now go through and perform the encryption or decryption
-      for (let i = looping[j]; i != endloop; i += loopinc) {
-        const right1 = right ^ keys[i];
-        const right2 = ((right >>> 4) | (right << 28)) ^ keys[i + 1];
+      for (let index = looping[innerIndex]; index != endloop; index += loopinc) {
+        const right1 = right ^ keys[index];
+        const right2 = ((right >>> 4) | (right << 28)) ^ keys[index + 1];
 
         // passing these bytes through the S selection functions
         swapMask = left;

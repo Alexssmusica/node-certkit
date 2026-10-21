@@ -36,8 +36,8 @@ export class Md5 {
       10, 15, 21
     ];
     Md5.#sineConstants = new Array<number>(64);
-    for (let i = 0; i < 64; ++i) {
-      Md5.#sineConstants[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 0x100000000);
+    for (let index = 0; index < 64; ++index) {
+      Md5.#sineConstants[index] = Math.floor(Math.abs(Math.sin(index + 1)) * 0x100000000);
     }
     Md5.#initialized = true;
   }
@@ -49,7 +49,7 @@ export class Md5 {
   static create(): Md5Digest {
     Md5.#ensureInit();
     const engine = new Md5();
-    const md: Md5Digest = {
+    const messageDigest: Md5Digest = {
       algorithm: 'md5',
       blockLength: 64,
       digestLength: 16,
@@ -57,20 +57,20 @@ export class Md5 {
       fullMessageLength: null,
       messageLength64: null,
       messageLengthSize: 8,
-      start: () => engine.#start(md),
-      update: (input, encoding) => engine.#update(md, input, encoding),
-      digest: () => engine.#digest(md)
+      start: () => engine.#start(messageDigest),
+      update: (input, encoding) => engine.#update(messageDigest, input, encoding),
+      digest: () => engine.#digest(messageDigest)
     };
-    md.start();
-    return md;
+    messageDigest.start();
+    return messageDigest;
   }
 
-  #start(md: Md5Digest): Md5Digest {
-    md.messageLength = 0;
-    md.fullMessageLength = md.messageLength64 = [];
-    const int32s = md.messageLengthSize / 4;
-    for (let i = 0; i < int32s; ++i) {
-      md.fullMessageLength.push(0);
+  #start(messageDigest: Md5Digest): Md5Digest {
+    messageDigest.messageLength = 0;
+    messageDigest.fullMessageLength = messageDigest.messageLength64 = [];
+    const int32s = messageDigest.messageLengthSize / 4;
+    for (let index = 0; index < int32s; ++index) {
+      messageDigest.fullMessageLength.push(0);
     }
     this.#input = new ByteStringBuffer();
     this.#state = {
@@ -79,22 +79,22 @@ export class Md5 {
       hashWord2: 0x98badcfe,
       hashWord3: 0x10325476
     };
-    return md;
+    return messageDigest;
   }
 
-  #update(md: Md5Digest, message: string, encoding?: string): Md5Digest {
+  #update(messageDigest: Md5Digest, message: string, encoding?: string): Md5Digest {
     if (encoding === 'utf8') {
       message = encodeUtf8(message);
     }
 
     const messageByteLength = message.length;
-    md.messageLength += messageByteLength;
+    messageDigest.messageLength += messageByteLength;
     const lengthCarry = [(messageByteLength / 0x100000000) >>> 0, messageByteLength >>> 0];
-    const fullMessageLength = md.fullMessageLength!;
-    for (let i = fullMessageLength.length - 1; i >= 0; --i) {
-      fullMessageLength[i] += lengthCarry[1];
-      lengthCarry[1] = lengthCarry[0] + ((fullMessageLength[i] / 0x100000000) >>> 0);
-      fullMessageLength[i] = fullMessageLength[i] >>> 0;
+    const fullMessageLength = messageDigest.fullMessageLength!;
+    for (let index = fullMessageLength.length - 1; index >= 0; --index) {
+      fullMessageLength[index] += lengthCarry[1];
+      lengthCarry[1] = lengthCarry[0] + ((fullMessageLength[index] / 0x100000000) >>> 0);
+      fullMessageLength[index] = fullMessageLength[index] >>> 0;
       lengthCarry[0] = (lengthCarry[1] / 0x100000000) >>> 0;
     }
 
@@ -105,22 +105,23 @@ export class Md5 {
       this.#input.compact();
     }
 
-    return md;
+    return messageDigest;
   }
 
-  #digest(md: Md5Digest): ByteStringBuffer {
+  #digest(messageDigest: Md5Digest): ByteStringBuffer {
     const finalBlock = new ByteStringBuffer();
     finalBlock.putBytes(this.#input.bytes());
 
-    const remaining = md.fullMessageLength![md.fullMessageLength!.length - 1] + md.messageLengthSize;
+    const remaining =
+      messageDigest.fullMessageLength![messageDigest.fullMessageLength!.length - 1] + messageDigest.messageLengthSize;
 
-    const overflow = remaining & (md.blockLength - 1);
-    finalBlock.putBytes(Md5.#padding!.substr(0, md.blockLength - overflow));
+    const overflow = remaining & (messageDigest.blockLength - 1);
+    finalBlock.putBytes(Md5.#padding!.substr(0, messageDigest.blockLength - overflow));
 
     let lengthBits: number;
     let carryBits = 0;
-    for (let i = md.fullMessageLength!.length - 1; i >= 0; --i) {
-      lengthBits = md.fullMessageLength![i] * 8 + carryBits;
+    for (let index = messageDigest.fullMessageLength!.length - 1; index >= 0; --index) {
+      lengthBits = messageDigest.fullMessageLength![index] * 8 + carryBits;
       carryBits = (lengthBits / 0x100000000) >>> 0;
       finalBlock.putInt32Le(lengthBits >>> 0);
     }

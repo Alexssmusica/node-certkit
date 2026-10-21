@@ -177,8 +177,8 @@ export function createFillMissingExtensionFields(deps: ExtensionFillDeps): FillM
       extension.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
       const altNameSeq = extension.value.value as Asn1Object[];
 
-      for (let n = 0; n < extension.altNames!.length; ++n) {
-        const altName = extension.altNames![n];
+      for (let limbCount = 0; limbCount < extension.altNames!.length; ++limbCount) {
+        const altName = extension.altNames![limbCount];
         let value: string = altName.value ?? '';
         if (altName.type === 7 && altName.ip) {
           value = util.bytesFromIP(altName.ip) ?? '';
@@ -240,8 +240,8 @@ export function createFillMissingExtensionFields(deps: ExtensionFillDeps): FillM
 
       const fullNameGeneralNames = asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, []);
       let altName;
-      for (let n = 0; n < extension.altNames!.length; ++n) {
-        altName = extension.altNames![n];
+      for (let limbCount = 0; limbCount < extension.altNames!.length; ++limbCount) {
+        altName = extension.altNames![limbCount];
         let value: string = altName.value ?? '';
         if (altName.type === 7 && altName.ip) {
           value = util.bytesFromIP(altName.ip) ?? '';

@@ -118,7 +118,7 @@ export type CipherNamespaceObject = {
 
 export type Rc2CipherObject = {
   output?: ByteStringBuffer;
-  start: (iv?: string | ByteStringBuffer | null, output?: ByteStringBuffer | null) => void;
+  start: (initializationVector?: string | ByteStringBuffer | null, output?: ByteStringBuffer | null) => void;
   update: (input: ByteStringBuffer) => void;
   finish: (pad?: PaddingFunction) => boolean;
 };
@@ -134,21 +134,21 @@ export type Rc2NamespaceObject = {
 export type AesNamespaceObject = {
   startEncrypting: (
     key: SymmetricCipherKey,
-    iv: SymmetricCipherKey | null,
+    initializationVector: SymmetricCipherKey | null,
     output: ByteStringBuffer | null,
     mode?: string
   ) => BlockCipher;
   createEncryptionCipher: (key: SymmetricCipherKey, mode?: string) => BlockCipher;
   startDecrypting: (
     key: SymmetricCipherKey,
-    iv: SymmetricCipherKey | null,
+    initializationVector: SymmetricCipherKey | null,
     output: ByteStringBuffer | null,
     mode?: string
   ) => BlockCipher;
   createDecryptionCipher: (key: SymmetricCipherKey, mode?: string) => BlockCipher;
   Algorithm: typeof AesAlgorithm;
   _expandKey: (key: number[], decrypt: boolean) => number[];
-  _updateBlock: (w: number[], input: number[], output: number[], decrypt: boolean) => void;
+  _updateBlock: (word: number[], input: number[], output: number[], decrypt: boolean) => void;
 };
 
 export type AesTables = {
@@ -162,14 +162,14 @@ export type AesTables = {
 export type DesNamespaceObject = {
   startEncrypting: (
     key: DesCipherKey,
-    iv: DesCipherKey | null,
+    initializationVector: DesCipherKey | null,
     output: ByteStringBuffer | null,
     mode?: string
   ) => BlockCipher;
   createEncryptionCipher: (key: DesCipherKey, mode?: string) => BlockCipher;
   startDecrypting: (
     key: DesCipherKey,
-    iv: DesCipherKey | null,
+    initializationVector: DesCipherKey | null,
     output: ByteStringBuffer | null,
     mode?: string
   ) => BlockCipher;

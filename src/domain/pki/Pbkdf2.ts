@@ -20,12 +20,12 @@ export class Pbkdf2 {
       salt: string,
       iterationCount: number,
       dkLen: number,
-      md?: string | MessageDigest | null | Pbkdf2Callback,
+      messageDigest?: string | MessageDigest | null | Pbkdf2Callback,
       callback?: Pbkdf2Callback
     ): string | void {
-      if (typeof md === 'function') {
-        callback = md;
-        md = null;
+      if (typeof messageDigest === 'function') {
+        callback = messageDigest;
+        messageDigest = null;
       }
 
       if (
@@ -33,13 +33,13 @@ export class Pbkdf2 {
         !deps.usePureJavaScript &&
         nativeCrypto.available &&
         nativeCrypto.pbkdf2Available &&
-        (md === null || typeof md !== 'object') &&
-        (nativeCrypto.pbkdf2SyncSupportsDigest || !md || md === 'sha256')
+        (messageDigest === null || typeof messageDigest !== 'object') &&
+        (nativeCrypto.pbkdf2SyncSupportsDigest || !messageDigest || messageDigest === 'sha256')
       ) {
-        if (typeof md !== 'string') {
-          md = 'sha256';
+        if (typeof messageDigest !== 'string') {
+          messageDigest = 'sha256';
         }
-        const digest = md;
+        const digest = messageDigest;
         const pBuf = Buffer.from(password, 'binary');
         const sBuf = Buffer.from(salt, 'binary');
         if (!callback) {
@@ -85,17 +85,17 @@ export class Pbkdf2 {
         return;
       }
 
-      if (typeof md === 'undefined' || md === null) {
-        md = 'sha256';
+      if (typeof messageDigest === 'undefined' || messageDigest === null) {
+        messageDigest = 'sha256';
       }
-      if (typeof md === 'string') {
-        if (!(md in deps.mdAlgorithms)) {
-          throw new Error('Unknown hash algorithm: ' + md);
+      if (typeof messageDigest === 'string') {
+        if (!(messageDigest in deps.mdAlgorithms)) {
+          throw new Error('Unknown hash algorithm: ' + messageDigest);
         }
-        md = deps.mdAlgorithms[md].create() as unknown as MessageDigest;
+        messageDigest = deps.mdAlgorithms[messageDigest].create() as unknown as MessageDigest;
       }
 
-      const mdObj = md;
+      const mdObj = messageDigest;
       const hLen = mdObj.digestLength;
 
       if (!Number.isInteger(iterationCount) || iterationCount < 1) {
@@ -133,13 +133,13 @@ export class Pbkdf2 {
       let previousU: string;
 
       if (!callback) {
-        for (let i = 1; i <= blockCount; ++i) {
+        for (let index = 1; index <= blockCount; ++index) {
           prf.start(null, null);
           prf.update(salt);
-          prf.update(UtilNamespace.int32ToBytes(i));
+          prf.update(UtilNamespace.int32ToBytes(index));
           xor = previousU = prf.digest().getBytes();
 
-          for (let j = 2; j <= iterationCount; ++j) {
+          for (let innerIndex = 2; innerIndex <= iterationCount; ++innerIndex) {
             prf.start(null, null);
             prf.update(previousU);
             currentU = prf.digest().getBytes();
@@ -147,43 +147,43 @@ export class Pbkdf2 {
             previousU = currentU;
           }
 
-          derivedKeyBytes += i < blockCount ? xor : xor.substr(0, finalBlockLength);
+          derivedKeyBytes += index < blockCount ? xor : xor.substr(0, finalBlockLength);
         }
         return derivedKeyBytes;
       }
 
-      let i = 1;
-      let j: number;
+      let index = 1;
+      let innerIndex: number;
 
       function outer(): void {
-        if (i > blockCount) {
+        if (index > blockCount) {
           return callback!(null, derivedKeyBytes);
         }
 
         prf.start(null, null);
         prf.update(salt);
-        prf.update(UtilNamespace.int32ToBytes(i));
+        prf.update(UtilNamespace.int32ToBytes(index));
         xor = previousU = prf.digest().getBytes();
 
-        j = 2;
+        innerIndex = 2;
         inner();
       }
 
       function inner(): void {
-        if (j <= iterationCount) {
+        if (innerIndex <= iterationCount) {
           prf.start(null, null);
           prf.update(previousU);
           currentU = prf.digest().getBytes();
           xor = UtilNamespace.xorBytes(xor, currentU, hLen);
           previousU = currentU;
-          ++j;
+          ++innerIndex;
           EnvInfo.setImmediate(inner);
           return;
         }
 
-        derivedKeyBytes += i < blockCount ? xor : xor.substr(0, finalBlockLength);
+        derivedKeyBytes += index < blockCount ? xor : xor.substr(0, finalBlockLength);
 
-        ++i;
+        ++index;
         outer();
       }
 

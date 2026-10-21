@@ -54,8 +54,8 @@ export class CaStore {
         }
         const matchArr = match;
         const der1 = asn1.toDer(pki.certificateToAsn1(cert)).getBytes();
-        for (let i = 0; i < matchArr.length; ++i) {
-          const der2 = asn1.toDer(pki.certificateToAsn1(matchArr[i])).getBytes();
+        for (let index = 0; index < matchArr.length; ++index) {
+          const der2 = asn1.toDer(pki.certificateToAsn1(matchArr[index])).getBytes();
           if (der1 === der2) {
             return true;
           }
@@ -72,8 +72,8 @@ export class CaStore {
             if (!ctx.util.isArray(value)) {
               certList.push(value);
             } else {
-              for (let i = 0; i < value.length; ++i) {
-                certList.push(value[i]);
+              for (let index = 0; index < value.length; ++index) {
+                certList.push(value[index]);
               }
             }
           }
@@ -103,11 +103,11 @@ export class CaStore {
 
         const der1 = asn1.toDer(pki.certificateToAsn1(cert)).getBytes();
         const matchArr = match;
-        for (let i = 0; i < matchArr.length; ++i) {
-          const der2 = asn1.toDer(pki.certificateToAsn1(matchArr[i])).getBytes();
+        for (let index = 0; index < matchArr.length; ++index) {
+          const der2 = asn1.toDer(pki.certificateToAsn1(matchArr[index])).getBytes();
           if (der1 === der2) {
-            result = matchArr[i]!;
-            matchArr.splice(i, 1);
+            result = matchArr[index]!;
+            matchArr.splice(index, 1);
           }
         }
         if (matchArr.length === 0) {
@@ -118,8 +118,8 @@ export class CaStore {
       };
 
       if (certs) {
-        for (let i = 0; i < certs.length; ++i) {
-          caStore.addCertificate(certs[i]);
+        for (let index = 0; index < certs.length; ++index) {
+          caStore.addCertificate(certs[index]);
         }
       }
 
@@ -145,9 +145,9 @@ export class CaStore {
     dnToAsn1: X509Helpers['dnToAsn1']
   ): void {
     if (!subject.hash) {
-      const md = ctx.digestRegistry.sha1.create();
-      subject.attributes = pki.RDNAttributesAsArray(dnToAsn1(subject), md);
-      subject.hash = md.digest().toHex();
+      const messageDigest = ctx.digestRegistry.sha1.create();
+      subject.attributes = pki.RDNAttributesAsArray(dnToAsn1(subject), messageDigest);
+      subject.hash = messageDigest.digest().toHex();
     }
   }
 }

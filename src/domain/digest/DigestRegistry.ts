@@ -8,10 +8,10 @@ export class DigestRegistry {
 
   static createCertkitNamespace(): MdRegistry {
     const registry = new DigestRegistry();
-    const md = {
+    const messageDigest = {
       algorithms: registry.algorithms
     } as MdRegistry;
-    return md;
+    return messageDigest;
   }
 }
 

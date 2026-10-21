@@ -159,7 +159,7 @@ export class Certificate {
     ): string;
     function getPublicKeyFingerprint(key: RsaPublicKey, options?: PublicKeyFingerprintOptions) {
       options = options || {};
-      const md = options.md || runtime.digestRegistry.sha1.create();
+      const messageDigest = options.md || runtime.digestRegistry.sha1.create();
       const type = options.type || 'RSAPublicKey';
 
       let bytes;
@@ -175,9 +175,9 @@ export class Certificate {
       }
 
       // hash public key bytes
-      md.start?.();
-      md.update(bytes);
-      const digest = md.digest();
+      messageDigest.start?.();
+      messageDigest.update(bytes);
+      const digest = messageDigest.digest();
       if (options.encoding === 'hex') {
         const hex = digest.toHex();
         if (options.delimiter) {
@@ -262,8 +262,8 @@ export class Certificate {
       cert.validity.notAfter = new Date();
 
       cert.issuer = {} as DistinguishedName;
-      cert.issuer.getField = function (sn: string | AttributeLookup) {
-        return getAttribute(cert.issuer, sn);
+      cert.issuer.getField = function (serialNumber: string | AttributeLookup) {
+        return getAttribute(cert.issuer, serialNumber);
       };
       cert.issuer.addField = function (attr: DnAttributeInput) {
         fillMissingFields([attr]);
@@ -273,8 +273,8 @@ export class Certificate {
       cert.issuer.hash = null;
 
       cert.subject = {} as DistinguishedName;
-      cert.subject.getField = function (sn: string | AttributeLookup) {
-        return getAttribute(cert.subject, sn);
+      cert.subject.getField = function (serialNumber: string | AttributeLookup) {
+        return getAttribute(cert.subject, serialNumber);
       };
       cert.subject.addField = function (attr: DnAttributeInput) {
         fillMissingFields([attr]);
@@ -329,8 +329,8 @@ export class Certificate {
        * @param exts the array of extensions to use.
        */
       cert.setExtensions = function (exts: X509Extension[]) {
-        for (let i = 0; i < exts.length; ++i) {
-          fillMissingExtensionFields(exts[i], { cert: cert });
+        for (let index = 0; index < exts.length; ++index) {
+          fillMissingExtensionFields(exts[index], { cert: cert });
         }
         // set new extensions
         cert.extensions = exts;
@@ -352,8 +352,8 @@ export class Certificate {
 
         let foundExtension = null;
         let ext;
-        for (let i = 0; foundExtension === null && i < cert.extensions.length; ++i) {
-          ext = cert.extensions[i];
+        for (let index = 0; foundExtension === null && index < cert.extensions.length; ++index) {
+          ext = cert.extensions[index];
           if (options.id && ext.id === options.id) {
             foundExtension = ext;
           } else if (options.name && ext.name === options.name) {
@@ -367,11 +367,11 @@ export class Certificate {
        * Signs this certificate using the given private key.
        *
        * @param key the private key to sign with.
-       * @param md the message digest object to use (defaults to runtime.digestRegistry.sha1).
+       * @param messageDigest the message digest object to use (defaults to runtime.digestRegistry.sha1).
        */
-      cert.sign = function (key: PrivateKey, md?: MessageDigest) {
+      cert.sign = function (key: PrivateKey, messageDigest?: MessageDigest) {
         // TODO: get signature OID from private key
-        cert.md = md || runtime.digestRegistry.sha1.create();
+        cert.md = messageDigest || runtime.digestRegistry.sha1.create();
         const algorithmOid = oids[cert.md.algorithm + 'WithRSAEncryption'];
         if (!algorithmOid) {
           const error = new Error(
@@ -415,10 +415,10 @@ export class Certificate {
           throw error;
         }
 
-        let md = child.md;
-        if (md === null) {
+        let messageDigest = child.md;
+        if (messageDigest === null) {
           // create digest for OID signature types
-          md = createSignatureDigest({
+          messageDigest = createSignatureDigest({
             signatureOid: child.signatureOid!,
             type: 'certificate'
           });
@@ -426,14 +426,14 @@ export class Certificate {
           // produce DER formatted TBSCertificate and digest it
           const tbsCertificate = child.tbsCertificate || pki.getTBSCertificate(child);
           const bytes = asn1.toDer(tbsCertificate);
-          md.update(bytes.getBytes());
+          messageDigest.update(bytes.getBytes());
         }
 
-        if (md !== null) {
+        if (messageDigest !== null) {
           signatureValid = verifySignature({
             certificate: cert,
             subject: child,
-            messageDigest: md,
+            messageDigest: messageDigest,
             signature: child.signature
           });
         }
@@ -464,9 +464,9 @@ export class Certificate {
           issuerMatches = true;
           let issuerAttribute;
           let subjectAttribute;
-          for (let n = 0; issuerMatches && n < issuerDn.attributes.length; ++n) {
-            issuerAttribute = issuerDn.attributes[n];
-            subjectAttribute = subjectDn.attributes[n];
+          for (let limbCount = 0; issuerMatches && limbCount < issuerDn.attributes.length; ++limbCount) {
+            issuerAttribute = issuerDn.attributes[limbCount];
+            subjectAttribute = subjectDn.attributes[limbCount];
             if (issuerAttribute.type !== subjectAttribute.type || issuerAttribute.value !== subjectAttribute.value) {
               // attribute mismatch
               issuerMatches = false;
@@ -508,8 +508,8 @@ export class Certificate {
        */
       cert.verifySubjectKeyIdentifier = function () {
         const oid = oids['subjectKeyIdentifier'];
-        for (let i = 0; i < cert.extensions.length; ++i) {
-          const ext = cert.extensions[i];
+        for (let index = 0; index < cert.extensions.length; ++index) {
+          const ext = cert.extensions[index];
           if (ext.id === oid) {
             const ski = cert.generateSubjectKeyIdentifier().getBytes();
             return runtime.util.hexToBytes(ext.subjectKeyIdentifier!) === ski;
@@ -621,8 +621,8 @@ export class Certificate {
       const imd = runtime.digestRegistry.sha1.create();
       const ibytes = asn1.toDer(capture.certIssuer as Asn1Object);
       imd.update(ibytes.getBytes());
-      cert.issuer.getField = function (sn: string | AttributeLookup) {
-        return getAttribute(cert.issuer, sn);
+      cert.issuer.getField = function (serialNumber: string | AttributeLookup) {
+        return getAttribute(cert.issuer, serialNumber);
       };
       cert.issuer.addField = function (attr: DnAttributeInput) {
         fillMissingFields([attr]);
@@ -638,8 +638,8 @@ export class Certificate {
       const smd = runtime.digestRegistry.sha1.create();
       const sbytes = asn1.toDer(capture.certSubject as Asn1Object);
       smd.update(sbytes.getBytes());
-      cert.subject.getField = function (sn: string | AttributeLookup) {
-        return getAttribute(cert.subject, sn);
+      cert.subject.getField = function (serialNumber: string | AttributeLookup) {
+        return getAttribute(cert.subject, serialNumber);
       };
       cert.subject.addField = function (attr: DnAttributeInput) {
         fillMissingFields([attr]);
@@ -757,12 +757,12 @@ export class Certificate {
     /**
      * Converts a DistinguishedName (subject or issuer) to an ASN.1 object.
      *
-     * @param dn the DistinguishedName.
+     * @param distinguishedName the DistinguishedName.
      *
      * @return the asn1 representation of a DistinguishedName.
      */
-    pki.distinguishedNameToAsn1 = function (dn: { attributes: DnAttribute[] }) {
-      return dnToAsn1(dn);
+    pki.distinguishedNameToAsn1 = function (distinguishedName: { attributes: DnAttribute[] }) {
+      return dnToAsn1(distinguishedName);
     };
 
     /**
@@ -807,8 +807,8 @@ export class Certificate {
       const seq = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
       (extensionsWrapper.value as Asn1Object[]).push(seq);
 
-      for (let i = 0; i < exts.length; ++i) {
-        (seq.value as Asn1Object[]).push(pki.certificateExtensionToAsn1(exts[i]));
+      for (let index = 0; index < exts.length; ++index) {
+        (seq.value as Asn1Object[]).push(pki.certificateExtensionToAsn1(exts[index]));
       }
 
       return extensionsWrapper;

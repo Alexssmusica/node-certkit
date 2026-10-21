@@ -1,33 +1,33 @@
 import { ByteStringBuffer } from '../buffer/ByteStringBuffer.js';
 import { isArray } from '../util/typeChecks.js';
-export function transformIV(iv: string | ByteStringBuffer | number[], blockSize: number): number[] {
-  if (typeof iv === 'string') {
-    iv = new ByteStringBuffer(iv);
+export function transformIV(initializationVector: string | ByteStringBuffer | number[], blockSize: number): number[] {
+  if (typeof initializationVector === 'string') {
+    initializationVector = new ByteStringBuffer(initializationVector);
   }
 
-  if (isArray(iv) && iv.length > 4) {
-    const ivBytes = iv;
-    iv = new ByteStringBuffer();
-    for (let i = 0; i < ivBytes.length; ++i) {
-      iv.putByte(ivBytes[i]);
+  if (isArray(initializationVector) && initializationVector.length > 4) {
+    const ivBytes = initializationVector;
+    initializationVector = new ByteStringBuffer();
+    for (let index = 0; index < ivBytes.length; ++index) {
+      initializationVector.putByte(ivBytes[index]);
     }
   }
 
-  const buf = iv as ByteStringBuffer;
+  const buf = initializationVector as ByteStringBuffer;
   if (buf.length() < blockSize) {
     throw new Error('Invalid IV length; got ' + buf.length() + ' bytes and expected ' + blockSize + ' bytes.');
   }
 
-  if (!isArray(iv)) {
+  if (!isArray(initializationVector)) {
     const ints: number[] = [];
     const blocks = blockSize / 4;
-    for (let i = 0; i < blocks; ++i) {
+    for (let index = 0; index < blocks; ++index) {
       ints.push(buf.getInt32());
     }
-    iv = ints;
+    initializationVector = ints;
   }
 
-  return iv;
+  return initializationVector;
 }
 
 export function inc32(block: number[]): void {
@@ -52,8 +52,8 @@ export function validatePkcs7Padding(output: ByteStringBuffer, blockSize: number
     return false;
   }
 
-  for (let i = bufferLength - paddingByteCount; i < bufferLength; ++i) {
-    if (output.at(i) !== paddingByteCount) {
+  for (let index = bufferLength - paddingByteCount; index < bufferLength; ++index) {
+    if (output.at(index) !== paddingByteCount) {
       return false;
     }
   }

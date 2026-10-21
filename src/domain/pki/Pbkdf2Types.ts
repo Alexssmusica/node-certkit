@@ -18,14 +18,14 @@ type Pbkdf2MessageDigest = {
 export type Pbkdf2Callback = (err: Error | null, key?: string) => void;
 
 export type Pbkdf2Function = {
-  (p: string, s: string, c: number, dkLen: number, md?: string | Pbkdf2MessageDigest | null): string;
+  (prime: string, s: string, carry: number, dkLen: number, messageDigest?: string | Pbkdf2MessageDigest | null): string;
   (
-    p: string,
+    prime: string,
     s: string,
-    c: number,
+    carry: number,
     dkLen: number,
-    md: string | Pbkdf2MessageDigest | null | undefined,
+    messageDigest: string | Pbkdf2MessageDigest | null | undefined,
     callback: Pbkdf2Callback
   ): void;
-  (p: string, s: string, c: number, dkLen: number, callback: Pbkdf2Callback): void;
+  (prime: string, s: string, carry: number, dkLen: number, callback: Pbkdf2Callback): void;
 };

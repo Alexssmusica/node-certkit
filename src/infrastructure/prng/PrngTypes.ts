@@ -30,5 +30,5 @@ export type PrngContext = {
   seedFile: (needed: number, callback: (err: Error | null, bytes?: string) => void) => void;
   seedFileSync: (needed: number) => string;
   collect: (bytes: string) => void;
-  collectInt: (i: number, n: number) => void;
+  collectInt: (index: number, limbCount: number) => void;
 };

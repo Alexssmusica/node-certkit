@@ -59,9 +59,9 @@ export class Pkcs12Service {
     ): Pkcs12Bag[] {
       const result = [];
 
-      for (let i = 0; i < safeContents.length; i++) {
-        for (let j = 0; j < safeContents[i].safeBags.length; j++) {
-          const bag = safeContents[i].safeBags[j];
+      for (let index = 0; index < safeContents.length; index++) {
+        for (let innerIndex = 0; innerIndex < safeContents[index].safeBags.length; innerIndex++) {
+          const bag = safeContents[index].safeBags[innerIndex];
           if (bagType !== undefined && bag.type !== bagType) {
             continue;
           }
@@ -208,32 +208,32 @@ export class Pkcs12Service {
 
       // check for MAC
       if (capture.mac) {
-        let md = null;
+        let messageDigest = null;
         let macKeyBytes = 0;
         const macAlgorithm = asn1.derToOid(capture.macAlgorithm as string);
         switch (macAlgorithm) {
           case pkiOids.sha1:
-            md = deps.digestRegistry.sha1.create();
+            messageDigest = deps.digestRegistry.sha1.create();
             macKeyBytes = 20;
             break;
           case pkiOids.sha256:
-            md = deps.digestRegistry.sha256.create();
+            messageDigest = deps.digestRegistry.sha256.create();
             macKeyBytes = 32;
             break;
           case pkiOids.sha384:
-            md = deps.digestRegistry.sha384.create();
+            messageDigest = deps.digestRegistry.sha384.create();
             macKeyBytes = 48;
             break;
           case pkiOids.sha512:
-            md = deps.digestRegistry.sha512.create();
+            messageDigest = deps.digestRegistry.sha512.create();
             macKeyBytes = 64;
             break;
           case pkiOids.md5:
-            md = deps.digestRegistry.md5.create();
+            messageDigest = deps.digestRegistry.md5.create();
             macKeyBytes = 16;
             break;
         }
-        if (md === null) {
+        if (messageDigest === null) {
           throw new Error('PKCS#12 uses unsupported MAC algorithm: ' + macAlgorithm);
         }
 
@@ -241,9 +241,9 @@ export class Pkcs12Service {
         const macSalt = new deps.util.ByteBuffer(capture.macSalt as string);
         const macIterations =
           'macIterations' in capture ? parseInt(deps.util.bytesToHex(capture.macIterations as string), 16) : 1;
-        const macKey = p12.generateKey!(password, macSalt, 3, macIterations, macKeyBytes, md);
+        const macKey = p12.generateKey!(password, macSalt, 3, macIterations, macKeyBytes, messageDigest);
         const mac = deps.hmac.create();
-        mac.start(md, macKey);
+        mac.start(messageDigest, macKey);
         mac.update(data.value as string);
         const macValue = mac.getMac();
         if (macValue.getBytes() !== (capture.macDigest as string)) {
@@ -276,8 +276,8 @@ export class Pkcs12Service {
       if (data.composed || data.constructed) {
         const value = deps.util.createBuffer();
         const chunks = data.value as Asn1Object[];
-        for (let i = 0; i < chunks.length; ++i) {
-          value.putBytes(chunks[i].value as string);
+        for (let index = 0; index < chunks.length; ++index) {
+          value.putBytes(chunks[index].value as string);
         }
         data.composed = data.constructed = false;
         data.value = value.getBytes();
@@ -306,8 +306,8 @@ export class Pkcs12Service {
         throw new Error('PKCS#12 AuthenticatedSafe expected to be a ' + 'SEQUENCE OF ContentInfo');
       }
 
-      for (let i = 0; i < (authSafeAsn1.value as Asn1Object[]).length; i++) {
-        const contentInfo = (authSafeAsn1.value as Asn1Object[])[i];
+      for (let index = 0; index < (authSafeAsn1.value as Asn1Object[]).length; index++) {
+        const contentInfo = (authSafeAsn1.value as Asn1Object[])[index];
 
         // validate contentInfo and capture data
         const capture: Record<string, unknown> = {};
@@ -416,8 +416,8 @@ export class Pkcs12Service {
       }
 
       const bags: Pkcs12Bag[] = [];
-      for (let i = 0; i < (safeContentsAsn1.value as Asn1Object[]).length; i++) {
-        const safeBag = (safeContentsAsn1.value as Asn1Object[])[i];
+      for (let index = 0; index < (safeContentsAsn1.value as Asn1Object[]).length; index++) {
+        const safeBag = (safeContentsAsn1.value as Asn1Object[])[index];
 
         // validate SafeBag and capture data
         const capture: Record<string, unknown> = {};
@@ -522,10 +522,10 @@ export class Pkcs12Service {
       const decodedAttrs: Record<string, string[]> = {};
 
       if (attributes !== undefined) {
-        for (let i = 0; i < attributes.length; ++i) {
+        for (let index = 0; index < attributes.length; ++index) {
           const capture: Record<string, unknown> = {};
           const errors: string[] = [];
-          if (!asn1.validate(attributes[i], attributeValidator, capture, errors)) {
+          if (!asn1.validate(attributes[index], attributeValidator, capture, errors)) {
             const error = new Error('Cannot read PKCS#12 BagAttribute.') as Error & { errors?: string[] };
             error.errors = errors;
             throw error;
@@ -539,8 +539,8 @@ export class Pkcs12Service {
 
           decodedAttrs[pkiOids[oid]] = [];
           const values = capture.values as Asn1Object[];
-          for (let j = 0; j < values.length; ++j) {
-            decodedAttrs[pkiOids[oid]].push(values[j].value as string);
+          for (let innerIndex = 0; innerIndex < values.length; ++innerIndex) {
+            decodedAttrs[pkiOids[oid]].push(values[innerIndex].value as string);
           }
         }
       }
@@ -666,15 +666,15 @@ export class Pkcs12Service {
       }
 
       const certSafeBags = [];
-      for (let i = 0; i < chain.length; ++i) {
+      for (let index = 0; index < chain.length; ++index) {
         // convert cert from PEM as necessary
-        cert = chain[i];
+        cert = chain[index];
         if (typeof cert === 'string') {
           cert = deps.pki.certificateFromPem!(cert);
         }
 
         // SafeBag
-        const certBagAttrs = i === 0 ? bagAttrs : undefined;
+        const certBagAttrs = index === 0 ? bagAttrs : undefined;
         const certAsn1 = deps.pki.certificateToAsn1!(cert);
         const certSafeBag = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
           // bagId

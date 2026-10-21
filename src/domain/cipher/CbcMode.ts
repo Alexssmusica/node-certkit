@@ -40,14 +40,14 @@ export class CbcMode {
       return true;
     }
 
-    for (let i = 0; i < this._ints; ++i) {
-      this._inBlock[i] = this._prev![i] ^ input.getInt32();
+    for (let index = 0; index < this._ints; ++index) {
+      this._inBlock[index] = this._prev![index] ^ input.getInt32();
     }
 
     this.cipher.encrypt(this._inBlock, this._outBlock);
 
-    for (let i = 0; i < this._ints; ++i) {
-      output.putInt32(this._outBlock[i]);
+    for (let index = 0; index < this._ints; ++index) {
+      output.putInt32(this._outBlock[index]);
     }
     this._prev = this._outBlock;
   }
@@ -57,14 +57,14 @@ export class CbcMode {
       return true;
     }
 
-    for (let i = 0; i < this._ints; ++i) {
-      this._inBlock[i] = input.getInt32();
+    for (let index = 0; index < this._ints; ++index) {
+      this._inBlock[index] = input.getInt32();
     }
 
     this.cipher.decrypt(this._inBlock, this._outBlock);
 
-    for (let i = 0; i < this._ints; ++i) {
-      output.putInt32(this._prev![i] ^ this._outBlock[i]);
+    for (let index = 0; index < this._ints; ++index) {
+      output.putInt32(this._prev![index] ^ this._outBlock[index]);
     }
     this._prev = this._inBlock.slice(0);
   }

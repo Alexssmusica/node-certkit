@@ -63,7 +63,10 @@ export type ExtensionFillDeps = {
   dnToAsn1: (dnEntity: { attributes: DnAttribute[] }) => Asn1Object;
 };
 
-export type FillMissingExtensionFields = (e: X509Extension, options?: { cert?: X509Certificate }) => X509Extension;
+export type FillMissingExtensionFields = (
+  exponent: X509Extension,
+  options?: { cert?: X509Certificate }
+) => X509Extension;
 
 export type CertificateExtensionFromAsn1Options = {
   ctx: X509Runtime;
@@ -91,7 +94,7 @@ export type DnAttributeInput = {
 };
 
 export type DistinguishedName = {
-  getField: (sn: string | { type?: string; name?: string; shortName?: string }) => DnAttribute | null;
+  getField: (serialNumber: string | { type?: string; name?: string; shortName?: string }) => DnAttribute | null;
   addField: (attr: DnAttributeInput) => void;
   attributes: DnAttribute[];
   hash: string | null;
@@ -195,7 +198,7 @@ export type X509Certificate = {
   setIssuer: (attrs: DnAttributeInput[], uniqueId?: string) => void;
   setExtensions: (exts: X509Extension[]) => void;
   getExtension: (options: string | { id?: string; name?: string }) => X509Extension | null;
-  sign: (key: PrivateKey, md?: MessageDigest) => void;
+  sign: (key: PrivateKey, messageDigest?: MessageDigest) => void;
   verify: (child: X509Certificate) => boolean;
   isIssuer: (parent: X509Certificate) => boolean;
   issued: (child: X509Certificate) => boolean;
@@ -211,14 +214,14 @@ export type X509CertificationRequest = {
   subject: DistinguishedName;
   publicKey: PublicKey | null;
   attributes: DnAttribute[];
-  getAttribute: (sn: string | { type?: string; name?: string; shortName?: string }) => DnAttribute | null;
+  getAttribute: (serialNumber: string | { type?: string; name?: string; shortName?: string }) => DnAttribute | null;
   addAttribute: (attr: DnAttributeInput) => void;
   md: MessageDigest | null;
   certificationRequestInfo?: Asn1Object;
   signatureParameters?: SignatureParameters;
   setSubject: (attrs: DnAttributeInput[]) => void;
   setAttributes: (attrs: DnAttributeInput[]) => void;
-  sign: (key: PrivateKey, md?: MessageDigest) => void;
+  sign: (key: PrivateKey, messageDigest?: MessageDigest) => void;
   verify: () => boolean;
 };
 
@@ -286,7 +289,7 @@ export type X509Helpers = {
   dnToAsn1: (dnEntity: { attributes: DnAttribute[] }) => Asn1Object;
   getAttributesAsJson: (attrs: DnAttribute[]) => Record<string, unknown>;
   fillMissingFields: (attrs: DnAttributeInput[]) => void;
-  fillMissingExtensionFields: (e: X509Extension, options?: { cert?: X509Certificate }) => void;
+  fillMissingExtensionFields: (exponent: X509Extension, options?: { cert?: X509Certificate }) => void;
   signatureParametersToAsn1: (oid: string, params: SignatureParameters) => Asn1Object;
   CRIAttributesToAsn1: (csr: X509CertificationRequest) => Asn1Object;
   dateToAsn1: (date: Date) => Asn1Object;

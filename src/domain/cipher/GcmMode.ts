@@ -44,7 +44,7 @@ export class GcmMode {
     if (!('iv' in options)) {
       throw new Error('Invalid IV parameter.');
     }
-    const iv = new ByteStringBuffer(options.iv as string);
+    const initializationVector = new ByteStringBuffer(options.iv as string);
 
     this._cipherLength = 0;
 
@@ -78,13 +78,18 @@ export class GcmMode {
     this.componentBits = 4;
     this._hashTable = this.generateHashTable(this._hashSubkey, this.componentBits);
 
-    const ivLength = iv.length();
+    const ivLength = initializationVector.length();
     if (ivLength === 12) {
-      this._j0 = [iv.getInt32(), iv.getInt32(), iv.getInt32(), 1];
+      this._j0 = [initializationVector.getInt32(), initializationVector.getInt32(), initializationVector.getInt32(), 1];
     } else {
       this._j0 = [0, 0, 0, 0];
-      while (iv.length() > 0) {
-        this._j0 = this.ghash(this._hashSubkey, this._j0, [iv.getInt32(), iv.getInt32(), iv.getInt32(), iv.getInt32()]);
+      while (initializationVector.length() > 0) {
+        this._j0 = this.ghash(this._hashSubkey, this._j0, [
+          initializationVector.getInt32(),
+          initializationVector.getInt32(),
+          initializationVector.getInt32(),
+          initializationVector.getInt32()
+        ]);
       }
       this._j0 = this.ghash(this._hashSubkey, this._j0, [0, 0].concat(from64To32(ivLength * 8)));
     }
@@ -119,8 +124,8 @@ export class GcmMode {
     this.cipher.encrypt(this._inBlock, this._outBlock);
 
     if (this._partialBytes === 0 && inputLength >= this.blockSize) {
-      for (let i = 0; i < this._ints; ++i) {
-        output.putInt32((this._outBlock[i] ^= input.getInt32()));
+      for (let index = 0; index < this._ints; ++index) {
+        output.putInt32((this._outBlock[index] ^= input.getInt32()));
       }
       this._cipherLength! += this.blockSize;
     } else {
@@ -130,8 +135,8 @@ export class GcmMode {
       }
 
       this._partialOutput.clear();
-      for (let i = 0; i < this._ints; ++i) {
-        this._partialOutput.putInt32(input.getInt32() ^ this._outBlock[i]);
+      for (let index = 0; index < this._ints; ++index) {
+        this._partialOutput.putInt32(input.getInt32() ^ this._outBlock[index]);
       }
 
       if (partialBytes <= 0 || finish) {
@@ -143,8 +148,8 @@ export class GcmMode {
           this._cipherLength! += this.blockSize;
         }
 
-        for (let i = 0; i < this._ints; ++i) {
-          this._outBlock[i] = this._partialOutput.getInt32();
+        for (let index = 0; index < this._ints; ++index) {
+          this._outBlock[index] = this._partialOutput.getInt32();
         }
         this._partialOutput.read -= this.blockSize;
       }
@@ -183,8 +188,8 @@ export class GcmMode {
     this._hashBlock![3] = input.getInt32();
     this._ghashState = this.ghash(this._hashSubkey!, this._ghashState!, this._hashBlock!);
 
-    for (let i = 0; i < this._ints; ++i) {
-      output.putInt32(this._outBlock[i] ^ this._hashBlock![i]);
+    for (let index = 0; index < this._ints; ++index) {
+      output.putInt32(this._outBlock[index] ^ this._hashBlock![index]);
     }
 
     if (inputLength < this.blockSize) {
@@ -207,8 +212,8 @@ export class GcmMode {
 
     const tag: number[] = [];
     this.cipher.encrypt(this._j0!, tag);
-    for (let i = 0; i < this._ints; ++i) {
-      this.tag.putInt32(this._ghashState[i] ^ tag[i]);
+    for (let index = 0; index < this._ints; ++index) {
+      this.tag.putInt32(this._ghashState[index] ^ tag[index]);
     }
 
     this.tag.truncate(this.tag.length() % (this._tagLength! / 8));
@@ -226,8 +231,8 @@ export class GcmMode {
     const zAccumulator = [0, 0, 0, 0];
     const vMultiplier = multiplier.slice(0);
 
-    for (let i = 0; i < 128; ++i) {
-      const bitMask = factor[(i / 32) | 0] & (1 << (31 - (i % 32)));
+    for (let index = 0; index < 128; ++index) {
+      const bitMask = factor[(index / 32) | 0] & (1 << (31 - (index % 32)));
       if (bitMask) {
         zAccumulator[0] ^= vMultiplier[0];
         zAccumulator[1] ^= vMultiplier[1];
@@ -243,8 +248,8 @@ export class GcmMode {
   pow(factor: number[], out: number[]): void {
     const lsb = factor[3] & 1;
 
-    for (let i = 3; i > 0; --i) {
-      out[i] = (factor[i] >>> 1) | ((factor[i - 1] & 1) << 31);
+    for (let index = 3; index > 0; --index) {
+      out[index] = (factor[index] >>> 1) | ((factor[index - 1] & 1) << 31);
     }
     out[0] = factor[0] >>> 1;
 

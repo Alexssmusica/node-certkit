@@ -62,7 +62,7 @@ export interface BlockDigest {
 export type DigestAlgorithmRegistry = Record<string, { create: () => BlockDigest }>;
 
 export interface HmacContext {
-  start: (md: string | BlockDigest | null, key: unknown) => void;
+  start: (messageDigest: string | BlockDigest | null, key: unknown) => void;
   update: (bytes: string) => void;
   getMac: () => ByteStringBuffer;
   digest: () => ByteStringBuffer;

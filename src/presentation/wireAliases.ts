@@ -58,29 +58,29 @@ export function wireCrossNamespaceAliases(certkit: MutableCertkit): void {
 
   // sha512 family aliases
   if (certkit.sha512 && certkit.md) {
-    const md = certkit.md;
-    const algorithms = md.algorithms || (md.algorithms = {});
+    const messageDigest = certkit.md;
+    const algorithms = messageDigest.algorithms || (messageDigest.algorithms = {});
 
-    md.sha512 = md.sha512 || (certkit.sha512 as NonNullable<typeof md.sha512>);
+    messageDigest.sha512 = messageDigest.sha512 || (certkit.sha512 as NonNullable<typeof messageDigest.sha512>);
     algorithms.sha512 = algorithms.sha512 || (certkit.sha512 as NonNullable<typeof algorithms.sha512>);
 
     const sha384 = certkit.sha384 || certkit.sha512.sha384;
     if (sha384) {
       certkit.sha384 = sha384;
       certkit.sha512.sha384 = sha384;
-      md.sha384 = md.sha384 || sha384;
+      messageDigest.sha384 = messageDigest.sha384 || sha384;
       algorithms.sha384 = algorithms.sha384 || sha384;
     }
 
     const sha512Trunc256 = certkit.sha512.sha256;
     if (sha512Trunc256) {
-      md['sha512/256'] = md['sha512/256'] || sha512Trunc256;
+      messageDigest['sha512/256'] = messageDigest['sha512/256'] || sha512Trunc256;
       algorithms['sha512/256'] = algorithms['sha512/256'] || sha512Trunc256;
     }
 
     const sha512Trunc224 = certkit.sha512.sha224;
     if (sha512Trunc224) {
-      md['sha512/224'] = md['sha512/224'] || sha512Trunc224;
+      messageDigest['sha512/224'] = messageDigest['sha512/224'] || sha512Trunc224;
       algorithms['sha512/224'] = algorithms['sha512/224'] || sha512Trunc224;
     }
   }

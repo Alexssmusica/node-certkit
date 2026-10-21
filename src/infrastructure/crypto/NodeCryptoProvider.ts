@@ -18,7 +18,7 @@ export class NodeCryptoProvider implements NativeCryptoProvider {
     if (this.pbkdf2SyncSupportsDigest && digest) {
       return crypto.pbkdf2Sync(password, salt, iterations, keylen, digest);
     }
-    return (crypto.pbkdf2Sync as (p: string, s: string, i: number, k: number) => Buffer)(
+    return (crypto.pbkdf2Sync as (prime: string, s: string, index: number, limbIndex: number) => Buffer)(
       password,
       salt,
       iterations,
@@ -40,10 +40,10 @@ export class NodeCryptoProvider implements NativeCryptoProvider {
     }
     (
       crypto.pbkdf2 as unknown as (
-        p: string,
+        prime: string,
         s: string,
-        i: number,
-        k: number,
+        index: number,
+        limbIndex: number,
         cb: (err: Error | null, key: Buffer) => void
       ) => void
     )(password, salt, iterations, keylen, callback);

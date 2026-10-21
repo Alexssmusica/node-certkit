@@ -3,7 +3,7 @@
  */
 type ByteBufferLike = {
   length(): number;
-  at(i: number): number;
+  at(index: number): number;
 };
 
 export class BaseNCodec {
@@ -25,11 +25,11 @@ export class BaseNCodec {
       const base = alphabet.length;
       const first = alphabet.charAt(0);
       const digits = [0];
-      for (let i = 0; i < input.length; ++i) {
-        let carry = input[i];
-        for (let j = 0; j < digits.length; ++j) {
-          carry += digits[j] << 8;
-          digits[j] = carry % base;
+      for (let index = 0; index < input.length; ++index) {
+        let carry = input[index];
+        for (let innerIndex = 0; innerIndex < digits.length; ++innerIndex) {
+          carry += digits[innerIndex] << 8;
+          digits[innerIndex] = carry % base;
           carry = (carry / base) | 0;
         }
 
@@ -39,11 +39,11 @@ export class BaseNCodec {
         }
       }
 
-      for (let i = 0; input[i] === 0 && i < input.length - 1; ++i) {
+      for (let index = 0; input[index] === 0 && index < input.length - 1; ++index) {
         output += first;
       }
-      for (let i = digits.length - 1; i >= 0; --i) {
-        output += alphabet[digits[i]];
+      for (let index = digits.length - 1; index >= 0; --index) {
+        output += alphabet[digits[index]];
       }
     }
 
@@ -66,8 +66,8 @@ export class BaseNCodec {
     let table = BaseNCodec.#reverseAlphabets[alphabet];
     if (!table) {
       table = BaseNCodec.#reverseAlphabets[alphabet] = [];
-      for (let i = 0; i < alphabet.length; ++i) {
-        table[alphabet.charCodeAt(i)] = i;
+      for (let index = 0; index < alphabet.length; ++index) {
+        table[alphabet.charCodeAt(index)] = index;
       }
     }
 
@@ -76,16 +76,16 @@ export class BaseNCodec {
     const base = alphabet.length;
     const first = alphabet.charAt(0);
     const bytes = [0];
-    for (let i = 0; i < input.length; i++) {
-      const value = table[input.charCodeAt(i)];
+    for (let index = 0; index < input.length; index++) {
+      const value = table[input.charCodeAt(index)];
       if (value === undefined) {
         return;
       }
 
       let carry = value;
-      for (let j = 0; j < bytes.length; ++j) {
-        carry += bytes[j] * base;
-        bytes[j] = carry & 0xff;
+      for (let innerIndex = 0; innerIndex < bytes.length; ++innerIndex) {
+        carry += bytes[innerIndex] * base;
+        bytes[innerIndex] = carry & 0xff;
         carry >>= 8;
       }
 
@@ -95,7 +95,7 @@ export class BaseNCodec {
       }
     }
 
-    for (let k = 0; input[k] === first && k < input.length - 1; ++k) {
+    for (let limbIndex = 0; input[limbIndex] === first && limbIndex < input.length - 1; ++limbIndex) {
       bytes.push(0);
     }
 
@@ -106,11 +106,11 @@ export class BaseNCodec {
     const base = alphabet.length;
     const first = alphabet.charAt(0);
     const digits = [0];
-    for (let i = 0; i < input.length(); ++i) {
-      let carry = input.at(i);
-      for (let j = 0; j < digits.length; ++j) {
-        carry += digits[j] << 8;
-        digits[j] = carry % base;
+    for (let index = 0; index < input.length(); ++index) {
+      let carry = input.at(index);
+      for (let innerIndex = 0; innerIndex < digits.length; ++innerIndex) {
+        carry += digits[innerIndex] << 8;
+        digits[innerIndex] = carry % base;
         carry = (carry / base) | 0;
       }
 
@@ -122,11 +122,11 @@ export class BaseNCodec {
 
     let output = '';
 
-    for (let i = 0; input.at(i) === 0 && i < input.length() - 1; ++i) {
+    for (let index = 0; input.at(index) === 0 && index < input.length() - 1; ++index) {
       output += first;
     }
-    for (let i = digits.length - 1; i >= 0; --i) {
-      output += alphabet[digits[i]];
+    for (let index = digits.length - 1; index >= 0; --index) {
+      output += alphabet[digits[index]];
     }
 
     return output;

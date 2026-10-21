@@ -94,7 +94,7 @@ export class DataBuffer {
 
   fillWithByte(byteValue: number, repeatCount: number): this {
     this.accommodate(repeatCount);
-    for (let i = 0; i < repeatCount; ++i) {
+    for (let index = 0; index < repeatCount; ++index) {
       (this.data as unknown as { setUint8(byte: number): void }).setUint8(byteValue);
     }
     return this;
@@ -213,68 +213,68 @@ export class DataBuffer {
     return this.putBytes(str, 'utf16');
   }
 
-  putInt16(i: number): this {
+  putInt16(index: number): this {
     this.accommodate(2);
-    this.data.setInt16(this.write, i);
+    this.data.setInt16(this.write, index);
     this.write += 2;
     return this;
   }
 
-  putInt24(i: number): this {
+  putInt24(index: number): this {
     this.accommodate(3);
-    this.data.setInt16(this.write, (i >> 8) & 0xffff);
-    this.data.setInt8(this.write, (i >> 16) & 0xff);
+    this.data.setInt16(this.write, (index >> 8) & 0xffff);
+    this.data.setInt8(this.write, (index >> 16) & 0xff);
     this.write += 3;
     return this;
   }
 
-  putInt32(i: number): this {
+  putInt32(index: number): this {
     this.accommodate(4);
-    this.data.setInt32(this.write, i);
+    this.data.setInt32(this.write, index);
     this.write += 4;
     return this;
   }
 
-  putInt16Le(i: number): this {
+  putInt16Le(index: number): this {
     this.accommodate(2);
-    this.data.setInt16(this.write, i, true);
+    this.data.setInt16(this.write, index, true);
     this.write += 2;
     return this;
   }
 
-  putInt24Le(i: number): this {
+  putInt24Le(index: number): this {
     this.accommodate(3);
-    this.data.setInt8(this.write, (i >> 16) & 0xff);
-    this.data.setInt16(this.write, (i >> 8) & 0xffff, true);
+    this.data.setInt8(this.write, (index >> 16) & 0xff);
+    this.data.setInt16(this.write, (index >> 8) & 0xffff, true);
     this.write += 3;
     return this;
   }
 
-  putInt32Le(i: number): this {
+  putInt32Le(index: number): this {
     this.accommodate(4);
-    this.data.setInt32(this.write, i, true);
+    this.data.setInt32(this.write, index, true);
     this.write += 4;
     return this;
   }
 
-  putInt(i: number, bitCount: number): this {
+  putInt(index: number, bitCount: number): this {
     checkBitsParam(bitCount);
     this.accommodate(bitCount / 8);
     let remainingBits = bitCount;
     do {
       remainingBits -= 8;
-      this.data.setInt8(this.write++, (i >> remainingBits) & 0xff);
+      this.data.setInt8(this.write++, (index >> remainingBits) & 0xff);
     } while (remainingBits > 0);
     return this;
   }
 
-  putSignedInt(i: number, bitCount: number): this {
+  putSignedInt(index: number, bitCount: number): this {
     checkBitsParam(bitCount);
     this.accommodate(bitCount / 8);
-    if (i < 0) {
-      i += 2 << (bitCount - 1);
+    if (index < 0) {
+      index += 2 << (bitCount - 1);
     }
-    return this.putInt(i, bitCount);
+    return this.putInt(index, bitCount);
   }
 
   getByte(): number {
@@ -358,8 +358,9 @@ export class DataBuffer {
     return typeof count === 'undefined' ? data.slice(this.read) : data.slice(this.read, this.read + count);
   }
 
-  at(i: number): number {
-    return this.data.getUint8(this.read + i);
+  // eslint-disable-next-line id-length -- DataBuffer#at matches node-forge instance shape
+  at(index: number): number {
+    return this.data.getUint8(this.read + index);
   }
 
   setAt(index: number, byteValue: number): this {
@@ -401,8 +402,8 @@ export class DataBuffer {
 
   toHex(): string {
     let value = '';
-    for (let i = this.read; i < this.data.byteLength; ++i) {
-      const byteValue = this.data.getUint8(i);
+    for (let index = this.read; index < this.data.byteLength; ++index) {
+      const byteValue = this.data.getUint8(index);
       if (byteValue < 16) {
         value += '0';
       }

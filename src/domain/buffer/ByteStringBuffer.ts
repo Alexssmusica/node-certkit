@@ -31,8 +31,8 @@ export class ByteStringBuffer {
         try {
           this.data = String.fromCharCode.apply(null, Array.from(arr));
         } catch {
-          for (let i = 0; i < arr.length; ++i) {
-            this.putByte(arr[i]);
+          for (let index = 0; index < arr.length; ++index) {
+            this.putByte(arr[index]);
           }
         }
       }
@@ -98,60 +98,64 @@ export class ByteStringBuffer {
     return this.putBytes(encodeUtf8(str));
   }
 
-  putInt16(i: number): this {
-    return this.putBytes(String.fromCharCode((i >> 8) & 0xff) + String.fromCharCode(i & 0xff));
+  putInt16(index: number): this {
+    return this.putBytes(String.fromCharCode((index >> 8) & 0xff) + String.fromCharCode(index & 0xff));
   }
 
-  putInt24(i: number): this {
+  putInt24(index: number): this {
     return this.putBytes(
-      String.fromCharCode((i >> 16) & 0xff) + String.fromCharCode((i >> 8) & 0xff) + String.fromCharCode(i & 0xff)
+      String.fromCharCode((index >> 16) & 0xff) +
+        String.fromCharCode((index >> 8) & 0xff) +
+        String.fromCharCode(index & 0xff)
     );
   }
 
-  putInt32(i: number): this {
+  putInt32(index: number): this {
     return this.putBytes(
-      String.fromCharCode((i >> 24) & 0xff) +
-        String.fromCharCode((i >> 16) & 0xff) +
-        String.fromCharCode((i >> 8) & 0xff) +
-        String.fromCharCode(i & 0xff)
+      String.fromCharCode((index >> 24) & 0xff) +
+        String.fromCharCode((index >> 16) & 0xff) +
+        String.fromCharCode((index >> 8) & 0xff) +
+        String.fromCharCode(index & 0xff)
     );
   }
 
-  putInt16Le(i: number): this {
-    return this.putBytes(String.fromCharCode(i & 0xff) + String.fromCharCode((i >> 8) & 0xff));
+  putInt16Le(index: number): this {
+    return this.putBytes(String.fromCharCode(index & 0xff) + String.fromCharCode((index >> 8) & 0xff));
   }
 
-  putInt24Le(i: number): this {
+  putInt24Le(index: number): this {
     return this.putBytes(
-      String.fromCharCode(i & 0xff) + String.fromCharCode((i >> 8) & 0xff) + String.fromCharCode((i >> 16) & 0xff)
+      String.fromCharCode(index & 0xff) +
+        String.fromCharCode((index >> 8) & 0xff) +
+        String.fromCharCode((index >> 16) & 0xff)
     );
   }
 
-  putInt32Le(i: number): this {
+  putInt32Le(index: number): this {
     return this.putBytes(
-      String.fromCharCode(i & 0xff) +
-        String.fromCharCode((i >> 8) & 0xff) +
-        String.fromCharCode((i >> 16) & 0xff) +
-        String.fromCharCode((i >> 24) & 0xff)
+      String.fromCharCode(index & 0xff) +
+        String.fromCharCode((index >> 8) & 0xff) +
+        String.fromCharCode((index >> 16) & 0xff) +
+        String.fromCharCode((index >> 24) & 0xff)
     );
   }
 
-  putInt(i: number, bitCount: number): this {
+  putInt(index: number, bitCount: number): this {
     checkBitsParam(bitCount);
     let bytes = '';
     let remainingBits = bitCount;
     do {
       remainingBits -= 8;
-      bytes += String.fromCharCode((i >> remainingBits) & 0xff);
+      bytes += String.fromCharCode((index >> remainingBits) & 0xff);
     } while (remainingBits > 0);
     return this.putBytes(bytes);
   }
 
-  putSignedInt(i: number, bitCount: number): this {
-    if (i < 0) {
-      i += 2 << (bitCount - 1);
+  putSignedInt(index: number, bitCount: number): this {
+    if (index < 0) {
+      index += 2 << (bitCount - 1);
     }
-    return this.putInt(i, bitCount);
+    return this.putInt(index, bitCount);
   }
 
   putBuffer(buffer: { getBytes(count?: number): string }): this {
@@ -276,11 +280,12 @@ export class ByteStringBuffer {
     return typeof count === 'undefined' ? this.data.slice(this.read) : this.data.slice(this.read, this.read + count);
   }
 
-  at(i: number): number {
-    if (this.read + i >= this.data.length || this.read + i < 0) {
+  // eslint-disable-next-line id-length -- ByteStringBuffer#at matches node-forge instance shape
+  at(index: number): number {
+    if (this.read + index >= this.data.length || this.read + index < 0) {
       throw new RangeError('ByteStringBuffer read past end of buffer.');
     }
-    return this.data.charCodeAt(this.read + i);
+    return this.data.charCodeAt(this.read + index);
   }
 
   setAt(index: number, byteValue: number): this {
@@ -322,8 +327,8 @@ export class ByteStringBuffer {
 
   toHex(): string {
     let value = '';
-    for (let i = this.read; i < this.data.length; ++i) {
-      const byteValue = this.data.charCodeAt(i);
+    for (let index = this.read; index < this.data.length; ++index) {
+      const byteValue = this.data.charCodeAt(index);
       if (byteValue < 16) {
         value += '0';
       }

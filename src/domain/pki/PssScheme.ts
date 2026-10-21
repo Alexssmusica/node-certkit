@@ -35,10 +35,10 @@ export class PssScheme {
     const prng = options.prng;
 
     return {
-      encode(md: MessageDigest, modBits: number): string {
+      encode(messageDigest: MessageDigest, modBits: number): string {
         const emBits = modBits - 1;
         const emLen = Math.ceil(emBits / 8);
-        const mHash = md.digest().getBytes();
+        const mHash = messageDigest.digest().getBytes();
 
         if (emLen < hLen + saltLength + 2) {
           throw new Error('Message is too long to encrypt.');
@@ -73,8 +73,8 @@ export class PssScheme {
         const dbMask = mgf.generate(hashOctets, maskLen);
 
         let maskedDB = '';
-        for (let i = 0; i < maskLen; i++) {
-          maskedDB += String.fromCharCode(dataBlock.charCodeAt(i) ^ dbMask.charCodeAt(i));
+        for (let index = 0; index < maskLen; index++) {
+          maskedDB += String.fromCharCode(dataBlock.charCodeAt(index) ^ dbMask.charCodeAt(index));
         }
 
         const mask = (0xff00 >> (8 * emLen - emBits)) & 0xff;
@@ -109,15 +109,15 @@ export class PssScheme {
         const dbMask = mgf.generate(encodedHashOctets, maskLen);
 
         let dataBlock = '';
-        for (let i = 0; i < maskLen; i++) {
-          dataBlock += String.fromCharCode(maskedDB.charCodeAt(i) ^ dbMask.charCodeAt(i));
+        for (let index = 0; index < maskLen; index++) {
+          dataBlock += String.fromCharCode(maskedDB.charCodeAt(index) ^ dbMask.charCodeAt(index));
         }
 
         dataBlock = String.fromCharCode(dataBlock.charCodeAt(0) & ~mask) + dataBlock.substr(1);
 
         const checkLen = emLen - hLen - saltLength - 2;
-        for (let i = 0; i < checkLen; i++) {
-          if (dataBlock.charCodeAt(i) !== 0x00) {
+        for (let index = 0; index < checkLen; index++) {
+          if (dataBlock.charCodeAt(index) !== 0x00) {
             throw new Error('Leftmost octets not zero as expected');
           }
         }

@@ -62,8 +62,8 @@ export function certificateExtensionsFromAsn1(
 ): X509Extension[] {
   const parsedExtensions: X509Extension[] = [];
   const sequences = exts.value as Asn1Object[];
-  for (let i = 0; i < sequences.length; ++i) {
-    const extseq = sequences[i];
+  for (let index = 0; index < sequences.length; ++index) {
+    const extseq = sequences[index];
     const extensionList = extseq.value as Asn1Object[];
     for (let extensionIndex = 0; extensionIndex < extensionList.length; ++extensionIndex) {
       parsedExtensions.push(certificateExtensionFromAsn1(extensionList[extensionIndex], options));
@@ -174,8 +174,8 @@ export function certificateExtensionFromAsn1(
       let generalNameAsn1: Asn1Object;
       const extensionValueAsn1 = asn1.fromDer(rawValue);
       const names = extensionValueAsn1.value as Asn1Object[];
-      for (let n = 0; n < names.length; ++n) {
-        generalNameAsn1 = names[n]!;
+      for (let limbCount = 0; limbCount < names.length; ++limbCount) {
+        generalNameAsn1 = names[limbCount]!;
 
         const altName: GeneralName = {
           type: generalNameAsn1.type,

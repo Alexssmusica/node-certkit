@@ -65,27 +65,27 @@ export type PkiFinalizeDeps = PkiFacadeDeps & {
 export type CertkitRsaNamespace = {
   encrypt: (data: string, key: RsaPublicKey, scheme?: unknown, schemeOptions?: unknown) => string;
   decrypt: (data: string, key: RsaPrivateKey, scheme?: unknown, schemeOptions?: unknown) => string;
-  createKeyPairGenerationState: (bits: number, e?: number, options?: unknown) => Record<string, unknown>;
+  createKeyPairGenerationState: (bits: number, exponent?: number, options?: unknown) => Record<string, unknown>;
   stepKeyPairGenerationState: (
     state: Record<string, unknown>,
     callback: (err: Error | null, keypair?: RsaKeyPair) => void
   ) => void;
-  generateKeyPair(bits?: number, e?: number, options?: unknown): RsaKeyPair;
+  generateKeyPair(bits?: number, exponent?: number, options?: unknown): RsaKeyPair;
   generateKeyPair(
     bits: number,
-    e: number | undefined,
+    exponent: number | undefined,
     options: unknown,
     callback: (err: Error | null, keypair?: RsaKeyPair) => void
   ): void;
   generateKeyPair(bits: number, callback: (err: Error | null, keypair?: RsaKeyPair) => void): void;
   generateKeyPair(options: Record<string, unknown>, callback: (err: Error | null, keypair?: RsaKeyPair) => void): void;
-  setPublicKey: (n: BigInteger, e: BigInteger) => RsaPublicKey;
+  setPublicKey: (limbCount: BigInteger, exponent: BigInteger) => RsaPublicKey;
   setPrivateKey: (
-    n: BigInteger,
-    e: BigInteger,
-    d: BigInteger,
-    p?: BigInteger,
-    q?: BigInteger,
+    limbCount: BigInteger,
+    exponent: BigInteger,
+    digit: BigInteger,
+    prime?: BigInteger,
+    quotient?: BigInteger,
     dP?: BigInteger,
     dQ?: BigInteger,
     qInv?: BigInteger
@@ -95,7 +95,7 @@ export type CertkitRsaNamespace = {
 
 export type PbeDecryptCipher = {
   output: ByteStringBuffer | null;
-  start: (iv?: string | ByteStringBuffer | null, output?: ByteStringBuffer | null) => void;
+  start: (initializationVector?: string | ByteStringBuffer | null, output?: ByteStringBuffer | null) => void;
   update: (input?: ByteStringBuffer) => void;
   finish: (pad?: PaddingFunction) => boolean;
 };
@@ -104,10 +104,10 @@ export type CertkitPbeNamespace = {
   generatePkcs12Key: (
     password: string | null | undefined,
     salt: ByteStringBuffer,
-    id: number,
+    objectId: number,
     iter: number,
-    n: number,
-    md?: BlockDigest
+    limbCount: number,
+    messageDigest?: BlockDigest
   ) => ByteStringBuffer;
   getCipher: (oid: string, params: Asn1Object, password: string) => PbeDecryptCipher;
   getCipherForPBES2: (oid: string, params: Asn1Object, password: string) => PbeDecryptCipher;
@@ -116,7 +116,7 @@ export type CertkitPbeNamespace = {
     password: string,
     salt: ByteStringBuffer | string | null,
     dkLen: number,
-    md?: BlockDigest
+    messageDigest?: BlockDigest
   ) => string;
 };
 
@@ -187,7 +187,7 @@ export type CertkitPki = {
   certificateExtensionsFromAsn1: (exts: Asn1Object) => X509Extension[];
   certificateExtensionFromAsn1: (ext: Asn1Object) => X509Extension;
   getTBSCertificate: (cert: X509Certificate) => Asn1Object;
-  distinguishedNameToAsn1: (dn: { attributes: DnAttribute[] }) => Asn1Object;
+  distinguishedNameToAsn1: (distinguishedName: { attributes: DnAttribute[] }) => Asn1Object;
   certificateToAsn1: (cert: X509Certificate) => Asn1Object;
   certificateExtensionsToAsn1: (exts: X509Extension[]) => Asn1Object;
   certificateExtensionToAsn1: (ext: X509Extension) => Asn1Object;
@@ -202,7 +202,7 @@ export type CertkitPki = {
     chain: X509Certificate[],
     options?: VerifyCallback | VerifyOptions
   ) => boolean;
-  RDNAttributesAsArray: (rdn: Asn1Object, md?: MessageDigest) => DnAttribute[];
+  RDNAttributesAsArray: (rdn: Asn1Object, messageDigest?: MessageDigest) => DnAttribute[];
   CRIAttributesAsArray: (attributes: Asn1Object[]) => DnAttribute[];
   pemToDer: (pem: string) => ByteStringBuffer;
   privateKeyFromPem: (pem: string) => RsaPrivateKey;

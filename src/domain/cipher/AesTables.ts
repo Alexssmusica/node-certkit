@@ -24,9 +24,9 @@ export function ensureAesTables(): AesTables {
 
   // compute xtime table which maps i onto GF(i, 0x02)
   const xtime: number[] = new Array<number>(256);
-  for (let i = 0; i < 128; ++i) {
-    xtime[i] = i << 1;
-    xtime[i + 128] = ((i + 128) << 1) ^ 0x11b;
+  for (let index = 0; index < 128; ++index) {
+    xtime[index] = index << 1;
+    xtime[index + 128] = ((index + 128) << 1) ^ 0x11b;
   }
 
   // compute all other tables
@@ -34,9 +34,9 @@ export function ensureAesTables(): AesTables {
   const isbox: number[] = new Array<number>(256);
   const mix: number[][] = new Array<number[]>(4);
   const imix: number[][] = new Array<number[]>(4);
-  for (let i = 0; i < 4; ++i) {
-    mix[i] = new Array<number>(256);
-    imix[i] = new Array<number>(256);
+  for (let index = 0; index < 4; ++index) {
+    mix[index] = new Array<number>(256);
+    imix[index] = new Array<number>(256);
   }
   let fieldElement = 0;
   let inverseElement = 0;

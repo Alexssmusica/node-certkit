@@ -223,33 +223,19 @@ import certkit from 'node-certkit';
 
 ### Type equivalents
 
-| node-forge (`@types/node-forge`) | node-certkit |
-|----------------------------------|--------------|
-| `forge.pkcs12.PKCS12Pfx` | `Pkcs12Pfx` or `certkit.pkcs12.Pkcs12Pfx` (named import) |
-| `forge.pki.Certificate` | `X509Certificate` or `certkit.pki.Certificate` (named import) |
-| `forge.pki.rsa.PrivateKey` | `RsaPrivateKey` or `certkit.pki.rsa.PrivateKey` (named import) |
-| `forge.asn1.Asn1` | `Asn1Object` or `certkit.asn1.Asn1` (named import) |
-| `forge.util.ByteBuffer` | `ByteStringBuffer` or `certkit.util.ByteBuffer` (named import) |
+| node-forge (`@types/node-forge`) | node-certkit (named type import) |
+|----------------------------------|----------------------------------|
+| `forge.pkcs12.PKCS12Pfx` | `Pkcs12Pfx` |
+| `forge.pki.Certificate` | `X509Certificate` |
+| `forge.pki.rsa.PrivateKey` | `RsaPrivateKey` |
+| `forge.asn1.Asn1` | `Asn1Object` |
+| `forge.util.ByteBuffer` | `ByteStringBuffer` |
 
 ### Importing types
 
-**Important:** `import certkit from 'node-certkit'` gives you the runtime API
-only. Forge-style namespace types such as `certkit.pki.rsa.PrivateKey` require
-the **named import** (same instance, merged with the type namespace):
-
-```ts
-// TS2503: Cannot find namespace 'certkit' — default import has no type namespace
-import certkit from 'node-certkit';
-let key: certkit.pki.rsa.PrivateKey; // error
-
-// Correct: named import for runtime + namespace types
-import { certkit, type Pkcs12Pfx } from 'node-certkit';
-
-let privateKey: certkit.pki.rsa.PrivateKey | null = null;
-let certificate: certkit.pki.Certificate | null = null;
-```
-
-With **default import**, use named type exports instead of namespace paths:
+Use **named type exports** from `node-certkit`. The runtime API is available from
+either default or named `certkit` import; types are not nested under a `certkit`
+namespace.
 
 ```ts
 import certkit, { type Pkcs12Pfx, type RsaPrivateKey, type X509Certificate } from 'node-certkit';
@@ -265,12 +251,12 @@ function getKey(p12: Pkcs12Pfx): string {
 Typical flow when rebuilding a PKCS#12 for NFSe — uses named import throughout:
 
 ```ts
-import { certkit, type Pkcs12Pfx } from 'node-certkit';
+import { certkit, type Pkcs12Pfx, type RsaPrivateKey, type X509Certificate } from 'node-certkit';
 
 export function loadCertificateNFSe(p12: Pkcs12Pfx) {
-  let privateKey: certkit.pki.rsa.PrivateKey | null = null;
-  let certificate: certkit.pki.Certificate | null = null;
-  const caCertificates: certkit.pki.Certificate[] = [];
+  let privateKey: RsaPrivateKey | null = null;
+  let certificate: X509Certificate | null = null;
+  const caCertificates: X509Certificate[] = [];
 
   for (const safeContent of p12.safeContents) {
     for (const bag of safeContent.safeBags) {

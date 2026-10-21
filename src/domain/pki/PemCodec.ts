@@ -30,8 +30,8 @@ export class PemCodec {
     }
 
     if (pemMessage.headers) {
-      for (let i = 0; i < pemMessage.headers.length; ++i) {
-        pemText += PemCodec.foldHeader(pemMessage.headers[i]);
+      for (let index = 0; index < pemMessage.headers.length; ++index) {
+        pemText += PemCodec.foldHeader(pemMessage.headers[index]);
       }
     }
 
@@ -197,14 +197,14 @@ export class PemCodec {
     const insertSpace = (_match: string, firstLine: string) => {
       return ' ' + firstLine;
     };
-    for (let i = 0; i < header.values.length; ++i) {
-      values.push(header.values[i].replace(/^(\S+\r\n)/, insertSpace));
+    for (let index = 0; index < header.values.length; ++index) {
+      values.push(header.values[index].replace(/^(\S+\r\n)/, insertSpace));
     }
     headerLine += values.join(',') + '\r\n';
 
     let length = 0;
     let candidate = -1;
-    for (let i = 0; i < headerLine.length; ++i, ++length) {
+    for (let index = 0; index < headerLine.length; ++index, ++length) {
       if (length > 65 && candidate !== -1) {
         const insert = headerLine[candidate];
         if (insert === ',') {
@@ -213,11 +213,11 @@ export class PemCodec {
         } else {
           headerLine = headerLine.substr(0, candidate) + '\r\n' + insert + headerLine.substr(candidate + 1);
         }
-        length = i - candidate - 1;
+        length = index - candidate - 1;
         candidate = -1;
-        ++i;
-      } else if (headerLine[i] === ' ' || headerLine[i] === '\t' || headerLine[i] === ',') {
-        candidate = i;
+        ++index;
+      } else if (headerLine[index] === ' ' || headerLine[index] === '\t' || headerLine[index] === ',') {
+        candidate = index;
       }
     }
 

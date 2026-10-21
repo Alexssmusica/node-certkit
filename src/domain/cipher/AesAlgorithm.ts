@@ -53,7 +53,7 @@ const stateColumnWordCount = 4;
  * a byte buffer, or an array of 32-bit words.
  *
  * @param key the symmetric key to use.
- * @param iv the initialization vector to use.
+ * @param initializationVector the initialization vector to use.
  * @param output the buffer to write to, null to create one.
  * @param mode the cipher mode to use (default: 'CBC').
  *
@@ -61,7 +61,7 @@ const stateColumnWordCount = 4;
  */
 function startEncrypting(
   key: SymmetricCipherKey,
-  iv: SymmetricCipherKey | null,
+  initializationVector: SymmetricCipherKey | null,
   output: ByteStringBuffer | null,
   mode?: string
 ) {
@@ -71,7 +71,7 @@ function startEncrypting(
     decrypt: false,
     mode: mode
   });
-  cipher.start(iv);
+  cipher.start(initializationVector);
   return cipher;
 }
 
@@ -112,7 +112,7 @@ function createEncryptionCipher(key: SymmetricCipherKey, mode?: string) {
  * a byte buffer, or an array of 32-bit words.
  *
  * @param key the symmetric key to use.
- * @param iv the initialization vector to use.
+ * @param initializationVector the initialization vector to use.
  * @param output the buffer to write to, null to create one.
  * @param mode the cipher mode to use (default: 'CBC').
  *
@@ -120,7 +120,7 @@ function createEncryptionCipher(key: SymmetricCipherKey, mode?: string) {
  */
 function startDecrypting(
   key: SymmetricCipherKey,
-  iv: SymmetricCipherKey | null,
+  initializationVector: SymmetricCipherKey | null,
   output: ByteStringBuffer | null,
   mode?: string
 ) {
@@ -130,7 +130,7 @@ function startDecrypting(
     decrypt: true,
     mode: mode
   });
-  cipher.start(iv);
+  cipher.start(initializationVector);
   return cipher;
 }
 
@@ -193,7 +193,7 @@ function _createCipher(options?: CreateCipherOptions) {
 
   // backwards compatible start API
   const start = cipher.start;
-  cipher.start = function (iv: unknown, startOptions: unknown) {
+  cipher.start = function (initializationVector: unknown, startOptions: unknown) {
     // backwards compatibility: support second arg as output buffer
     let output: ByteStringBuffer | null = null;
     let opts: Record<string, unknown>;
@@ -204,7 +204,7 @@ function _createCipher(options?: CreateCipherOptions) {
       opts = (startOptions as Record<string, unknown>) || {};
     }
     opts.output = output;
-    opts.iv = iv;
+    opts.iv = initializationVector;
     start.call(cipher, opts);
   };
 
@@ -277,8 +277,8 @@ export class AesAlgorithm {
     } else if (isArray(key) && (key.length === 16 || key.length === 24 || key.length === 32)) {
       keyScratch = key;
       key = UtilNamespace.createBuffer();
-      for (let i = 0; i < keyScratch.length; ++i) {
-        key.putByte(keyScratch[i]);
+      for (let index = 0; index < keyScratch.length; ++index) {
+        key.putByte(keyScratch[index]);
       }
     }
 
@@ -290,7 +290,7 @@ export class AesAlgorithm {
       const keyByteLength = keyScratch.length();
       if (keyByteLength === 16 || keyByteLength === 24 || keyByteLength === 32) {
         const wordCount = keyByteLength >>> 2;
-        for (let i = 0; i < wordCount; ++i) {
+        for (let index = 0; index < wordCount; ++index) {
           keyWords.push(keyScratch.getInt32());
         }
       } else {

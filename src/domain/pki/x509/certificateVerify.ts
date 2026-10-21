@@ -114,8 +114,8 @@ export class CertificateVerify {
             keyUsage: true,
             basicConstraints: true
           };
-          for (let i = 0; error === null && i < cert.extensions.length; ++i) {
-            const ext = cert.extensions[i];
+          for (let index = 0; error === null && index < cert.extensions.length; ++index) {
+            const ext = cert.extensions[index];
             if (ext.critical && !(ext.name! in knownCriticalExtensions)) {
               error = {
                 message: 'Certificate has an unsupported critical extension.',

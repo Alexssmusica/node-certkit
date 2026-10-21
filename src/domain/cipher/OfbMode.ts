@@ -42,9 +42,9 @@ export class OfbMode {
     this.cipher.encrypt(this._inBlock!, this._outBlock);
 
     if (this._partialBytes === 0 && inputLength >= this.blockSize) {
-      for (let i = 0; i < this._ints; ++i) {
-        output.putInt32(input.getInt32() ^ this._outBlock[i]);
-        this._inBlock![i] = this._outBlock[i]!;
+      for (let index = 0; index < this._ints; ++index) {
+        output.putInt32(input.getInt32() ^ this._outBlock[index]);
+        this._inBlock![index] = this._outBlock[index]!;
       }
       return;
     }
@@ -55,15 +55,15 @@ export class OfbMode {
     }
 
     this._partialOutput.clear();
-    for (let i = 0; i < this._ints; ++i) {
-      this._partialOutput.putInt32(input.getInt32() ^ this._outBlock[i]);
+    for (let index = 0; index < this._ints; ++index) {
+      this._partialOutput.putInt32(input.getInt32() ^ this._outBlock[index]);
     }
 
     if (partialBytes > 0) {
       input.read -= this.blockSize;
     } else {
-      for (let i = 0; i < this._ints; ++i) {
-        this._inBlock![i] = this._outBlock[i]!;
+      for (let index = 0; index < this._ints; ++index) {
+        this._inBlock![index] = this._outBlock[index]!;
       }
     }
 

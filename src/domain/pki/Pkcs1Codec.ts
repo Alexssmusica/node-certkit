@@ -9,8 +9,13 @@ function rsaMgf1(seed: string, maskLength: number, hash?: MessageDigest): string
   }
   let maskOctets = '';
   const count = Math.ceil(maskLength / hash.digestLength);
-  for (let i = 0; i < count; ++i) {
-    const counterOctets = String.fromCharCode((i >> 24) & 0xff, (i >> 16) & 0xff, (i >> 8) & 0xff, i & 0xff);
+  for (let index = 0; index < count; ++index) {
+    const counterOctets = String.fromCharCode(
+      (index >> 24) & 0xff,
+      (index >> 16) & 0xff,
+      (index >> 8) & 0xff,
+      index & 0xff
+    );
     hash.start();
     hash.update(seed + counterOctets);
     maskOctets += hash.digest().getBytes();
@@ -37,34 +42,34 @@ export class Pkcs1Codec {
   ): string {
     let label: string | undefined;
     let seed: string | undefined;
-    let md: MessageDigest | undefined;
+    let messageDigest: MessageDigest | undefined;
     let mgf1Md: MessageDigest | undefined;
 
     if (typeof options === 'string') {
       label = options;
       seed = seedArg;
-      md = mdArg;
+      messageDigest = mdArg;
     } else if (options) {
       label = options.label;
       seed = options.seed;
-      md = options.md;
+      messageDigest = options.md;
       if (options.mgf1?.md) {
         mgf1Md = options.mgf1.md;
       }
     }
 
-    if (!md) {
-      md = Sha1.create();
+    if (!messageDigest) {
+      messageDigest = Sha1.create();
     } else {
-      md.start();
+      messageDigest.start();
     }
 
     if (!mgf1Md) {
-      mgf1Md = md;
+      mgf1Md = messageDigest;
     }
 
     const keyLength = Math.ceil(key.n.bitLength() / 8);
-    const maxLength = keyLength - 2 * md.digestLength - 2;
+    const maxLength = keyLength - 2 * messageDigest.digestLength - 2;
     if (message.length > maxLength) {
       const error = new Error('RSAES-OAEP input message length is too long.') as Error & {
         length?: number;
@@ -78,8 +83,8 @@ export class Pkcs1Codec {
     if (!label) {
       label = '';
     }
-    md.update(label);
-    const lHash = md.digest();
+    messageDigest.update(label);
+    const lHash = messageDigest.digest();
 
     const psLength = maxLength - message.length;
     const paddingString = UtilNamespace.fillString('\x00', psLength);
@@ -89,20 +94,20 @@ export class Pkcs1Codec {
       if (!getRandomBytes) {
         throw new Error('Random byte source required for OAEP encoding');
       }
-      seed = getRandomBytes(md.digestLength);
-    } else if (seed.length !== md.digestLength) {
+      seed = getRandomBytes(messageDigest.digestLength);
+    } else if (seed.length !== messageDigest.digestLength) {
       const error = new Error('Invalid RSAES-OAEP seed. The seed length must match the digest length.') as Error & {
         seedLength?: number;
         digestLength?: number;
       };
       error.seedLength = seed.length;
-      error.digestLength = md.digestLength;
+      error.digestLength = messageDigest.digestLength;
       throw error;
     }
 
-    const dbMask = rsaMgf1(seed, keyLength - md.digestLength - 1, mgf1Md);
+    const dbMask = rsaMgf1(seed, keyLength - messageDigest.digestLength - 1, mgf1Md);
     const maskedDB = UtilNamespace.xorBytes(dataBlock, dbMask, dataBlock.length);
-    const seedMask = rsaMgf1(maskedDB, md.digestLength, mgf1Md);
+    const seedMask = rsaMgf1(maskedDB, messageDigest.digestLength, mgf1Md);
     const maskedSeed = UtilNamespace.xorBytes(seed, seedMask, seed.length);
 
     return '\x00' + maskedSeed + maskedDB;
@@ -116,15 +121,15 @@ export class Pkcs1Codec {
     mdArg?: MessageDigest
   ): string {
     let label: string | undefined;
-    let md: MessageDigest | undefined;
+    let messageDigest: MessageDigest | undefined;
     let mgf1Md: MessageDigest | undefined;
 
     if (typeof options === 'string') {
       label = options;
-      md = mdArg;
+      messageDigest = mdArg;
     } else if (options) {
       label = options.label;
-      md = options.md;
+      messageDigest = options.md;
       if (options.mgf1?.md) {
         mgf1Md = options.mgf1.md;
       }
@@ -142,46 +147,46 @@ export class Pkcs1Codec {
       throw error;
     }
 
-    if (md === undefined) {
-      md = Sha1.create();
+    if (messageDigest === undefined) {
+      messageDigest = Sha1.create();
     } else {
-      md.start();
+      messageDigest.start();
     }
 
     if (!mgf1Md) {
-      mgf1Md = md;
+      mgf1Md = messageDigest;
     }
 
-    if (keyLength < 2 * md.digestLength + 2) {
+    if (keyLength < 2 * messageDigest.digestLength + 2) {
       throw new Error('RSAES-OAEP key is too short for the hash function.');
     }
 
     if (!label) {
       label = '';
     }
-    md.update(label);
-    const lHash = md.digest().getBytes();
+    messageDigest.update(label);
+    const lHash = messageDigest.digest().getBytes();
 
     const leadingOctet = encodedMessage.charAt(0);
-    const maskedSeed = encodedMessage.substring(1, md.digestLength + 1);
-    const maskedDB = encodedMessage.substring(1 + md.digestLength);
+    const maskedSeed = encodedMessage.substring(1, messageDigest.digestLength + 1);
+    const maskedDB = encodedMessage.substring(1 + messageDigest.digestLength);
 
-    const seedMask = rsaMgf1(maskedDB, md.digestLength, mgf1Md);
+    const seedMask = rsaMgf1(maskedDB, messageDigest.digestLength, mgf1Md);
     const seed = UtilNamespace.xorBytes(maskedSeed, seedMask, maskedSeed.length);
-    const dbMask = rsaMgf1(seed, keyLength - md.digestLength - 1, mgf1Md);
+    const dbMask = rsaMgf1(seed, keyLength - messageDigest.digestLength - 1, mgf1Md);
     const decodedBlock = UtilNamespace.xorBytes(maskedDB, dbMask, maskedDB.length);
-    const lHashPrime = decodedBlock.substring(0, md.digestLength);
+    const lHashPrime = decodedBlock.substring(0, messageDigest.digestLength);
 
     let failureFlags: number = leadingOctet !== '\x00' ? 1 : 0;
 
-    for (let i = 0; i < md.digestLength; ++i) {
-      failureFlags |= lHash.charAt(i) !== lHashPrime.charAt(i) ? 1 : 0;
+    for (let index = 0; index < messageDigest.digestLength; ++index) {
+      failureFlags |= lHash.charAt(index) !== lHashPrime.charAt(index) ? 1 : 0;
     }
 
     let insidePaddingString = 1;
-    let index = md.digestLength;
-    for (let j = md.digestLength; j < decodedBlock.length; j++) {
-      const code = decodedBlock.charCodeAt(j);
+    let index = messageDigest.digestLength;
+    for (let innerIndex = messageDigest.digestLength; innerIndex < decodedBlock.length; innerIndex++) {
+      const code = decodedBlock.charCodeAt(innerIndex);
       const isZeroBit = (code & 0x1) ^ 0x1;
       const errorMask = insidePaddingString ? 0xfffe : 0x0000;
       failureFlags |= code & errorMask ? 1 : 0;

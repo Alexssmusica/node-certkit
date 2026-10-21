@@ -22,7 +22,7 @@ export class X509Shared {
     const oids = ctx.oids;
     const pki = ctx.pki as CertkitPki;
 
-    pki.RDNAttributesAsArray = function (rdn: Asn1Object, md?: MessageDigest) {
+    pki.RDNAttributesAsArray = function (rdn: Asn1Object, messageDigest?: MessageDigest) {
       const attributes: DnAttribute[] = [];
 
       let rdnSet;
@@ -31,9 +31,9 @@ export class X509Shared {
       for (let setIndex = 0; setIndex < (rdn.value as Asn1Object[]).length; ++setIndex) {
         rdnSet = (rdn.value as Asn1Object[])[setIndex]!;
 
-        for (let i = 0; i < (rdnSet.value as Asn1Object[]).length; ++i) {
+        for (let index = 0; index < (rdnSet.value as Asn1Object[]).length; ++index) {
           dnAttribute = {} as DnAttribute;
-          attributeAsn1 = (rdnSet.value as Asn1Object[])[i]!;
+          attributeAsn1 = (rdnSet.value as Asn1Object[])[index]!;
           dnAttribute.type = asn1.derToOid((attributeAsn1.value as Asn1Object[])[0].value as string);
           dnAttribute.value = (attributeAsn1.value as Asn1Object[])[1].value as string;
           dnAttribute.valueTagClass = (attributeAsn1.value as Asn1Object[])[1].type;
@@ -43,9 +43,9 @@ export class X509Shared {
               dnAttribute.shortName = validators.shortNames[dnAttribute.name];
             }
           }
-          if (md) {
-            md.update(dnAttribute.type);
-            md.update(dnAttribute.value);
+          if (messageDigest) {
+            messageDigest.update(dnAttribute.type);
+            messageDigest.update(dnAttribute.value);
           }
           attributes.push(dnAttribute);
         }
@@ -111,8 +111,8 @@ export class X509Shared {
 
       let foundAttribute: DnAttribute | null = null;
       let attr: DnAttribute;
-      for (let i = 0; foundAttribute === null && i < dnEntity.attributes.length; ++i) {
-        attr = dnEntity.attributes[i]!;
+      for (let index = 0; foundAttribute === null && index < dnEntity.attributes.length; ++index) {
+        attr = dnEntity.attributes[index]!;
         if (options!.type && options!.type === attr.type) {
           foundAttribute = attr;
         } else if (options!.name && options!.name === attr.name) {
@@ -130,8 +130,8 @@ export class X509Shared {
       let dnAttributeEntry;
       let attributeSet;
       const attrs = dnEntity.attributes;
-      for (let i = 0; i < attrs.length; ++i) {
-        dnAttributeEntry = attrs[i];
+      for (let index = 0; index < attrs.length; ++index) {
+        dnAttributeEntry = attrs[index];
         let value = dnAttributeEntry.value;
 
         let valueTagClass = asn1.Type.PRINTABLESTRING;
@@ -165,8 +165,8 @@ export class X509Shared {
      */
     function getAttributesAsJson(attrs: DnAttribute[]) {
       const attributeMap: Record<string, unknown> = {};
-      for (let i = 0; i < attrs.length; ++i) {
-        const attr = attrs[i];
+      for (let index = 0; index < attrs.length; ++index) {
+        const attr = attrs[index];
         if (
           attr.shortName &&
           (attr.valueTagClass === asn1.Type.UTF8 ||
@@ -203,8 +203,8 @@ export class X509Shared {
      */
     function fillMissingFields(attrs: DnAttributeInput[]) {
       let attr;
-      for (let i = 0; i < attrs.length; ++i) {
-        attr = attrs[i];
+      for (let index = 0; index < attrs.length; ++index) {
+        attr = attrs[index];
 
         if (typeof attr.name === 'undefined') {
           if (attr.type && attr.type in oids) {
@@ -279,8 +279,8 @@ export class X509Shared {
       }
 
       const attrs = csr.attributes;
-      for (let i = 0; i < attrs.length; ++i) {
-        const attr = attrs[i];
+      for (let index = 0; index < attrs.length; ++index) {
+        const attr = attrs[index];
         let value = attr.value;
 
         let valueTagClass = asn1.Type.UTF8;

@@ -7,8 +7,8 @@ export function constantTimeEquals(left: string, right: string): boolean {
   }
 
   let result = 0;
-  for (let i = 0; i < left.length; ++i) {
-    result |= left.charCodeAt(i) ^ right.charCodeAt(i);
+  for (let index = 0; index < left.length; ++index) {
+    result |= left.charCodeAt(index) ^ right.charCodeAt(index);
   }
 
   return result === 0;
