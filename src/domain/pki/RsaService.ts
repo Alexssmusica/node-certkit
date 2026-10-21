@@ -145,8 +145,24 @@ export class RsaService {
     return this.#pemKeyCodec;
   }
 
-  #emsaPkcs1v15encode(messageDigest: { algorithm: string; digest(): ByteStringBuffer }): string {
+  #encodeDigestInfo(oid: string, withNullParameters: boolean, digestBytes: string): string {
     const asn1 = this.#asn1;
+    const oidBytes = asn1.oidToDer(oid).getBytes();
+    const digestInfo = this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
+    const digestAlgorithm = this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
+    (digestAlgorithm.value as Asn1Object[]).push(
+      this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OID, false, oidBytes)
+    );
+    if (withNullParameters) {
+      (digestAlgorithm.value as Asn1Object[]).push(this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, ''));
+    }
+    const digest = this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, digestBytes);
+    (digestInfo.value as Asn1Object[]).push(digestAlgorithm);
+    (digestInfo.value as Asn1Object[]).push(digest);
+    return asn1.toDer(digestInfo).getBytes();
+  }
+
+  #emsaPkcs1v15encode(messageDigest: { algorithm: string; digest(): ByteStringBuffer }): string {
     let oid: string;
     if (messageDigest.algorithm in this.#oids) {
       oid = this.#oids[messageDigest.algorithm]!;
@@ -155,22 +171,7 @@ export class RsaService {
       error.algorithm = messageDigest.algorithm;
       throw error;
     }
-    const oidBytes = asn1.oidToDer(oid).getBytes();
-    const digestInfo = this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
-    const digestAlgorithm = this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
-    (digestAlgorithm.value as Asn1Object[]).push(
-      this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.OID, false, oidBytes)
-    );
-    (digestAlgorithm.value as Asn1Object[]).push(this.#createAsn1(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, ''));
-    const digest = this.#createAsn1(
-      asn1.Class.UNIVERSAL,
-      asn1.Type.OCTETSTRING,
-      false,
-      messageDigest.digest().getBytes()
-    );
-    (digestInfo.value as Asn1Object[]).push(digestAlgorithm);
-    (digestInfo.value as Asn1Object[]).push(digest);
-    return asn1.toDer(digestInfo).getBytes();
+    return this.#encodeDigestInfo(oid, true, messageDigest.digest().getBytes());
   }
 
   #modPow(baseValue: BigInteger, key: RsaKeyMaterial, usePublicKey: boolean): BigInteger {
@@ -488,6 +489,13 @@ export class RsaService {
                     'Missing algorithm identifier NULL parameters.'
                 );
               }
+            }
+            const canonicalDigestInfo = service.#encodeDigestInfo(oid, 'parameters' in capture, capture.digest);
+            if (decryptedPayload.substring(0, canonicalDigestInfo.length) !== canonicalDigestInfo) {
+              throw new Error(
+                'ASN.1 object does not contain a valid RSASSA-PKCS1-v1_5 DigestInfo value. ' +
+                  'Non-canonical DigestInfo encoding.'
+              );
             }
             return constantTimeEquals(expectedDigest, capture.digest);
           }
