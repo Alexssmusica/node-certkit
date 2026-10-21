@@ -30,6 +30,8 @@
     "format": "prettier --write \"**/*.{js,ts,mts,json}\" --ignore-path .gitignore",
     "publish:npm": "node publish.js",
     "release": "node release.js",
+    "release:dry": "node version-preview.js",
+    "release:dry:full": "node release-dry.js",
     "type": "tsc --project tsconfig.json",
     "dev": "tsc -p tsconfig.build.json --watch",
     "test": "vitest run",
