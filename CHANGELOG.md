@@ -1,3 +1,11 @@
+## [1.1.2](https://github.com/Alexssmusica/node-certkit/compare/v1.1.1...v1.1.2) (2026-10-21)
+
+
+### Bug Fixes
+
+* correct fillWithByte string optimization and Rc2Cipher loop scoping ([d31e191](https://github.com/Alexssmusica/node-certkit/commit/d31e191693df6380871e7faf2eaddfbda6f624e5))
+* **security:** rejeitar DigestInfo não canônico na verificação RSA PKCS[#1](https://github.com/Alexssmusica/node-certkit/issues/1) v1.5 (CVE-2026-85393) ([7d3f618](https://github.com/Alexssmusica/node-certkit/commit/7d3f6184ab6f5d91ca155dedf4da588626f3c6aa))
+
 ## [1.1.1](https://github.com/Alexssmusica/node-certkit/compare/v1.1.0...v1.1.1) (2026-09-04)
 
 
