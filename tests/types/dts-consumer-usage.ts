@@ -2,12 +2,7 @@
  * Validates the published declaration file (lib/index.d.ts) as consumers see it.
  * Run after `npm run build` via `npm run test:dts`.
  */
-import {
-  certkit,
-  type Pkcs12Pfx,
-  type RsaPrivateKey,
-  type X509Certificate
-} from '../../lib/index.js';
+import { certkit, type Pkcs12Pfx, type RsaPrivateKey, type X509Certificate } from '../../lib/index.js';
 
 type CertificateData = {
   emissao: Date;
